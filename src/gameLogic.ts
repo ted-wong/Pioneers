@@ -219,6 +219,34 @@ module gameLogic {
     //TODO: Check when playing year of plenty
   }
 
+  /**
+   * create move logics
+   */
+  function createResources(board: Board, players: Players): Players {
+    let ret: Players = angular.copy(players);
+
+    return ret;
+  }
+
+  function onDicesRolled(prevState: IState, playerIdx: number): IState {
+    let dices: number[] = [];
+    dices[0] = Math.floor(Math.random() * 6) + 1;
+    dices[1] = Math.floor(Math.random() * 6) + 1;
+    let rollNum: number = dices[0] + dices[1];
+    let ret: IState = angular.copy(prevState);
+    ret.dices = dices;
+
+    if (rollNum === 7) {
+      //Robber Event
+      ret.moveType = MoveType.ROBBER_EVENT;
+      ret.eventIdx = playerIdx;
+    } else {
+      //Create resources
+    }
+
+    return ret;
+  }
+
   export function checkMoveOk(stateTransition: IStateTransition): void {
 
   }
