@@ -5,6 +5,7 @@ enum Resource {
   Grain,
   Ore,
   Dust,
+  Water,
 
   SIZE
 }
@@ -56,12 +57,17 @@ type Constructions = number[];
 type Edges = number[];
 type Vertices = number[];
 
+interface Harbor {
+  trading: Resource;
+  ratio: number;
+}
+
 interface Hex {
   label: Resource;
   edges: Edges;
   vertices: Vertices;
   rollNum: number;
-  tradingRatio: number;
+  harbor: Harbor;
   hasRobber: boolean;
 }
 
@@ -112,3 +118,26 @@ interface StateDelta {
 interface IState extends StateDelta {
   delta: StateDelta;
 }
+
+const tokens: number[] = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11];
+const terrains: Resource[] = [
+  Resource.Brick,
+  Resource.Brick,
+  Resource.Brick,
+  Resource.Lumber,
+  Resource.Lumber,
+  Resource.Lumber,
+  Resource.Lumber,
+  Resource.Wool,
+  Resource.Wool,
+  Resource.Wool,
+  Resource.Wool,
+  Resource.Grain,
+  Resource.Grain,
+  Resource.Grain,
+  Resource.Grain,
+  Resource.Ore,
+  Resource.Ore,
+  Resource.Ore,
+  Resource.Dust
+];
