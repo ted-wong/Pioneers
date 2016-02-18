@@ -5,8 +5,10 @@ var Resource;
     Resource[Resource["Wool"] = 2] = "Wool";
     Resource[Resource["Grain"] = 3] = "Grain";
     Resource[Resource["Ore"] = 4] = "Ore";
-    Resource[Resource["Dust"] = 5] = "Dust";
-    Resource[Resource["SIZE"] = 6] = "SIZE";
+    Resource[Resource["SIZE"] = 5] = "SIZE";
+    Resource[Resource["Dust"] = 6] = "Dust";
+    Resource[Resource["Water"] = 7] = "Water";
+    Resource[Resource["ANY"] = 8] = "ANY"; //Used for harbor 3:1
 })(Resource || (Resource = {}));
 var DevCard;
 (function (DevCard) {
@@ -43,4 +45,81 @@ var MoveType;
     MoveType[MoveType["WIN"] = 13] = "WIN";
     MoveType[MoveType["SIZE"] = 14] = "SIZE";
 })(MoveType || (MoveType = {}));
+/**
+ * Constants definitions
+ */
+var tokens = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11];
+var terrains = [
+    Resource.Brick,
+    Resource.Brick,
+    Resource.Brick,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Ore,
+    Resource.Ore,
+    Resource.Ore,
+    Resource.Dust
+];
+/**
+ * Constants for harbors
+ */
+var harborPos = [
+    [1, 3],
+    [1, 4],
+    [2, 1],
+    [2, 4],
+    [3, 1],
+    [4, 1],
+    [4, 4],
+    [5, 3],
+    [5, 4]
+];
+var harbors = [
+    {
+        trading: Resource.ANY,
+        vertices: [1, 2]
+    },
+    {
+        trading: Resource.Ore,
+        vertices: [0, 1]
+    },
+    {
+        trading: Resource.Lumber,
+        vertices: [1, 2]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [0, 5]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [2, 3]
+    },
+    {
+        trading: Resource.Wool,
+        vertices: [3, 4]
+    },
+    {
+        trading: Resource.Brick,
+        vertices: [0, 5]
+    },
+    {
+        trading: Resource.Grain,
+        vertices: [3, 4]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [4, 5]
+    }
+];
 //# sourceMappingURL=common.js.map
