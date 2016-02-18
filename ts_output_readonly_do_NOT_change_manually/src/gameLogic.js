@@ -3,21 +3,56 @@ var gameLogic;
     gameLogic.ROWS = 7;
     gameLogic.COLS = 7;
     gameLogic.NUM_PLAYERS = 4;
+    function shuffleArray(src) {
+        var ret = angular.copy(src);
+        for (var j = void 0, x = void 0, i = ret.length; i; j = Math.floor(Math.random() * i), x = ret[--i], ret[i] = ret[j], ret[j] = x)
+            ;
+        return ret;
+    }
+    function isSea(row, col) {
+        if (row === 0 || col === 0 || row === gameLogic.ROWS - 1 || col === gameLogic.COLS - 1) {
+            return true;
+        }
+        else if (row === 1 || row === 5) {
+            if (col === 1 || col > 4) {
+                return true;
+            }
+        }
+        else if (row === 2 || row === 4) {
+            if (col > 4) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function assignHarbor(row, col) {
+        for (var i = 0; i < harborPos.length; i++) {
+            if (harborPos[i][0] === row && harborPos[i][1] === col) {
+                return harbors[i];
+            }
+        }
+        return null;
+    }
     function getInitialBoard() {
         var board = [];
-        //TODO: Shuffle & terrains
+        //Shuffle & terrains
+        var newNumTokens = shuffleArray(tokens);
+        var newTerrains = shuffleArray(terrains);
+        var tokenPtr = 0;
+        var terrainPtr = 0;
         for (var i = 0; i < gameLogic.ROWS; i++) {
             board[i] = [];
             for (var j = 0; j < gameLogic.COLS; j++) {
                 var edges = [-1, -1, -1, -1, -1, -1];
                 var vertices = [-1, -1, -1, -1, -1, -1];
+                var label = isSea(i, j) ? Resource.Water : newTerrains[terrainPtr++];
                 var hex = {
-                    label: Resource.Dust,
+                    label: label,
                     edges: edges,
                     vertices: vertices,
-                    rollNum: -1,
-                    tradingRatio: 4,
-                    hasRobber: false
+                    rollNum: isSea(i, j) || label === Resource.Dust ? -1 : newNumTokens[tokenPtr++],
+                    harbor: assignHarbor(i, j),
+                    hasRobber: label === Resource.Dust
                 };
                 board[i][j] = hex;
             }
@@ -148,6 +183,24 @@ var gameLogic;
             }
         }
     }
+    function findTradingRatio(board, trading, idx) {
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                if (board[i][j].harbor === null || board[i][j].harbor.trading !== Resource.ANY ||
+                    board[i][j].harbor.trading !== trading) {
+                    continue;
+                }
+                var harbor = board[i][j].harbor;
+                for (var v = 0; v < 6; v++) {
+                    if (board[i][j].vertices[v] === idx &&
+                        (harbor.vertices[0] === v || harbor.vertices[1] === v)) {
+                        return board[i][j].harbor.trading === Resource.ANY ? 3 : 2;
+                    }
+                }
+            }
+        }
+        return 4;
+    }
     function checkTradeResourceWithBank(prevState, nextState, idx) {
         if (!prevState.diceRolled) {
             throw new Error('Need to roll dices first');
@@ -157,12 +210,18 @@ var gameLogic;
         checkResources(nextState.players[idx].resources);
         for (var i = 0; i < Resource.SIZE; i++) {
             if (nextState.players[idx].resources[i] < prevState.players[idx].resources[i]) {
+                if (selling.item !== Resource.Dust) {
+                    throw new Error('Need to use same resources for trading');
+                }
                 selling = {
                     item: i,
                     num: prevState.players[idx].resources[i] - nextState.players[idx].resources[i]
                 };
             }
             if (nextState.players[idx].resources[i] > prevState.players[idx].resources[i]) {
+                if (buying.item !== Resource.Dust) {
+                    throw new Error('One resource per trade');
+                }
                 buying = {
                     item: i,
                     num: nextState.players[idx].resources[i] - prevState.players[idx].resources[i]
@@ -172,8 +231,7 @@ var gameLogic;
         if (selling.item === buying.item) {
             throw new Error('Cannot trade the same resources');
         }
-        //TODO: Need to integrate with harbors
-        if (buying.num * 4 !== selling.num) {
+        if (buying.num * findTradingRatio(nextState.board, buying.item, idx) !== selling.num) {
             throw new Error('Wrong trading ratio');
         }
     }
@@ -190,7 +248,12 @@ var gameLogic;
         if (prevState.devCardsPlayed) {
             throw new Error('Already played development cards');
         }
-        //TODO: Check when playing year of plenty
+        //Check when playing year of plenty
+        for (var i = 0; i < Resource.SIZE; i++) {
+            if (nextState.bank.resources[i] < 0) {
+                throw new Error('Bank has insufficient resource: ' + Resource[i]);
+            }
+        }
     }
     /**
      * create move logics
