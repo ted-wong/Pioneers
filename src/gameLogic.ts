@@ -205,7 +205,7 @@ module gameLogic {
   function checkResources(resources: Resources): void {
     for (let i = 0; i < Resource.SIZE; i++) {
       if (resources[i] < 0) {
-        throw new Error('Insufficient resources');
+        throw new Error('Insufficient resources: ' + Resource[i]);
       }
     }
   }
@@ -239,7 +239,6 @@ module gameLogic {
     let buying = {item: Resource.Dust, num: 0};
 
     checkResources(nextState.players[idx].resources);
-
     for (let i = 0; i < Resource.SIZE; i++) {
       if (nextState.players[idx].resources[i] < prevState.players[idx].resources[i]) {
         if (selling.item !== Resource.Dust) {
@@ -285,10 +284,10 @@ module gameLogic {
     }
 
     //Check when playing year of plenty
-    for (let i = 0; i < Resource.SIZE; i++) {
-      if (nextState.bank.resources[i] < 0) {
-        throw new Error('Bank has insufficient resource: ' + Resource[i]);
-      }
+    try {
+      checkResources(nextState.bank.resources);
+    } catch(e) {
+      throw new Error('Bank Error: ' + e.message);
     }
   }
 

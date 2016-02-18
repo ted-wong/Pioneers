@@ -179,7 +179,7 @@ var gameLogic;
     function checkResources(resources) {
         for (var i = 0; i < Resource.SIZE; i++) {
             if (resources[i] < 0) {
-                throw new Error('Insufficient resources');
+                throw new Error('Insufficient resources: ' + Resource[i]);
             }
         }
     }
@@ -249,10 +249,11 @@ var gameLogic;
             throw new Error('Already played development cards');
         }
         //Check when playing year of plenty
-        for (var i = 0; i < Resource.SIZE; i++) {
-            if (nextState.bank.resources[i] < 0) {
-                throw new Error('Bank has insufficient resource: ' + Resource[i]);
-            }
+        try {
+            checkResources(nextState.bank.resources);
+        }
+        catch (e) {
+            throw new Error('Bank Error: ' + e.message);
         }
     }
     /**
