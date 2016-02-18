@@ -4,10 +4,11 @@ enum Resource {
   Wool,
   Grain,
   Ore,
+
+  SIZE,
   Dust,
   Water,
-
-  SIZE
+  ANY //Used for harbor 3:1
 }
 
 enum DevCard {

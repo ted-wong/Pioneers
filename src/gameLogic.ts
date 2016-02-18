@@ -41,13 +41,15 @@ module gameLogic {
       for (let j = 0; j < COLS; j++) {
         let edges: Edges = [-1, -1, -1, -1, -1, -1];
         let vertices: Vertices = [-1, -1, -1, -1, -1, -1];
+        let label: Resource = isSea(i, j) ? Resource.Water : newTerrains[terrainPtr++];
+
         let hex: Hex = {
-          label: isSea(i, j) ? Resource.Water : newTerrains[terrainPtr++],
+          label: label,
           edges: edges,
           vertices: vertices,
           rollNum: isSea(i, j) ? -1 : newNumTokens[tokenPtr++],
           harbor: null,
-          hasRobber: false
+          hasRobber: label === Resource.Dust
         };
         board[i][j] = hex;
       }
@@ -198,6 +200,25 @@ module gameLogic {
     }
   }
 
+  function findTradingRatio(board: Board, trading: Resource, idx: number): number {
+    for (let i: number = 0; i < ROWS; i++) {
+      for (let j: number = 0; j < COLS; j++) {
+        if (board[i][j].harbor === null || board[i][j].harbor.trading !== Resource.ANY ||
+            board[i][j].harbor.trading !== trading) {
+          continue;
+        }
+
+        for (let v: number = 0; v < 6; v++) {
+          if (board[i][j].vertices[v] === idx) {
+            return board[i][j].harbor.trading === Resource.ANY ? 3 : 2;
+          }
+        }
+      }
+    }
+
+    return 4;
+  }
+
   function checkTradeResourceWithBank(prevState: IState, nextState: IState, idx: number): void {
     if (!prevState.diceRolled) {
       throw new Error('Need to roll dices first');
@@ -230,8 +251,7 @@ module gameLogic {
     if (selling.item === buying.item) {
       throw new Error('Cannot trade the same resources');
     }
-    //TODO: Need to integrate with harbors
-    if (buying.num * 4 !== selling.num) {
+    if (buying.num * findTradingRatio(nextState.board, buying.item, idx) !== selling.num) {
       throw new Error('Wrong trading ratio');
     }
   }
