@@ -28,6 +28,16 @@ module gameLogic {
     return false;
   }
 
+  function assignHarbor(row: number, col: number): Harbor {
+    for (let i = 0; i < harborPos.length; i++) {
+      if (harborPos[i][0] === row && harborPos[i][1] === col) {
+        return harbors[i];
+      }
+    }
+
+    return null;
+  }
+
   function getInitialBoard(): Board {
     let board: Board = [];
 
@@ -47,8 +57,8 @@ module gameLogic {
           label: label,
           edges: edges,
           vertices: vertices,
-          rollNum: isSea(i, j) ? -1 : newNumTokens[tokenPtr++],
-          harbor: null,
+          rollNum: isSea(i, j) || label === Resource.Dust ? -1 : newNumTokens[tokenPtr++],
+          harbor: assignHarbor(i, j),
           hasRobber: label === Resource.Dust
         };
         board[i][j] = hex;
@@ -208,8 +218,10 @@ module gameLogic {
           continue;
         }
 
+        let harbor: Harbor = board[i][j].harbor;
         for (let v: number = 0; v < 6; v++) {
-          if (board[i][j].vertices[v] === idx) {
+          if (board[i][j].vertices[v] === idx &&
+              (harbor.vertices[0] === v || harbor.vertices[1] === v)) {
             return board[i][j].harbor.trading === Resource.ANY ? 3 : 2;
           }
         }
