@@ -42,7 +42,7 @@ module gameLogic {
     let board: Board = [];
 
     //Shuffle & terrains
-    let newNumTokens: number[] = shuffleArray(tokens);
+    let newNumTokens: number[] = angular.copy(tokens);
     let newTerrains: Resource[] = shuffleArray(terrains);
     let tokenPtr: number = 0;
     let terrainPtr: number = 0;

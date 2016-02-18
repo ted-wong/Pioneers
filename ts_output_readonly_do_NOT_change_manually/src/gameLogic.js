@@ -36,7 +36,7 @@ var gameLogic;
     function getInitialBoard() {
         var board = [];
         //Shuffle & terrains
-        var newNumTokens = shuffleArray(tokens);
+        var newNumTokens = angular.copy(tokens);
         var newTerrains = shuffleArray(terrains);
         var tokenPtr = 0;
         var terrainPtr = 0;
