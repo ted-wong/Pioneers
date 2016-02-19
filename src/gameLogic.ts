@@ -179,7 +179,7 @@ module gameLogic {
   /**
    * Validation logics
    */
-  function rollDice(prevState: IState, nextState: IState, idx: number): void {
+  function checkRollDice(prevState: IState, nextState: IState, idx: number): void {
     if (prevState.diceRolled) {
       throw new Error('Dices already rolled');
     }
@@ -322,6 +322,51 @@ module gameLogic {
   }
 
   export function checkMoveOk(stateTransition: IStateTransition): void {
+    let prevState: IState = stateTransition.stateBeforeMove;
+    let nextState: IState = stateTransition.move.stateAfterMove;
+    let prevIdx: number = stateTransition.turnIndexBeforeMove;
+    let nextIdx: number = stateTransition.move.turnIndexAfterMove;
+    //TODO: What does this for, exactly?
+    let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
 
+    switch (nextState.moveType) {
+      case MoveType.ROLL_DICE:
+        checkRollDice(prevState, nextState, prevIdx);
+        break;
+      case MoveType.BUILD_ROAD:
+        break;
+      case MoveType.BUILD_SETTLEMENT:
+        break;
+      case MoveType.BUILD_CITY:
+        break;
+      case MoveType.BUILD_DEVCARD:
+        checkBuildDevCards(prevState, nextState, prevIdx);
+        break;
+      case MoveType.KNIGHT:
+        checkPlayDevCard(prevState, nextState, prevIdx);
+        break;
+      case MoveType.PROGRESS:
+        checkPlayDevCard(prevState, nextState, prevIdx);
+        break;
+      case MoveType.TRADE:
+        //TODO: On hold until after MVP
+        break;
+      case MoveType.ROBBER_EVENT:
+        checkRobberEvent(prevState, nextState, prevState.eventIdx);
+        break;
+      case MoveType.ROBBER_MOVE:
+        checkRobberMove(prevState, nextState, prevIdx);
+        break;
+      case MoveType.ROB_PLAYER:
+        break;
+      case MoveType.TRANSACTION_WITH_BANK:
+        checkTradeResourceWithBank(prevState, nextState, prevIdx);
+        break;
+      default:
+        if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
+          throw new Error('Unidentified Move: ' + nextState.moveType);
+        }
+        break;
+    }
   }
 }

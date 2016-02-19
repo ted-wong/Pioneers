@@ -157,7 +157,7 @@ var gameLogic;
     /**
      * Validation logics
      */
-    function rollDice(prevState, nextState, idx) {
+    function checkRollDice(prevState, nextState, idx) {
         if (prevState.diceRolled) {
             throw new Error('Dices already rolled');
         }
@@ -282,6 +282,51 @@ var gameLogic;
         return ret;
     }
     function checkMoveOk(stateTransition) {
+        var prevState = stateTransition.stateBeforeMove;
+        var nextState = stateTransition.move.stateAfterMove;
+        var prevIdx = stateTransition.turnIndexBeforeMove;
+        var nextIdx = stateTransition.move.turnIndexAfterMove;
+        //TODO: What does this for, exactly?
+        var delta = stateTransition.move.stateAfterMove.delta;
+        switch (nextState.moveType) {
+            case MoveType.ROLL_DICE:
+                checkRollDice(prevState, nextState, prevIdx);
+                break;
+            case MoveType.BUILD_ROAD:
+                break;
+            case MoveType.BUILD_SETTLEMENT:
+                break;
+            case MoveType.BUILD_CITY:
+                break;
+            case MoveType.BUILD_DEVCARD:
+                checkBuildDevCards(prevState, nextState, prevIdx);
+                break;
+            case MoveType.KNIGHT:
+                checkPlayDevCard(prevState, nextState, prevIdx);
+                break;
+            case MoveType.PROGRESS:
+                checkPlayDevCard(prevState, nextState, prevIdx);
+                break;
+            case MoveType.TRADE:
+                //TODO: On hold until after MVP
+                break;
+            case MoveType.ROBBER_EVENT:
+                checkRobberEvent(prevState, nextState, prevState.eventIdx);
+                break;
+            case MoveType.ROBBER_MOVE:
+                checkRobberMove(prevState, nextState, prevIdx);
+                break;
+            case MoveType.ROB_PLAYER:
+                break;
+            case MoveType.TRANSACTION_WITH_BANK:
+                checkTradeResourceWithBank(prevState, nextState, prevIdx);
+                break;
+            default:
+                if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
+                    throw new Error('Unidentified Move: ' + nextState.moveType);
+                }
+                break;
+        }
     }
     gameLogic.checkMoveOk = checkMoveOk;
 })(gameLogic || (gameLogic = {}));
