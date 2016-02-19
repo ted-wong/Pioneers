@@ -3,22 +3,63 @@ module gameLogic {
   export const COLS = 7;
   export const NUM_PLAYERS = 4;
 
+  function shuffleArray<T>(src: T[]): T[] {
+    let ret: T[] = angular.copy(src);
+
+    for (let j: number, x: T, i = ret.length; i;
+        j = Math.floor(Math.random() * i), x = ret[--i], ret[i] = ret[j], ret[j] = x);
+
+    return ret;
+  }
+
+  function isSea(row: number, col: number): boolean {
+    if (row === 0 || col === 0 || row === ROWS-1 || col === COLS-1) {
+      return true;
+    } else if (row === 1 || row === 5) {
+      if (col === 1 || col > 4) {
+        return true;
+      }
+    } else if (row === 2 || row === 4) {
+      if (col > 4) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function assignHarbor(row: number, col: number): Harbor {
+    for (let i = 0; i < harborPos.length; i++) {
+      if (harborPos[i][0] === row && harborPos[i][1] === col) {
+        return harbors[i];
+      }
+    }
+
+    return null;
+  }
+
   function getInitialBoard(): Board {
     let board: Board = [];
 
-    //TODO: Shuffle & terrains
+    //Shuffle & terrains
+    let newNumTokens: number[] = angular.copy(tokens);
+    let newTerrains: Resource[] = shuffleArray(terrains);
+    let tokenPtr: number = 0;
+    let terrainPtr: number = 0;
     for (let i = 0; i < ROWS; i++) {
       board[i] = [];
       for (let j = 0; j < COLS; j++) {
         let edges: Edges = [-1, -1, -1, -1, -1, -1];
         let vertices: Vertices = [-1, -1, -1, -1, -1, -1];
+        let label: Resource = isSea(i, j) ? Resource.Water : newTerrains[terrainPtr++];
+
         let hex: Hex = {
-          label: Resource.Dust,
+          label: label,
           edges: edges,
           vertices: vertices,
-          rollNum: -1,
-          tradingRatio: 4,
-          hasRobber: false
+          rollNum: isSea(i, j) || label === Resource.Dust ? -1 : newNumTokens[tokenPtr++],
+          harbor: assignHarbor(i, j),
+          hasRobber: label === Resource.Dust
         };
         board[i][j] = hex;
       }
@@ -164,9 +205,30 @@ module gameLogic {
   function checkResources(resources: Resources): void {
     for (let i = 0; i < Resource.SIZE; i++) {
       if (resources[i] < 0) {
-        throw new Error('Insufficient resources');
+        throw new Error('Insufficient resources: ' + Resource[i]);
       }
     }
+  }
+
+  function findTradingRatio(board: Board, trading: Resource, idx: number): number {
+    for (let i: number = 0; i < ROWS; i++) {
+      for (let j: number = 0; j < COLS; j++) {
+        if (board[i][j].harbor === null || board[i][j].harbor.trading !== Resource.ANY ||
+            board[i][j].harbor.trading !== trading) {
+          continue;
+        }
+
+        let harbor: Harbor = board[i][j].harbor;
+        for (let v: number = 0; v < 6; v++) {
+          if (board[i][j].vertices[v] === idx &&
+              (harbor.vertices[0] === v || harbor.vertices[1] === v)) {
+            return board[i][j].harbor.trading === Resource.ANY ? 3 : 2;
+          }
+        }
+      }
+    }
+
+    return 4;
   }
 
   function checkTradeResourceWithBank(prevState: IState, nextState: IState, idx: number): void {
@@ -177,15 +239,20 @@ module gameLogic {
     let buying = {item: Resource.Dust, num: 0};
 
     checkResources(nextState.players[idx].resources);
-
     for (let i = 0; i < Resource.SIZE; i++) {
       if (nextState.players[idx].resources[i] < prevState.players[idx].resources[i]) {
+        if (selling.item !== Resource.Dust) {
+          throw new Error('Need to use same resources for trading');
+        }
         selling = {
           item: i,
           num: prevState.players[idx].resources[i] - nextState.players[idx].resources[i]
         };
       }
       if (nextState.players[idx].resources[i] > prevState.players[idx].resources[i]) {
+        if (buying.item !== Resource.Dust) {
+          throw new Error('One resource per trade');
+        }
         buying = {
           item: i,
           num: nextState.players[idx].resources[i] - prevState.players[idx].resources[i]
@@ -195,8 +262,7 @@ module gameLogic {
     if (selling.item === buying.item) {
       throw new Error('Cannot trade the same resources');
     }
-    //TODO: Need to integrate with harbors
-    if (buying.num * 4 !== selling.num) {
+    if (buying.num * findTradingRatio(nextState.board, buying.item, idx) !== selling.num) {
       throw new Error('Wrong trading ratio');
     }
   }
@@ -216,7 +282,41 @@ module gameLogic {
     if (prevState.devCardsPlayed) {
       throw new Error('Already played development cards');
     }
-    //TODO: Check when playing year of plenty
+
+    //Check when playing year of plenty
+    try {
+      checkResources(nextState.bank.resources);
+    } catch(e) {
+      throw new Error('Bank Error: ' + e.message);
+    }
+  }
+
+  /**
+   * create move logics
+   */
+  function createResources(board: Board, players: Players): Players {
+    let ret: Players = angular.copy(players);
+
+    return ret;
+  }
+
+  function onDicesRolled(prevState: IState, playerIdx: number): IState {
+    let dices: number[] = [];
+    dices[0] = Math.floor(Math.random() * 6) + 1;
+    dices[1] = Math.floor(Math.random() * 6) + 1;
+    let rollNum: number = dices[0] + dices[1];
+    let ret: IState = angular.copy(prevState);
+    ret.dices = dices;
+
+    if (rollNum === 7) {
+      //Robber Event
+      ret.moveType = MoveType.ROBBER_EVENT;
+      ret.eventIdx = playerIdx;
+    } else {
+      //Create resources
+    }
+
+    return ret;
   }
 
   export function checkMoveOk(stateTransition: IStateTransition): void {
