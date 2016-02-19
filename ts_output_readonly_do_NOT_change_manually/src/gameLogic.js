@@ -150,7 +150,8 @@ var gameLogic;
             devCardsPlayed: false,
             delta: null,
             moveType: MoveType.INIT,
-            eventIdx: -1
+            eventIdx: -1,
+            building: null
         };
     }
     gameLogic.getInitialState = getInitialState;
@@ -258,6 +259,38 @@ var gameLogic;
             throw new Error('Bank Error: ' + e.message);
         }
     }
+    function checkResourcesToBuild(player, consType, bank) {
+        if (!canAffordConstruction(player, consType)) {
+            throw new Error('Insufficient resources to build ' + consType);
+        }
+        if (!hasSufficientConstructsToBuild(player, consType, bank)) {
+            throw new Error('Has no enough constructions to build ' + consType);
+        }
+    }
+    function checkBuildRoad(prevState, nextState, idx) {
+        checkResourcesToBuild(prevState.players[idx], Construction.Road, prevState.bank);
+        var building = nextState.building;
+        var player = nextState.players[idx];
+        if (!canBuildRoadLegally(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge, building.init)) {
+            throw new Error('Cannot build road legally!');
+        }
+    }
+    function checkBuildSettlement(prevState, nextState, idx) {
+        checkResourcesToBuild(prevState.players[idx], Construction.Settlement, prevState.bank);
+        var building = nextState.building;
+        var player = nextState.players[idx];
+        if (!canBuildSettlementLegally(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge, building.init)) {
+            throw new Error('Cannot build settlement legally!');
+        }
+    }
+    function checkBuildCity(prevState, nextState, idx) {
+        checkResourcesToBuild(prevState.players[idx], Construction.City, prevState.bank);
+        var building = nextState.building;
+        var player = nextState.players[idx];
+        if (!canUpgradeSettlement(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge)) {
+            throw new Error('Cannot build city legally!');
+        }
+    }
     /**
      * create move logics
      */
@@ -293,10 +326,13 @@ var gameLogic;
                 checkRollDice(prevState, nextState, prevIdx);
                 break;
             case MoveType.BUILD_ROAD:
+                checkBuildRoad(prevState, nextState, prevIdx);
                 break;
             case MoveType.BUILD_SETTLEMENT:
+                checkBuildSettlement(prevState, nextState, prevIdx);
                 break;
             case MoveType.BUILD_CITY:
+                checkBuildCity(prevState, nextState, prevIdx);
                 break;
             case MoveType.BUILD_DEVCARD:
                 checkBuildDevCards(prevState, nextState, prevIdx);
