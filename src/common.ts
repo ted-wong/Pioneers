@@ -79,7 +79,7 @@ interface Player {
   devCards: DevCards;
   knightsPlayed: number;
   longestRoad: number;
-  Construction: Construction;
+  construction: Construction[];
 }
   
 interface Bank {
@@ -178,20 +178,23 @@ function canAffordConstruction(player: Player, construct: number): boolean {
 function hasSuffucientConstructsToBuild(player: Player, construct: number, bank: Bank): boolean {
   switch (construct) {
     case Construction.Road:
-      if (player.Construction[Construction.Road] < 15)
+      if (player.construction[Construction.Road] < 15)
         return true;
       break;
     case Construction.Settlement:
-      if (player.Construction[Construction.Settlement] < 5)
+      if (player.construction[Construction.Settlement] < 5)
         return true;
       break;
     case Construction.City:
-      if (player.Construction[Construction.City] < 4 && player.Construction[Construction.Settlement] > 0)
+      if (player.construction[Construction.City] < 4 && player.construction[Construction.Settlement] > 0)
         return true;
       break;
     case Construction.DevCard:
-      if (bank.devCards > 0)
-        return true;
+      for (let i = 0; i < bank.devCards.length; i++) {
+        if (bank.devCards[i] > 0) {
+          return true;
+        }
+      }
       break;
     default:
       return false;
@@ -435,7 +438,6 @@ function getHexesAdjacentToVertex(row: number, col: number, vertex: number): num
 }
 
 
-=======
 /**
  * Constants definitions
  */
