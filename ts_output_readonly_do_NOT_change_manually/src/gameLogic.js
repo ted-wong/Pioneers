@@ -337,10 +337,12 @@ var gameLogic;
         var nextState = stateTransition.move.stateAfterMove;
         var prevIdx = nextState.moveType === MoveType.ROBBER_EVENT ?
             prevState.eventIdx : stateTransition.turnIndexBeforeMove;
-        //TODO: What does these for, exactly?
+        //TODO: What are these for, exactly?
         var nextIdx = stateTransition.move.turnIndexAfterMove;
         var delta = stateTransition.move.stateAfterMove.delta;
-        validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+        if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
+            validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+        }
         /*
         TODO: Remove this once validateHandlers acts as expected
         switch (nextState.moveType) {

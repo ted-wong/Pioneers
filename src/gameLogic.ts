@@ -390,11 +390,13 @@ module gameLogic {
     let nextState: IState = stateTransition.move.stateAfterMove;
     let prevIdx: number = nextState.moveType === MoveType.ROBBER_EVENT ?
             prevState.eventIdx : stateTransition.turnIndexBeforeMove;
-    //TODO: What does these for, exactly?
+    //TODO: What are these for, exactly?
     let nextIdx: number = stateTransition.move.turnIndexAfterMove;
     let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
 
-    validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+    if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
+      validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+    }
     /*
     TODO: Remove this once validateHandlers acts as expected
     switch (nextState.moveType) {
