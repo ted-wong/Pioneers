@@ -45,11 +45,13 @@ var gameLogic;
             for (var j = 0; j < gameLogic.COLS; j++) {
                 var edges = [-1, -1, -1, -1, -1, -1];
                 var vertices = [-1, -1, -1, -1, -1, -1];
+                var vertexOwner = [-1, -1, -1, -1, -1, -1];
                 var label = isSea(i, j) ? Resource.Water : newTerrains[terrainPtr++];
                 var hex = {
                     label: label,
                     edges: edges,
                     vertices: vertices,
+                    vertexOwner: vertexOwner,
                     rollNum: isSea(i, j) || label === Resource.Dust ? -1 : newNumTokens[tokenPtr++],
                     harbor: assignHarbor(i, j),
                     hasRobber: label === Resource.Dust
@@ -76,7 +78,7 @@ var gameLogic;
                 devCards: getInitialArray(DevCard.SIZE),
                 knightsPlayed: 0,
                 longestRoad: 0,
-                constructions: getInitialArray(Construction.SIZE)
+                construction: getInitialArray(Construction.SIZE)
             };
         }
         return players;
@@ -192,7 +194,7 @@ var gameLogic;
                 }
                 var harbor = board[i][j].harbor;
                 for (var v = 0; v < 6; v++) {
-                    if (board[i][j].vertices[v] === idx &&
+                    if (board[i][j].vertexOwner[v] === idx &&
                         (harbor.vertices[0] === v || harbor.vertices[1] === v)) {
                         return board[i][j].harbor.trading === Resource.ANY ? 3 : 2;
                     }

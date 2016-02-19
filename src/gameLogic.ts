@@ -51,12 +51,14 @@ module gameLogic {
       for (let j = 0; j < COLS; j++) {
         let edges: Edges = [-1, -1, -1, -1, -1, -1];
         let vertices: Vertices = [-1, -1, -1, -1, -1, -1];
+        let vertexOwner: number[] = [-1, -1, -1, -1, -1, -1];
         let label: Resource = isSea(i, j) ? Resource.Water : newTerrains[terrainPtr++];
 
         let hex: Hex = {
           label: label,
           edges: edges,
           vertices: vertices,
+          vertexOwner: vertexOwner,
           rollNum: isSea(i, j) || label === Resource.Dust ? -1 : newNumTokens[tokenPtr++],
           harbor: assignHarbor(i, j),
           hasRobber: label === Resource.Dust
@@ -88,7 +90,7 @@ module gameLogic {
         devCards: getInitialArray(DevCard.SIZE),
         knightsPlayed: 0,
         longestRoad: 0,
-        constructions: getInitialArray(Construction.SIZE)
+        construction: getInitialArray(Construction.SIZE)
       };
     }
 
@@ -220,7 +222,7 @@ module gameLogic {
 
         let harbor: Harbor = board[i][j].harbor;
         for (let v: number = 0; v < 6; v++) {
-          if (board[i][j].vertices[v] === idx &&
+          if (board[i][j].vertexOwner[v] === idx &&
               (harbor.vertices[0] === v || harbor.vertices[1] === v)) {
             return board[i][j].harbor.trading === Resource.ANY ? 3 : 2;
           }
