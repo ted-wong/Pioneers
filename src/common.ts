@@ -46,6 +46,8 @@ enum MoveType {
   TRANSACTION_WITH_BANK,
   WIN,
 
+  //TODO: Might need to add move types for builds during initialization
+
   SIZE
 }
 
@@ -103,6 +105,14 @@ interface Awards {
   }
 }
 
+interface BuildInstruction {
+  consType: Construction;
+  hexRow: number;
+  hexCol: number;
+  vertexOrEdge: number;
+  init: boolean;
+}
+
 interface StateDelta {
   board: Board;
   dices: Dices;
@@ -114,6 +124,7 @@ interface StateDelta {
   devCardsPlayed: boolean;
   moveType: MoveType;
   eventIdx: number;
+  building: BuildInstruction;
 }
 
 interface IState extends StateDelta {
@@ -149,7 +160,7 @@ function stealFromPlayer(playerStealing: Player, playerStolen: Player): void {
   }
 }
 
-function canAffordConstruction(player: Player, construct: number): boolean {
+function canAffordConstruction(player: Player, construct: Construction): boolean {
   switch (construct) {
     case Construction.Road:
       if (player.resources[Resource.Brick] >= 1 && player.resources[Resource.Lumber] >= 1)
@@ -175,7 +186,7 @@ function canAffordConstruction(player: Player, construct: number): boolean {
   return false;
 }
 
-function hasSuffucientConstructsToBuild(player: Player, construct: number, bank: Bank): boolean {
+function hasSufficientConstructsToBuild(player: Player, construct: Construction, bank: Bank): boolean {
   switch (construct) {
     case Construction.Road:
       if (player.construction[Construction.Road] < 15)
@@ -310,6 +321,10 @@ function canUpgradeSettlement(player: Player, board: Board, row: number, col: nu
   return false;
 }
 
+// *****************
+// Helper functions for player-based functions
+// *****************
+
 function hasAdjacentRoad(player: Player, board: Board, row: number, col: number, vertex: number): boolean {
 
   if (board[row][col].edges[vertex] = player.id) return true;
@@ -324,14 +339,6 @@ function hasAdjacentRoad(player: Player, board: Board, row: number, col: number,
 
   return false;
 }
-
-
-
-// *****************
-// Helper functions for player-based functions
-// *****************
-
-
 
 function hasNearbyConstruct(board: Board, row: number, col: number, vertex: number): boolean {
 

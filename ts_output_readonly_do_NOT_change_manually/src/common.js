@@ -43,6 +43,7 @@ var MoveType;
     MoveType[MoveType["ROB_PLAYER"] = 11] = "ROB_PLAYER";
     MoveType[MoveType["TRANSACTION_WITH_BANK"] = 12] = "TRANSACTION_WITH_BANK";
     MoveType[MoveType["WIN"] = 13] = "WIN";
+    //TODO: Might need to add move types for builds during initialization
     MoveType[MoveType["SIZE"] = 14] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
@@ -95,7 +96,7 @@ function canAffordConstruction(player, construct) {
     }
     return false;
 }
-function hasSuffucientConstructsToBuild(player, construct, bank) {
+function hasSufficientConstructsToBuild(player, construct, bank) {
     switch (construct) {
         case Construction.Road:
             if (player.construction[Construction.Road] < 15)
@@ -215,6 +216,9 @@ function canUpgradeSettlement(player, board, row, col, vertex) {
         return true;
     return false;
 }
+// *****************
+// Helper functions for player-based functions
+// *****************
 function hasAdjacentRoad(player, board, row, col, vertex) {
     if (board[row][col].edges[vertex] = player.id)
         return true;
@@ -231,9 +235,6 @@ function hasAdjacentRoad(player, board, row, col, vertex) {
         return true;
     return false;
 }
-// *****************
-// Helper functions for player-based functions
-// *****************
 function hasNearbyConstruct(board, row, col, vertex) {
     if (board[row][col].vertices[vertex] == Construction.Settlement ||
         board[row][col].vertices[vertex] == Construction.City)
