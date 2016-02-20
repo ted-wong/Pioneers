@@ -1,15 +1,20 @@
 describe('Initial state tests', function () {
     it('First Test', function () {
-    });
-    it('Test3', function () {
-    });
-});
-describe('Robber related validation', function () {
-    it('TEST2', function () {
+        console.log(gameLogic.getInitialState().board);
     });
 });
-describe('Playing dev cards validation', function () {
+/*
+describe('Robber related validation', function() {
+  it('TEST2', function() {
+  });
 });
-describe('Trading with bank validation', function () {
+
+describe('Playing dev cards validation', function() {
+
 });
+
+describe('Trading with bank validation', function() {
+
+});
+*/
 //# sourceMappingURL=gameLogic_test.js.map
