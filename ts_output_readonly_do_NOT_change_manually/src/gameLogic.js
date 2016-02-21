@@ -517,14 +517,19 @@ var gameLogic;
             switch (i) {
                 case DevCard.Knight:
                     bank.devCards[i] = 14;
+                    break;
                 case DevCard.Monopoly:
                     bank.devCards[i] = 2;
+                    break;
                 case DevCard.RoadBuilding:
                     bank.devCards[i] = 2;
+                    break;
                 case DevCard.YearOfPlenty:
                     bank.devCards[i] = 2;
+                    break;
                 case DevCard.VictoryPoint:
                     bank.devCards[i] = 5;
+                    break;
                 default:
                     break;
             }
