@@ -959,52 +959,11 @@ module gameLogic {
     let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
 
     if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
-      validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+      if (nextState.moveType >= MoveType.SIZE || validateHandlers[nextState.moveType] === null) {
+        throw new Error('Unknown move!');
+      } else {
+        validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+      }
     }
-    /*
-    TODO: Remove this once validateHandlers acts as expected
-    switch (nextState.moveType) {
-      case MoveType.ROLL_DICE:
-        checkRollDice(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_ROAD:
-        checkBuildRoad(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_SETTLEMENT:
-        checkBuildSettlement(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_CITY:
-        checkBuildCity(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_DEVCARD:
-        checkBuildDevCards(prevState, nextState, prevIdx);
-        break;
-      case MoveType.KNIGHT:
-        checkPlayDevCard(prevState, nextState, prevIdx);
-        break;
-      case MoveType.PROGRESS:
-        checkPlayDevCard(prevState, nextState, prevIdx);
-        break;
-      case MoveType.TRADE:
-        //TODO: On hold until after MVP
-        break;
-      case MoveType.ROBBER_EVENT:
-        checkRobberEvent(prevState, nextState, prevState.eventIdx);
-        break;
-      case MoveType.ROBBER_MOVE:
-        checkRobberMove(prevState, nextState, prevIdx);
-        break;
-      case MoveType.ROB_PLAYER:
-        break;
-      case MoveType.TRANSACTION_WITH_BANK:
-        checkTradeResourceWithBank(prevState, nextState, prevIdx);
-        break;
-      default:
-        if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
-          throw new Error('Unidentified Move: ' + nextState.moveType);
-        }
-        break;
-    }
-    */
   }
 }
