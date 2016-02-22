@@ -824,5 +824,10 @@ var gameLogic;
         //TODO
         return null;
     }
+    function createMove(move) {
+        //TODO
+        return createMoveHandlers[move.moveType](move);
+    }
+    gameLogic.createMove = createMove;
 })(gameLogic || (gameLogic = {}));
 //# sourceMappingURL=gameLogic.js.map

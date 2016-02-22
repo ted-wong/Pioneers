@@ -1064,4 +1064,9 @@ module gameLogic {
     //TODO
     return null;
   }
+
+  export function createMove(move: TurnMove): IMove {
+    //TODO
+    return createMoveHandlers[move.moveType](move);
+  }
 }
