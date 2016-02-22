@@ -48,8 +48,6 @@ enum MoveType {
   TRANSACTION_WITH_BANK,
   WIN,
 
-  //TODO: Might need to add move types for builds during initialization
-
   SIZE
 }
 
@@ -131,6 +129,51 @@ interface StateDelta {
 
 interface IState extends StateDelta {
   delta: StateDelta;
+}
+
+/**
+ * Base class for turn instruction, in order to createMove
+ */
+interface TurnMove {
+  moveType: MoveType;
+}
+
+interface BuildMove extends TurnMove {
+  consType: Construction;
+  hexRow: number;
+  hexCol: number;
+  vertexOrEdge: number;
+  init: boolean;
+}
+
+interface MonopolyMove extends TurnMove {
+  target: Resource;
+}
+
+interface YearOfPlentyMove extends TurnMove {
+  target1: Resource;
+  target2: Resource;
+}
+
+interface RobberEventMove extends TurnMove {
+  tossed: Resources;
+}
+
+interface RobberMoveMove extends TurnMove {
+  row: number;
+  col: number;
+}
+
+interface RobPlayerMove extends TurnMove {
+  stealingIdx: number;
+  stolenIndx: number;
+}
+
+interface TradeWithBankMove extends TurnMove {
+  sellingItem: Resource;
+  sellingNum: number;
+  buyingItem: Resource;
+  buyingNum: number;
 }
 
 function numberResourceCards(player: Player): number {

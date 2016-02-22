@@ -45,7 +45,6 @@ var MoveType;
     MoveType[MoveType["ROB_PLAYER"] = 13] = "ROB_PLAYER";
     MoveType[MoveType["TRANSACTION_WITH_BANK"] = 14] = "TRANSACTION_WITH_BANK";
     MoveType[MoveType["WIN"] = 15] = "WIN";
-    //TODO: Might need to add move types for builds during initialization
     MoveType[MoveType["SIZE"] = 16] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
