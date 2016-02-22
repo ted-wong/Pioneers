@@ -32,21 +32,21 @@ enum Construction {
 
 enum MoveType {
   INIT,
+  INIT_BUILD,
   ROLL_DICE,
   BUILD_ROAD,
   BUILD_SETTLEMENT,
   BUILD_CITY,
   BUILD_DEVCARD,
   KNIGHT,
-  PROGRESS,
+  MONOPOLY,
+  YEAR_OF_PLENTY,
   TRADE,
   ROBBER_EVENT,
   ROBBER_MOVE,
   ROB_PLAYER,
   TRANSACTION_WITH_BANK,
   WIN,
-
-  //TODO: Might need to add move types for builds during initialization
 
   SIZE
 }
@@ -129,6 +129,51 @@ interface StateDelta {
 
 interface IState extends StateDelta {
   delta: StateDelta;
+}
+
+/**
+ * Base class for turn instruction, in order to createMove
+ */
+interface TurnMove {
+  moveType: MoveType;
+  playerIdx: number;
+}
+
+interface BuildMove extends TurnMove {
+  consType: Construction;
+  hexRow: number;
+  hexCol: number;
+  vertexOrEdge: number;
+}
+
+interface MonopolyMove extends TurnMove {
+  target: Resource;
+}
+
+interface YearOfPlentyMove extends TurnMove {
+  target1: Resource;
+  target2: Resource;
+}
+
+interface RobberEventMove extends TurnMove {
+  tossed: Resources;
+}
+
+interface RobberMoveMove extends TurnMove {
+  row: number;
+  col: number;
+}
+
+interface RobPlayerMove extends TurnMove {
+  stealingIdx: number;
+  stolenIndx: number;
+}
+
+interface TradeWithBankMove extends TurnMove {
+  sellingItem: Resource;
+  sellingNum: number;
+  buyingItem: Resource;
+  buyingNum: number;
 }
 
 function numberResourceCards(player: Player): number {
@@ -750,13 +795,15 @@ module gameLogic {
    */
   let validateHandlers: {(p: IState, n: IState, i: number): void}[] = [
     null, //INIT
+    null, //INIT_BUILD
     checkRollDice,
     checkBuildRoad,
     checkBuildSettlement,
     checkBuildCity,
     checkBuildDevCards,
     checkPlayDevCard, //KNIGHT
-    checkPlayDevCard, //PROGRESS
+    checkPlayDevCard, //MONOPOLY
+    checkPlayDevCard, //YEAR_OF_PLENTY
     null, //TRADE
     checkRobberEvent,
     checkRobberMove,
@@ -921,34 +968,6 @@ module gameLogic {
     }
   }
 
-  /**
-   * create move logics
-   */
-  function createResources(board: Board, players: Players): Players {
-    let ret: Players = angular.copy(players);
-
-    return ret;
-  }
-
-  function onDicesRolled(prevState: IState, playerIdx: number): IState {
-    let dices: number[] = [];
-    dices[0] = Math.floor(Math.random() * 6) + 1;
-    dices[1] = Math.floor(Math.random() * 6) + 1;
-    let rollNum: number = dices[0] + dices[1];
-    let ret: IState = angular.copy(prevState);
-    ret.dices = dices;
-
-    if (rollNum === 7) {
-      //Robber Event
-      ret.moveType = MoveType.ROBBER_EVENT;
-      ret.eventIdx = playerIdx;
-    } else {
-      //Create resources
-    }
-
-    return ret;
-  }
-
   export function checkMoveOk(stateTransition: IStateTransition): void {
     let prevState: IState = stateTransition.stateBeforeMove;
     let nextState: IState = stateTransition.move.stateAfterMove;
@@ -959,52 +978,95 @@ module gameLogic {
     let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
 
     if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
-      validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+      if (nextState.moveType >= MoveType.SIZE || validateHandlers[nextState.moveType] === null) {
+        throw new Error('Unknown move!');
+      } else {
+        validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+      }
     }
-    /*
-    TODO: Remove this once validateHandlers acts as expected
-    switch (nextState.moveType) {
-      case MoveType.ROLL_DICE:
-        checkRollDice(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_ROAD:
-        checkBuildRoad(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_SETTLEMENT:
-        checkBuildSettlement(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_CITY:
-        checkBuildCity(prevState, nextState, prevIdx);
-        break;
-      case MoveType.BUILD_DEVCARD:
-        checkBuildDevCards(prevState, nextState, prevIdx);
-        break;
-      case MoveType.KNIGHT:
-        checkPlayDevCard(prevState, nextState, prevIdx);
-        break;
-      case MoveType.PROGRESS:
-        checkPlayDevCard(prevState, nextState, prevIdx);
-        break;
-      case MoveType.TRADE:
-        //TODO: On hold until after MVP
-        break;
-      case MoveType.ROBBER_EVENT:
-        checkRobberEvent(prevState, nextState, prevState.eventIdx);
-        break;
-      case MoveType.ROBBER_MOVE:
-        checkRobberMove(prevState, nextState, prevIdx);
-        break;
-      case MoveType.ROB_PLAYER:
-        break;
-      case MoveType.TRANSACTION_WITH_BANK:
-        checkTradeResourceWithBank(prevState, nextState, prevIdx);
-        break;
-      default:
-        if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
-          throw new Error('Unidentified Move: ' + nextState.moveType);
-        }
-        break;
-    }
-    */
+  }
+
+  /**
+   * create move logics
+   */
+  let createMoveHandlers: {(m: TurnMove): IMove}[] = [
+    noop, //INIT
+    onBuilding, //INIT_BUILD
+    onRollDice, //ROLL_DICE
+    onBuilding, //BUILD_ROAD
+    onBuilding, //BUILD_SETTLEMENT
+    onBuilding, //BUILD_CITY
+    onBuilding, //BUILD_DEVCARD
+    onKnight, //KNIGHT
+    onMonopoly, //MONOPOLY
+    onYearOfPlenty, //YEAR_OF_PLENTY
+    null, //TRADE
+    onRobberEvent, //ROBBER_EVENT
+    onRobberMove, //ROBBER_MOVE
+    onRobPlayer, //ROB_PLAYER
+    onTradingWithBank, //TRANSACTION_WITH_BANK
+    noop, //WIN
+  ];
+
+  function noop(move: TurnMove): IMove {
+    //TODO
+    return null;
+  }
+
+  function onRollDice(move: TurnMove): IMove {
+    //TODO
+    return null;
+  }
+
+  function onBuilding(move: TurnMove): IMove {
+    let buildingMove = <BuildMove> move;
+    //TODO
+    return null;
+  }
+
+  function onKnight(move: TurnMove): IMove {
+    //TODO
+    return null;
+  }
+
+  function onMonopoly(move: TurnMove): IMove {
+    let monopolyMove = <MonopolyMove> move;
+    //TODO
+    return null;
+  }
+
+  function onYearOfPlenty(move: TurnMove): IMove {
+    let yearOfPlentyMove = <YearOfPlentyMove> move;
+    //TODO
+    return null;
+  }
+
+  function onRobberEvent(move: TurnMove): IMove {
+    let robberEventMove = <RobberEventMove> move;
+    //TODO
+    return null;
+  }
+
+  function onRobberMove(move: TurnMove): IMove {
+    let robberMove = <RobberMoveMove> move;
+    //TODO
+    return null;
+  }
+
+  function onRobPlayer(move: TurnMove): IMove {
+    let robPlayerMove = <RobPlayerMove> move;
+    //TODO
+    return null;
+  }
+
+  function onTradingWithBank(move: TurnMove): IMove {
+    let tradeWithBankMove = <TradeWithBankMove> move;
+    //TODO
+    return null;
+  }
+
+  export function createMove(move: TurnMove): IMove {
+    //TODO
+    return createMoveHandlers[move.moveType](move);
   }
 }
