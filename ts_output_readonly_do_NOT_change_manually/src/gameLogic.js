@@ -30,21 +30,23 @@ var Construction;
 var MoveType;
 (function (MoveType) {
     MoveType[MoveType["INIT"] = 0] = "INIT";
-    MoveType[MoveType["ROLL_DICE"] = 1] = "ROLL_DICE";
-    MoveType[MoveType["BUILD_ROAD"] = 2] = "BUILD_ROAD";
-    MoveType[MoveType["BUILD_SETTLEMENT"] = 3] = "BUILD_SETTLEMENT";
-    MoveType[MoveType["BUILD_CITY"] = 4] = "BUILD_CITY";
-    MoveType[MoveType["BUILD_DEVCARD"] = 5] = "BUILD_DEVCARD";
-    MoveType[MoveType["KNIGHT"] = 6] = "KNIGHT";
-    MoveType[MoveType["PROGRESS"] = 7] = "PROGRESS";
-    MoveType[MoveType["TRADE"] = 8] = "TRADE";
-    MoveType[MoveType["ROBBER_EVENT"] = 9] = "ROBBER_EVENT";
-    MoveType[MoveType["ROBBER_MOVE"] = 10] = "ROBBER_MOVE";
-    MoveType[MoveType["ROB_PLAYER"] = 11] = "ROB_PLAYER";
-    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 12] = "TRANSACTION_WITH_BANK";
-    MoveType[MoveType["WIN"] = 13] = "WIN";
+    MoveType[MoveType["INIT_BUILD"] = 1] = "INIT_BUILD";
+    MoveType[MoveType["ROLL_DICE"] = 2] = "ROLL_DICE";
+    MoveType[MoveType["BUILD_ROAD"] = 3] = "BUILD_ROAD";
+    MoveType[MoveType["BUILD_SETTLEMENT"] = 4] = "BUILD_SETTLEMENT";
+    MoveType[MoveType["BUILD_CITY"] = 5] = "BUILD_CITY";
+    MoveType[MoveType["BUILD_DEVCARD"] = 6] = "BUILD_DEVCARD";
+    MoveType[MoveType["KNIGHT"] = 7] = "KNIGHT";
+    MoveType[MoveType["MONOPOLY"] = 8] = "MONOPOLY";
+    MoveType[MoveType["YEAR_OF_PLENTY"] = 9] = "YEAR_OF_PLENTY";
+    MoveType[MoveType["TRADE"] = 10] = "TRADE";
+    MoveType[MoveType["ROBBER_EVENT"] = 11] = "ROBBER_EVENT";
+    MoveType[MoveType["ROBBER_MOVE"] = 12] = "ROBBER_MOVE";
+    MoveType[MoveType["ROB_PLAYER"] = 13] = "ROB_PLAYER";
+    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 14] = "TRANSACTION_WITH_BANK";
+    MoveType[MoveType["WIN"] = 15] = "WIN";
     //TODO: Might need to add move types for builds during initialization
-    MoveType[MoveType["SIZE"] = 14] = "SIZE";
+    MoveType[MoveType["SIZE"] = 16] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
     var total = 0;
@@ -589,11 +591,13 @@ var gameLogic;
      */
     var validateHandlers = [
         null,
+        null,
         checkRollDice,
         checkBuildRoad,
         checkBuildSettlement,
         checkBuildCity,
         checkBuildDevCards,
+        checkPlayDevCard,
         checkPlayDevCard,
         checkPlayDevCard,
         null,
@@ -735,6 +739,24 @@ var gameLogic;
             throw new Error('Wrong trading ratio');
         }
     }
+    function checkMoveOk(stateTransition) {
+        var prevState = stateTransition.stateBeforeMove;
+        var nextState = stateTransition.move.stateAfterMove;
+        var prevIdx = nextState.moveType === MoveType.ROBBER_EVENT ?
+            prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+        //TODO: What are these for, exactly?
+        var nextIdx = stateTransition.move.turnIndexAfterMove;
+        var delta = stateTransition.move.stateAfterMove.delta;
+        if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
+            if (nextState.moveType >= MoveType.SIZE || validateHandlers[nextState.moveType] === null) {
+                throw new Error('Unknown move!');
+            }
+            else {
+                validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+            }
+        }
+    }
+    gameLogic.checkMoveOk = checkMoveOk;
     /**
      * create move logics
      */
@@ -758,23 +780,5 @@ var gameLogic;
         }
         return ret;
     }
-    function checkMoveOk(stateTransition) {
-        var prevState = stateTransition.stateBeforeMove;
-        var nextState = stateTransition.move.stateAfterMove;
-        var prevIdx = nextState.moveType === MoveType.ROBBER_EVENT ?
-            prevState.eventIdx : stateTransition.turnIndexBeforeMove;
-        //TODO: What are these for, exactly?
-        var nextIdx = stateTransition.move.turnIndexAfterMove;
-        var delta = stateTransition.move.stateAfterMove.delta;
-        if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
-            if (nextState.moveType >= MoveType.SIZE || validateHandlers[nextState.moveType] === null) {
-                throw new Error('Unknown move!');
-            }
-            else {
-                validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
-            }
-        }
-    }
-    gameLogic.checkMoveOk = checkMoveOk;
 })(gameLogic || (gameLogic = {}));
 //# sourceMappingURL=gameLogic.js.map

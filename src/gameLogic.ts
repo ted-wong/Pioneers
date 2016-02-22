@@ -32,13 +32,15 @@ enum Construction {
 
 enum MoveType {
   INIT,
+  INIT_BUILD,
   ROLL_DICE,
   BUILD_ROAD,
   BUILD_SETTLEMENT,
   BUILD_CITY,
   BUILD_DEVCARD,
   KNIGHT,
-  PROGRESS,
+  MONOPOLY,
+  YEAR_OF_PLENTY,
   TRADE,
   ROBBER_EVENT,
   ROBBER_MOVE,
@@ -750,13 +752,15 @@ module gameLogic {
    */
   let validateHandlers: {(p: IState, n: IState, i: number): void}[] = [
     null, //INIT
+    null, //INIT_BUILD
     checkRollDice,
     checkBuildRoad,
     checkBuildSettlement,
     checkBuildCity,
     checkBuildDevCards,
     checkPlayDevCard, //KNIGHT
-    checkPlayDevCard, //PROGRESS
+    checkPlayDevCard, //MONOPOLY
+    checkPlayDevCard, //YEAR_OF_PLENTY
     null, //TRADE
     checkRobberEvent,
     checkRobberMove,
@@ -921,6 +925,24 @@ module gameLogic {
     }
   }
 
+  export function checkMoveOk(stateTransition: IStateTransition): void {
+    let prevState: IState = stateTransition.stateBeforeMove;
+    let nextState: IState = stateTransition.move.stateAfterMove;
+    let prevIdx: number = nextState.moveType === MoveType.ROBBER_EVENT ?
+            prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+    //TODO: What are these for, exactly?
+    let nextIdx: number = stateTransition.move.turnIndexAfterMove;
+    let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
+
+    if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
+      if (nextState.moveType >= MoveType.SIZE || validateHandlers[nextState.moveType] === null) {
+        throw new Error('Unknown move!');
+      } else {
+        validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+      }
+    }
+  }
+
   /**
    * create move logics
    */
@@ -947,23 +969,5 @@ module gameLogic {
     }
 
     return ret;
-  }
-
-  export function checkMoveOk(stateTransition: IStateTransition): void {
-    let prevState: IState = stateTransition.stateBeforeMove;
-    let nextState: IState = stateTransition.move.stateAfterMove;
-    let prevIdx: number = nextState.moveType === MoveType.ROBBER_EVENT ?
-            prevState.eventIdx : stateTransition.turnIndexBeforeMove;
-    //TODO: What are these for, exactly?
-    let nextIdx: number = stateTransition.move.turnIndexAfterMove;
-    let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
-
-    if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
-      if (nextState.moveType >= MoveType.SIZE || validateHandlers[nextState.moveType] === null) {
-        throw new Error('Unknown move!');
-      } else {
-        validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
-      }
-    }
   }
 }
