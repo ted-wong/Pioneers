@@ -759,25 +759,70 @@ var gameLogic;
     /**
      * create move logics
      */
-    function createResources(board, players) {
-        var ret = angular.copy(players);
-        return ret;
+    var createMoveHandlers = [
+        noop,
+        onBuilding,
+        onRollDice,
+        onBuilding,
+        onBuilding,
+        onBuilding,
+        onBuilding,
+        onKnight,
+        onMonopoly,
+        onYearOfPlenty,
+        null,
+        onRobberEvent,
+        onRobberMove,
+        onRobPlayer,
+        onTradingWithBank,
+        noop,
+    ];
+    function noop(move) {
+        //TODO
+        return null;
     }
-    function onDicesRolled(prevState, playerIdx) {
-        var dices = [];
-        dices[0] = Math.floor(Math.random() * 6) + 1;
-        dices[1] = Math.floor(Math.random() * 6) + 1;
-        var rollNum = dices[0] + dices[1];
-        var ret = angular.copy(prevState);
-        ret.dices = dices;
-        if (rollNum === 7) {
-            //Robber Event
-            ret.moveType = MoveType.ROBBER_EVENT;
-            ret.eventIdx = playerIdx;
-        }
-        else {
-        }
-        return ret;
+    function onRollDice(move) {
+        //TODO
+        return null;
+    }
+    function onBuilding(move) {
+        var buildingMove = move;
+        //TODO
+        return null;
+    }
+    function onKnight(move) {
+        //TODO
+        return null;
+    }
+    function onMonopoly(move) {
+        var monopolyMove = move;
+        //TODO
+        return null;
+    }
+    function onYearOfPlenty(move) {
+        var yearOfPlentyMove = move;
+        //TODO
+        return null;
+    }
+    function onRobberEvent(move) {
+        var robberEventMove = move;
+        //TODO
+        return null;
+    }
+    function onRobberMove(move) {
+        var robberMove = move;
+        //TODO
+        return null;
+    }
+    function onRobPlayer(move) {
+        var robPlayerMove = move;
+        //TODO
+        return null;
+    }
+    function onTradingWithBank(move) {
+        var tradeWithBankMove = move;
+        //TODO
+        return null;
     }
 })(gameLogic || (gameLogic = {}));
 //# sourceMappingURL=gameLogic.js.map

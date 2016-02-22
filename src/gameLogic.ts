@@ -136,6 +136,7 @@ interface IState extends StateDelta {
  */
 interface TurnMove {
   moveType: MoveType;
+  playerIdx: number;
 }
 
 interface BuildMove extends TurnMove {
@@ -143,7 +144,6 @@ interface BuildMove extends TurnMove {
   hexRow: number;
   hexCol: number;
   vertexOrEdge: number;
-  init: boolean;
 }
 
 interface MonopolyMove extends TurnMove {
@@ -989,28 +989,79 @@ module gameLogic {
   /**
    * create move logics
    */
-  function createResources(board: Board, players: Players): Players {
-    let ret: Players = angular.copy(players);
+  let createMoveHandlers: {(m: TurnMove): IMove}[] = [
+    noop, //INIT
+    onBuilding, //INIT_BUILD
+    onRollDice, //ROLL_DICE
+    onBuilding, //BUILD_ROAD
+    onBuilding, //BUILD_SETTLEMENT
+    onBuilding, //BUILD_CITY
+    onBuilding, //BUILD_DEVCARD
+    onKnight, //KNIGHT
+    onMonopoly, //MONOPOLY
+    onYearOfPlenty, //YEAR_OF_PLENTY
+    null, //TRADE
+    onRobberEvent, //ROBBER_EVENT
+    onRobberMove, //ROBBER_MOVE
+    onRobPlayer, //ROB_PLAYER
+    onTradingWithBank, //TRANSACTION_WITH_BANK
+    noop, //WIN
+  ];
 
-    return ret;
+  function noop(move: TurnMove): IMove {
+    //TODO
+    return null;
   }
 
-  function onDicesRolled(prevState: IState, playerIdx: number): IState {
-    let dices: number[] = [];
-    dices[0] = Math.floor(Math.random() * 6) + 1;
-    dices[1] = Math.floor(Math.random() * 6) + 1;
-    let rollNum: number = dices[0] + dices[1];
-    let ret: IState = angular.copy(prevState);
-    ret.dices = dices;
+  function onRollDice(move: TurnMove): IMove {
+    //TODO
+    return null;
+  }
 
-    if (rollNum === 7) {
-      //Robber Event
-      ret.moveType = MoveType.ROBBER_EVENT;
-      ret.eventIdx = playerIdx;
-    } else {
-      //Create resources
-    }
+  function onBuilding(move: TurnMove): IMove {
+    let buildingMove = <BuildMove> move;
+    //TODO
+    return null;
+  }
 
-    return ret;
+  function onKnight(move: TurnMove): IMove {
+    //TODO
+    return null;
+  }
+
+  function onMonopoly(move: TurnMove): IMove {
+    let monopolyMove = <MonopolyMove> move;
+    //TODO
+    return null;
+  }
+
+  function onYearOfPlenty(move: TurnMove): IMove {
+    let yearOfPlentyMove = <YearOfPlentyMove> move;
+    //TODO
+    return null;
+  }
+
+  function onRobberEvent(move: TurnMove): IMove {
+    let robberEventMove = <RobberEventMove> move;
+    //TODO
+    return null;
+  }
+
+  function onRobberMove(move: TurnMove): IMove {
+    let robberMove = <RobberMoveMove> move;
+    //TODO
+    return null;
+  }
+
+  function onRobPlayer(move: TurnMove): IMove {
+    let robPlayerMove = <RobPlayerMove> move;
+    //TODO
+    return null;
+  }
+
+  function onTradingWithBank(move: TurnMove): IMove {
+    let tradeWithBankMove = <TradeWithBankMove> move;
+    //TODO
+    return null;
   }
 }
