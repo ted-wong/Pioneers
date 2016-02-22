@@ -1,4 +1,6 @@
-TicTacToe
+Pioneers
 =========
 
-TicTacToe game
+Pioneers game
+
+### Please see branch `game-master` for up-to-date commits
