@@ -32,7 +32,6 @@ enum Construction {
 
 enum MoveType {
   INIT,
-  INIT_BUILD,
   ROLL_DICE,
   BUILD_ROAD,
   BUILD_SETTLEMENT,
@@ -46,7 +45,6 @@ enum MoveType {
   ROBBER_MOVE,
   ROB_PLAYER,
   TRANSACTION_WITH_BANK,
-  END,
   WIN,
 
   SIZE
@@ -797,7 +795,6 @@ module gameLogic {
    */
   let validateHandlers: {(p: IState, n: IState, i: number): void}[] = [
     null, //INIT
-    null, //INIT_BUILD
     checkRollDice,
     checkBuildRoad,
     checkBuildSettlement,
@@ -991,26 +988,6 @@ module gameLogic {
   /**
    * create move logics
    */
-  let createMoveHandlers: {(m: TurnMove, t: number): IMove}[] = [
-    noop, //INIT
-    onBuilding, //INIT_BUILD
-    onRollDice, //ROLL_DICE
-    onBuilding, //BUILD_ROAD
-    onBuilding, //BUILD_SETTLEMENT
-    onBuilding, //BUILD_CITY
-    onBuilding, //BUILD_DEVCARD
-    onKnight, //KNIGHT
-    onMonopoly, //MONOPOLY
-    onYearOfPlenty, //YEAR_OF_PLENTY
-    null, //TRADE
-    onRobberEvent, //ROBBER_EVENT
-    onRobberMove, //ROBBER_MOVE
-    onRobPlayer, //ROB_PLAYER
-    onTradingWithBank, //TRANSACTION_WITH_BANK
-    onEndTurn, //END
-    noop, //WIN
-  ];
-
   function countScores(state: IState): number[] {
     let scores: number[] = [];
     for (let i = 0; i < NUM_PLAYERS; i++) {
@@ -1049,23 +1026,28 @@ module gameLogic {
     return scores;
   }
 
-  function noop(move: TurnMove, turnIdx: number): IMove {
+  export function onRollDice(move: TurnMove, turnIdx: number): IMove {
+    if (move.currState.diceRolled) {
+      throw new Error('Dices already rolled!');
+    }
+
+    //TODO
+
+    return null;
+  }
+
+  export function onInitBuilding(move: TurnMove, turnIdx: number): IMove {
     //TODO
     return null;
   }
 
-  function onRollDice(move: TurnMove, turnIdx: number): IMove {
-    //TODO
-    return null;
-  }
-
-  function onBuilding(move: TurnMove, turnIdx: number): IMove {
+  export function onBuilding(move: TurnMove, turnIdx: number): IMove {
     let buildingMove = <BuildMove> move;
     //TODO
     return null;
   }
 
-  function onKnight(move: TurnMove, turnIdx: number): IMove {
+  export function onKnight(move: TurnMove, turnIdx: number): IMove {
     let stateBeforeMove = angular.copy(move.currState);
     stateBeforeMove.delta = null;
     if (stateBeforeMove.devCardsPlayed) {
@@ -1098,43 +1080,43 @@ module gameLogic {
     };
   }
 
-  function onMonopoly(move: TurnMove, turnIdx: number): IMove {
+  export function onMonopoly(move: TurnMove, turnIdx: number): IMove {
     let monopolyMove = <MonopolyMove> move;
     //TODO
     return null;
   }
 
-  function onYearOfPlenty(move: TurnMove, turnIdx: number): IMove {
+  export function onYearOfPlenty(move: TurnMove, turnIdx: number): IMove {
     let yearOfPlentyMove = <YearOfPlentyMove> move;
     //TODO
     return null;
   }
 
-  function onRobberEvent(move: TurnMove, turnIdx: number): IMove {
+  export function onRobberEvent(move: TurnMove, turnIdx: number): IMove {
     let robberEventMove = <RobberEventMove> move;
     //TODO
     return null;
   }
 
-  function onRobberMove(move: TurnMove, turnIdx: number): IMove {
+  export function onRobberMove(move: TurnMove, turnIdx: number): IMove {
     let robberMove = <RobberMoveMove> move;
     //TODO
     return null;
   }
 
-  function onRobPlayer(move: TurnMove, turnIdx: number): IMove {
+  export function onRobPlayer(move: TurnMove, turnIdx: number): IMove {
     let robPlayerMove = <RobPlayerMove> move;
     //TODO
     return null;
   }
 
-  function onTradingWithBank(move: TurnMove, turnIdx: number): IMove {
+  export function onTradingWithBank(move: TurnMove, turnIdx: number): IMove {
     let tradeWithBankMove = <TradeWithBankMove> move;
     //TODO
     return null;
   }
 
-  function onEndTurn(move: TurnMove, turnIdx: number): IMove {
+  export function onEndTurn(move: TurnMove, turnIdx: number): IMove {
     let stateBeforeMove = angular.copy(move.currState);
     stateBeforeMove.delta = null;
 
@@ -1147,30 +1129,18 @@ module gameLogic {
       }
     }
 
-    let stateAfterMove: IState = {
-      board: angular.copy(stateBeforeMove.board),
-      dices: angular.copy(stateBeforeMove.dices),
-      players: angular.copy(stateBeforeMove.players),
-      bank: angular.copy(stateBeforeMove.bank),
-      robber: angular.copy(stateBeforeMove.robber),
-      awards: angular.copy(stateBeforeMove.awards),
-      diceRolled: false,
-      devCardsPlayed: false,
-      moveType: hasWinner ? MoveType.WIN : MoveType.INIT,
-      eventIdx: -1,
-      building: null,
-      delta: stateBeforeMove
-    };
+    let stateAfterMove: IState = angular.copy(stateBeforeMove);
+    stateAfterMove.diceRolled = false;
+    stateAfterMove.devCardsPlayed = false;
+    stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
+    stateAfterMove.eventIdx = -1;
+    stateAfterMove.building = null;
+    stateAfterMove.delta = stateBeforeMove;
 
     return {
       endMatchScores: scores,
       turnIndexAfterMove: (turnIdx + 1) % NUM_PLAYERS,
       stateAfterMove: stateAfterMove
     };
-  }
-
-  export function createMove(turnIndexBeforeMove: number, move: TurnMove): IMove {
-    //TODO
-    return createMoveHandlers[move.moveType](move, turnIndexBeforeMove);
   }
 }

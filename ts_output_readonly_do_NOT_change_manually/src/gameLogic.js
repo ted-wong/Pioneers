@@ -30,23 +30,21 @@ var Construction;
 var MoveType;
 (function (MoveType) {
     MoveType[MoveType["INIT"] = 0] = "INIT";
-    MoveType[MoveType["INIT_BUILD"] = 1] = "INIT_BUILD";
-    MoveType[MoveType["ROLL_DICE"] = 2] = "ROLL_DICE";
-    MoveType[MoveType["BUILD_ROAD"] = 3] = "BUILD_ROAD";
-    MoveType[MoveType["BUILD_SETTLEMENT"] = 4] = "BUILD_SETTLEMENT";
-    MoveType[MoveType["BUILD_CITY"] = 5] = "BUILD_CITY";
-    MoveType[MoveType["BUILD_DEVCARD"] = 6] = "BUILD_DEVCARD";
-    MoveType[MoveType["KNIGHT"] = 7] = "KNIGHT";
-    MoveType[MoveType["MONOPOLY"] = 8] = "MONOPOLY";
-    MoveType[MoveType["YEAR_OF_PLENTY"] = 9] = "YEAR_OF_PLENTY";
-    MoveType[MoveType["TRADE"] = 10] = "TRADE";
-    MoveType[MoveType["ROBBER_EVENT"] = 11] = "ROBBER_EVENT";
-    MoveType[MoveType["ROBBER_MOVE"] = 12] = "ROBBER_MOVE";
-    MoveType[MoveType["ROB_PLAYER"] = 13] = "ROB_PLAYER";
-    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 14] = "TRANSACTION_WITH_BANK";
-    MoveType[MoveType["END"] = 15] = "END";
-    MoveType[MoveType["WIN"] = 16] = "WIN";
-    MoveType[MoveType["SIZE"] = 17] = "SIZE";
+    MoveType[MoveType["ROLL_DICE"] = 1] = "ROLL_DICE";
+    MoveType[MoveType["BUILD_ROAD"] = 2] = "BUILD_ROAD";
+    MoveType[MoveType["BUILD_SETTLEMENT"] = 3] = "BUILD_SETTLEMENT";
+    MoveType[MoveType["BUILD_CITY"] = 4] = "BUILD_CITY";
+    MoveType[MoveType["BUILD_DEVCARD"] = 5] = "BUILD_DEVCARD";
+    MoveType[MoveType["KNIGHT"] = 6] = "KNIGHT";
+    MoveType[MoveType["MONOPOLY"] = 7] = "MONOPOLY";
+    MoveType[MoveType["YEAR_OF_PLENTY"] = 8] = "YEAR_OF_PLENTY";
+    MoveType[MoveType["TRADE"] = 9] = "TRADE";
+    MoveType[MoveType["ROBBER_EVENT"] = 10] = "ROBBER_EVENT";
+    MoveType[MoveType["ROBBER_MOVE"] = 11] = "ROBBER_MOVE";
+    MoveType[MoveType["ROB_PLAYER"] = 12] = "ROB_PLAYER";
+    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 13] = "TRANSACTION_WITH_BANK";
+    MoveType[MoveType["WIN"] = 14] = "WIN";
+    MoveType[MoveType["SIZE"] = 15] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
     var total = 0;
@@ -591,7 +589,6 @@ var gameLogic;
      */
     var validateHandlers = [
         null,
-        null,
         checkRollDice,
         checkBuildRoad,
         checkBuildSettlement,
@@ -760,25 +757,6 @@ var gameLogic;
     /**
      * create move logics
      */
-    var createMoveHandlers = [
-        noop,
-        onBuilding,
-        onRollDice,
-        onBuilding,
-        onBuilding,
-        onBuilding,
-        onBuilding,
-        onKnight,
-        onMonopoly,
-        onYearOfPlenty,
-        null,
-        onRobberEvent,
-        onRobberMove,
-        onRobPlayer,
-        onTradingWithBank,
-        onEndTurn,
-        noop,
-    ];
     function countScores(state) {
         var scores = [];
         for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
@@ -812,19 +790,25 @@ var gameLogic;
         }
         return scores;
     }
-    function noop(move, turnIdx) {
-        //TODO
-        return null;
-    }
     function onRollDice(move, turnIdx) {
+        if (move.currState.diceRolled) {
+            throw new Error('Dices already rolled!');
+        }
         //TODO
         return null;
     }
+    gameLogic.onRollDice = onRollDice;
+    function onInitBuilding(move, turnIdx) {
+        //TODO
+        return null;
+    }
+    gameLogic.onInitBuilding = onInitBuilding;
     function onBuilding(move, turnIdx) {
         var buildingMove = move;
         //TODO
         return null;
     }
+    gameLogic.onBuilding = onBuilding;
     function onKnight(move, turnIdx) {
         var stateBeforeMove = angular.copy(move.currState);
         stateBeforeMove.delta = null;
@@ -854,36 +838,43 @@ var gameLogic;
             stateAfterMove: stateAfterMove
         };
     }
+    gameLogic.onKnight = onKnight;
     function onMonopoly(move, turnIdx) {
         var monopolyMove = move;
         //TODO
         return null;
     }
+    gameLogic.onMonopoly = onMonopoly;
     function onYearOfPlenty(move, turnIdx) {
         var yearOfPlentyMove = move;
         //TODO
         return null;
     }
+    gameLogic.onYearOfPlenty = onYearOfPlenty;
     function onRobberEvent(move, turnIdx) {
         var robberEventMove = move;
         //TODO
         return null;
     }
+    gameLogic.onRobberEvent = onRobberEvent;
     function onRobberMove(move, turnIdx) {
         var robberMove = move;
         //TODO
         return null;
     }
+    gameLogic.onRobberMove = onRobberMove;
     function onRobPlayer(move, turnIdx) {
         var robPlayerMove = move;
         //TODO
         return null;
     }
+    gameLogic.onRobPlayer = onRobPlayer;
     function onTradingWithBank(move, turnIdx) {
         var tradeWithBankMove = move;
         //TODO
         return null;
     }
+    gameLogic.onTradingWithBank = onTradingWithBank;
     function onEndTurn(move, turnIdx) {
         var stateBeforeMove = angular.copy(move.currState);
         stateBeforeMove.delta = null;
@@ -895,30 +886,19 @@ var gameLogic;
                 break;
             }
         }
-        var stateAfterMove = {
-            board: angular.copy(stateBeforeMove.board),
-            dices: angular.copy(stateBeforeMove.dices),
-            players: angular.copy(stateBeforeMove.players),
-            bank: angular.copy(stateBeforeMove.bank),
-            robber: angular.copy(stateBeforeMove.robber),
-            awards: angular.copy(stateBeforeMove.awards),
-            diceRolled: false,
-            devCardsPlayed: false,
-            moveType: hasWinner ? MoveType.WIN : MoveType.INIT,
-            eventIdx: -1,
-            building: null,
-            delta: stateBeforeMove
-        };
+        var stateAfterMove = angular.copy(stateBeforeMove);
+        stateAfterMove.diceRolled = false;
+        stateAfterMove.devCardsPlayed = false;
+        stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
+        stateAfterMove.eventIdx = -1;
+        stateAfterMove.building = null;
+        stateAfterMove.delta = stateBeforeMove;
         return {
             endMatchScores: scores,
             turnIndexAfterMove: (turnIdx + 1) % gameLogic.NUM_PLAYERS,
             stateAfterMove: stateAfterMove
         };
     }
-    function createMove(turnIndexBeforeMove, move) {
-        //TODO
-        return createMoveHandlers[move.moveType](move, turnIndexBeforeMove);
-    }
-    gameLogic.createMove = createMove;
+    gameLogic.onEndTurn = onEndTurn;
 })(gameLogic || (gameLogic = {}));
 //# sourceMappingURL=gameLogic.js.map
