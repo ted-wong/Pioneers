@@ -826,8 +826,33 @@ var gameLogic;
         return null;
     }
     function onKnight(move, turnIdx) {
-        //TODO
-        return null;
+        var stateBeforeMove = angular.copy(move.currState);
+        stateBeforeMove.delta = null;
+        if (stateBeforeMove.devCardsPlayed) {
+            throw new Error('Already played development card!');
+        }
+        if (stateBeforeMove.players[move.playerIdx].devCards[DevCard.Knight] <= 0) {
+            throw new Error('Doesn\'t have knight card on hand!');
+        }
+        var stateAfterMove = angular.copy(stateBeforeMove);
+        stateAfterMove.devCardsPlayed = true;
+        stateAfterMove.moveType = MoveType.KNIGHT;
+        stateAfterMove.eventIdx = -1;
+        stateAfterMove.building = null;
+        //State transition to knight cards
+        stateAfterMove.players[move.playerIdx].knightsPlayed += 1;
+        stateAfterMove.players[move.playerIdx].devCards[DevCard.Knight] -= 1;
+        if (stateAfterMove.players[move.playerIdx].knightsPlayed > stateBeforeMove.awards.largestArmy.num) {
+            stateAfterMove.awards.largestArmy = {
+                player: move.playerIdx,
+                num: stateAfterMove.players[move.playerIdx].knightsPlayed
+            };
+        }
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
     }
     function onMonopoly(move, turnIdx) {
         var monopolyMove = move;
