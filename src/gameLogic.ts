@@ -138,6 +138,7 @@ interface IState extends StateDelta {
 interface TurnMove {
   moveType: MoveType;
   playerIdx: number;
+  currState: IState;
 }
 
 interface BuildMove extends TurnMove {
@@ -1010,6 +1011,44 @@ module gameLogic {
     noop, //WIN
   ];
 
+  function countScores(state: IState): number[] {
+    let scores: number[] = [];
+    for (let i = 0; i < NUM_PLAYERS; i++) {
+      scores[i] = 0;
+    }
+
+    for (let i = 0; i < NUM_PLAYERS; i++) {
+      //Count scores from construction
+      let player: Player = state.players[i];
+      for (let c = 0; c < Construction.SIZE; c++) {
+        switch (c) {
+          case Construction.Settlement:
+            scores[i] += 1;
+            break;
+          case Construction.City:
+            scores[i] += 2;
+            break;
+          default:
+            //noop
+            break;
+        }
+      }
+
+      //Count scores from victory point cards
+      scores[i] += player.devCards[DevCard.VictoryPoint];
+    }
+
+    //Add scores if awards assigned
+    if (state.awards.longestRoad.player !== -1) {
+      scores[state.awards.longestRoad.player] += 2;
+    }
+    if (state.awards.largestArmy.player !== -1) {
+      scores[state.awards.largestArmy.player] += 2;
+    }
+
+    return scores;
+  }
+
   function noop(move: TurnMove, turnIdx: number): IMove {
     //TODO
     return null;
@@ -1068,12 +1107,41 @@ module gameLogic {
   }
 
   function onEndTurn(move: TurnMove, turnIdx: number): IMove {
-    //TODO
-    return null;
+    let stateBeforeMove = angular.copy(move.currState);
+    stateBeforeMove.delta = null;
+
+    let scores: number[] = countScores(stateBeforeMove);
+    let hasWinner: boolean = false;
+    for (let i = 0; i < NUM_PLAYERS; i++) {
+      if (scores[i] >= 10) {
+        hasWinner = true;
+        break;
+      }
+    }
+
+    let stateAfterMove: IState = {
+      board: angular.copy(stateBeforeMove.board),
+      dices: angular.copy(stateBeforeMove.dices),
+      players: angular.copy(stateBeforeMove.players),
+      bank: angular.copy(stateBeforeMove.bank),
+      robber: angular.copy(stateBeforeMove.robber),
+      awards: angular.copy(stateBeforeMove.awards),
+      diceRolled: false,
+      devCardsPlayed: false,
+      moveType: hasWinner ? MoveType.WIN : MoveType.INIT,
+      eventIdx: -1,
+      building: null,
+      delta: stateBeforeMove
+    };
+
+    return {
+      endMatchScores: scores,
+      turnIndexAfterMove: (turnIdx + 1) % NUM_PLAYERS,
+      stateAfterMove: stateAfterMove
+    };
   }
 
-  export function createMove(stateBeforeMove: IState, turnIndexBeforeMove: number,
-      move: TurnMove): IMove {
+  export function createMove(turnIndexBeforeMove: number, move: TurnMove): IMove {
     //TODO
     return createMoveHandlers[move.moveType](move, turnIndexBeforeMove);
   }
