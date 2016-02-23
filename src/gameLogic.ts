@@ -46,6 +46,7 @@ enum MoveType {
   ROBBER_MOVE,
   ROB_PLAYER,
   TRANSACTION_WITH_BANK,
+  END,
   WIN,
 
   SIZE
@@ -989,7 +990,7 @@ module gameLogic {
   /**
    * create move logics
    */
-  let createMoveHandlers: {(m: TurnMove): IMove}[] = [
+  let createMoveHandlers: {(m: TurnMove, t: number): IMove}[] = [
     noop, //INIT
     onBuilding, //INIT_BUILD
     onRollDice, //ROLL_DICE
@@ -1005,68 +1006,75 @@ module gameLogic {
     onRobberMove, //ROBBER_MOVE
     onRobPlayer, //ROB_PLAYER
     onTradingWithBank, //TRANSACTION_WITH_BANK
+    onEndTurn, //END
     noop, //WIN
   ];
 
-  function noop(move: TurnMove): IMove {
+  function noop(move: TurnMove, turnIdx: number): IMove {
     //TODO
     return null;
   }
 
-  function onRollDice(move: TurnMove): IMove {
+  function onRollDice(move: TurnMove, turnIdx: number): IMove {
     //TODO
     return null;
   }
 
-  function onBuilding(move: TurnMove): IMove {
+  function onBuilding(move: TurnMove, turnIdx: number): IMove {
     let buildingMove = <BuildMove> move;
     //TODO
     return null;
   }
 
-  function onKnight(move: TurnMove): IMove {
+  function onKnight(move: TurnMove, turnIdx: number): IMove {
     //TODO
     return null;
   }
 
-  function onMonopoly(move: TurnMove): IMove {
+  function onMonopoly(move: TurnMove, turnIdx: number): IMove {
     let monopolyMove = <MonopolyMove> move;
     //TODO
     return null;
   }
 
-  function onYearOfPlenty(move: TurnMove): IMove {
+  function onYearOfPlenty(move: TurnMove, turnIdx: number): IMove {
     let yearOfPlentyMove = <YearOfPlentyMove> move;
     //TODO
     return null;
   }
 
-  function onRobberEvent(move: TurnMove): IMove {
+  function onRobberEvent(move: TurnMove, turnIdx: number): IMove {
     let robberEventMove = <RobberEventMove> move;
     //TODO
     return null;
   }
 
-  function onRobberMove(move: TurnMove): IMove {
+  function onRobberMove(move: TurnMove, turnIdx: number): IMove {
     let robberMove = <RobberMoveMove> move;
     //TODO
     return null;
   }
 
-  function onRobPlayer(move: TurnMove): IMove {
+  function onRobPlayer(move: TurnMove, turnIdx: number): IMove {
     let robPlayerMove = <RobPlayerMove> move;
     //TODO
     return null;
   }
 
-  function onTradingWithBank(move: TurnMove): IMove {
+  function onTradingWithBank(move: TurnMove, turnIdx: number): IMove {
     let tradeWithBankMove = <TradeWithBankMove> move;
     //TODO
     return null;
   }
 
-  export function createMove(move: TurnMove): IMove {
+  function onEndTurn(move: TurnMove, turnIdx: number): IMove {
     //TODO
-    return createMoveHandlers[move.moveType](move);
+    return null;
+  }
+
+  export function createMove(stateBeforeMove: IState, turnIndexBeforeMove: number,
+      move: TurnMove): IMove {
+    //TODO
+    return createMoveHandlers[move.moveType](move, turnIndexBeforeMove);
   }
 }

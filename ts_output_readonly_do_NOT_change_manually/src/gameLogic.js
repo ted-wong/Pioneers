@@ -44,8 +44,9 @@ var MoveType;
     MoveType[MoveType["ROBBER_MOVE"] = 12] = "ROBBER_MOVE";
     MoveType[MoveType["ROB_PLAYER"] = 13] = "ROB_PLAYER";
     MoveType[MoveType["TRANSACTION_WITH_BANK"] = 14] = "TRANSACTION_WITH_BANK";
-    MoveType[MoveType["WIN"] = 15] = "WIN";
-    MoveType[MoveType["SIZE"] = 16] = "SIZE";
+    MoveType[MoveType["END"] = 15] = "END";
+    MoveType[MoveType["WIN"] = 16] = "WIN";
+    MoveType[MoveType["SIZE"] = 17] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
     var total = 0;
@@ -775,58 +776,63 @@ var gameLogic;
         onRobberMove,
         onRobPlayer,
         onTradingWithBank,
+        onEndTurn,
         noop,
     ];
-    function noop(move) {
+    function noop(move, turnIdx) {
         //TODO
         return null;
     }
-    function onRollDice(move) {
+    function onRollDice(move, turnIdx) {
         //TODO
         return null;
     }
-    function onBuilding(move) {
+    function onBuilding(move, turnIdx) {
         var buildingMove = move;
         //TODO
         return null;
     }
-    function onKnight(move) {
+    function onKnight(move, turnIdx) {
         //TODO
         return null;
     }
-    function onMonopoly(move) {
+    function onMonopoly(move, turnIdx) {
         var monopolyMove = move;
         //TODO
         return null;
     }
-    function onYearOfPlenty(move) {
+    function onYearOfPlenty(move, turnIdx) {
         var yearOfPlentyMove = move;
         //TODO
         return null;
     }
-    function onRobberEvent(move) {
+    function onRobberEvent(move, turnIdx) {
         var robberEventMove = move;
         //TODO
         return null;
     }
-    function onRobberMove(move) {
+    function onRobberMove(move, turnIdx) {
         var robberMove = move;
         //TODO
         return null;
     }
-    function onRobPlayer(move) {
+    function onRobPlayer(move, turnIdx) {
         var robPlayerMove = move;
         //TODO
         return null;
     }
-    function onTradingWithBank(move) {
+    function onTradingWithBank(move, turnIdx) {
         var tradeWithBankMove = move;
         //TODO
         return null;
     }
-    function createMove(move) {
+    function onEndTurn(move, turnIdx) {
         //TODO
-        return createMoveHandlers[move.moveType](move);
+        return null;
+    }
+    function createMove(stateBeforeMove, turnIndexBeforeMove, move) {
+        //TODO
+        return createMoveHandlers[move.moveType](move, turnIndexBeforeMove);
     }
     gameLogic.createMove = createMove;
 })(gameLogic || (gameLogic = {}));
