@@ -32,6 +32,7 @@ enum Construction {
 
 enum MoveType {
   INIT,
+  INIT_BUILD,
   ROLL_DICE,
   BUILD_ROAD,
   BUILD_SETTLEMENT,

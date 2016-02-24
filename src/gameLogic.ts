@@ -224,6 +224,7 @@ module gameLogic {
    */
   let validateHandlers: {(p: IState, n: IState, i: number): void}[] = [
     null, //INIT
+    checkInitBuild,
     checkRollDice,
     checkBuildRoad,
     checkBuildSettlement,
@@ -238,6 +239,19 @@ module gameLogic {
     null, //ROB_PLAYER
     checkTradeResourceWithBank
   ];
+
+  function checkInitBuild(prevState: IState, nextState: IState, idx: number): void {
+    switch (nextState.building.consType) {
+      case Construction.Road:
+        checkBuildRoad(prevState, nextState, idx);
+        break;
+      case Construction.Settlement:
+        checkBuildSettlement(prevState, nextState, idx);
+        break;
+      default:
+        throw new Error('Invalid build during initialization!');
+    }
+  }
 
   function checkRollDice(prevState: IState, nextState: IState, idx: number): void {
     if (prevState.diceRolled) {
@@ -399,8 +413,7 @@ module gameLogic {
   export function checkMoveOk(stateTransition: IStateTransition): void {
     let prevState: IState = stateTransition.stateBeforeMove;
     let nextState: IState = stateTransition.move.stateAfterMove;
-    let prevIdx: number = nextState.moveType === MoveType.ROBBER_EVENT ?
-            prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+    let prevIdx: number = prevState.eventIdx === -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
     //TODO: What are these for, exactly?
     let nextIdx: number = stateTransition.move.turnIndexAfterMove;
     let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
@@ -465,9 +478,60 @@ module gameLogic {
     return null;
   }
 
+  //TODO: Handle eventIdx when everyone finishes
   export function onInitBuilding(move: TurnMove, turnIdx: number): IMove {
-    //TODO
-    return null;
+    let buildingMove = <BuildMove> move;
+    let playerIdx = buildingMove.playerIdx;
+    if (playerIdx !== move.currState.eventIdx) {
+      throw new Error('It\'s not your turn to build!');
+    }
+
+    let stateBeforeMove: IState = angular.copy(move.currState);
+    stateBeforeMove.delta = null;
+    let stateAfterMove: IState = angular.copy(stateBeforeMove);
+    stateAfterMove.building = {
+      consType: null,
+      hexRow: buildingMove.hexRow,
+      hexCol: buildingMove.hexCol,
+      vertexOrEdge: buildingMove.vertexOrEdge,
+      init: true
+    };
+
+    switch (buildingMove.consType) {
+      case Construction.Road:
+        if (move.currState.players[playerIdx].construction[Construction.Road] >= 2) {
+          throw new Error('Can only build 2 roads during initialization!');
+        }
+        if (stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
+          throw new Error('Road already built on this place!');
+        }
+        stateAfterMove.building.consType = Construction.Road;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.players[playerIdx].construction[Construction.Road]++;
+        break;
+      case Construction.Settlement:
+        if (move.currState.players[playerIdx].construction[Construction.Settlement] >= 1) {
+          throw new Error('Can only build 1 settlement during initialization!');
+        }
+        stateAfterMove.building.consType = Construction.Settlement;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.players[playerIdx].construction[Construction.Settlement]++;
+        break;
+      default:
+        throw new Error('Can only build road/settlement during initialization!');
+    }
+
+    //Advance eventIdx
+    let player = stateAfterMove.players[playerIdx];
+    if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
+      stateAfterMove.eventIdx++;
+    }
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onBuilding(move: TurnMove, turnIdx: number): IMove {

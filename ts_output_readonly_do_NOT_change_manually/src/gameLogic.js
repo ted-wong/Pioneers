@@ -197,6 +197,7 @@ var gameLogic;
      */
     var validateHandlers = [
         null,
+        checkInitBuild,
         checkRollDice,
         checkBuildRoad,
         checkBuildSettlement,
@@ -211,6 +212,18 @@ var gameLogic;
         null,
         checkTradeResourceWithBank
     ];
+    function checkInitBuild(prevState, nextState, idx) {
+        switch (nextState.building.consType) {
+            case Construction.Road:
+                checkBuildRoad(prevState, nextState, idx);
+                break;
+            case Construction.Settlement:
+                checkBuildSettlement(prevState, nextState, idx);
+                break;
+            default:
+                throw new Error('Invalid build during initialization!');
+        }
+    }
     function checkRollDice(prevState, nextState, idx) {
         if (prevState.diceRolled) {
             throw new Error('Dices already rolled');
@@ -347,8 +360,7 @@ var gameLogic;
     function checkMoveOk(stateTransition) {
         var prevState = stateTransition.stateBeforeMove;
         var nextState = stateTransition.move.stateAfterMove;
-        var prevIdx = nextState.moveType === MoveType.ROBBER_EVENT ?
-            prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+        var prevIdx = prevState.eventIdx === -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
         //TODO: What are these for, exactly?
         var nextIdx = stateTransition.move.turnIndexAfterMove;
         var delta = stateTransition.move.stateAfterMove.delta;
@@ -406,9 +418,56 @@ var gameLogic;
         return null;
     }
     gameLogic.onRollDice = onRollDice;
+    //TODO: Handle eventIdx when everyone finishes
     function onInitBuilding(move, turnIdx) {
-        //TODO
-        return null;
+        var buildingMove = move;
+        var playerIdx = buildingMove.playerIdx;
+        if (playerIdx !== move.currState.eventIdx) {
+            throw new Error('It\'s not your turn to build!');
+        }
+        var stateBeforeMove = angular.copy(move.currState);
+        stateBeforeMove.delta = null;
+        var stateAfterMove = angular.copy(stateBeforeMove);
+        stateAfterMove.building = {
+            consType: null,
+            hexRow: buildingMove.hexRow,
+            hexCol: buildingMove.hexCol,
+            vertexOrEdge: buildingMove.vertexOrEdge,
+            init: true
+        };
+        switch (buildingMove.consType) {
+            case Construction.Road:
+                if (move.currState.players[playerIdx].construction[Construction.Road] >= 2) {
+                    throw new Error('Can only build 2 roads during initialization!');
+                }
+                if (stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
+                    throw new Error('Road already built on this place!');
+                }
+                stateAfterMove.building.consType = Construction.Road;
+                stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
+                stateAfterMove.players[playerIdx].construction[Construction.Road]++;
+                break;
+            case Construction.Settlement:
+                if (move.currState.players[playerIdx].construction[Construction.Settlement] >= 1) {
+                    throw new Error('Can only build 1 settlement during initialization!');
+                }
+                stateAfterMove.building.consType = Construction.Settlement;
+                stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = playerIdx;
+                stateAfterMove.players[playerIdx].construction[Construction.Settlement]++;
+                break;
+            default:
+                throw new Error('Can only build road/settlement during initialization!');
+        }
+        //Advance eventIdx
+        var player = stateAfterMove.players[playerIdx];
+        if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
+            stateAfterMove.eventIdx++;
+        }
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
     }
     gameLogic.onInitBuilding = onInitBuilding;
     function onBuilding(move, turnIdx) {
