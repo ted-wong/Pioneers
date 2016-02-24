@@ -167,6 +167,7 @@ var game;
         document.addEventListener("animationend", animationEndedCallback, false); // standard
         document.addEventListener("webkitAnimationEnd", animationEndedCallback, false); // WebKit
         document.addEventListener("oanimationend", animationEndedCallback, false); // Opera
+        setTimeout(animationEndedCallback, 1000); // Just in case animationEnded is not fired by some browser.
         var w = window;
         if (w["HTMLInspector"]) {
             setInterval(function () {
@@ -198,6 +199,8 @@ var game;
         };
     }
     function animationEndedCallback() {
+        if (game.animationEnded)
+            return;
         $rootScope.$apply(function () {
             log.info("Animation ended");
             game.animationEnded = true;
