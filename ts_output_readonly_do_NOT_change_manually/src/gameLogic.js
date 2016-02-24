@@ -543,6 +543,9 @@ var gameLogic;
     }
     gameLogic.onTradingWithBank = onTradingWithBank;
     function onEndTurn(move, turnIdx) {
+        if (!move.currState.diceRolled) {
+            throw new Error('Must roll the dices!');
+        }
         var stateBeforeMove = angular.copy(move.currState);
         stateBeforeMove.delta = null;
         var scores = countScores(stateBeforeMove);

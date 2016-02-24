@@ -610,6 +610,9 @@ module gameLogic {
   }
 
   export function onEndTurn(move: TurnMove, turnIdx: number): IMove {
+    if (!move.currState.diceRolled) {
+      throw new Error('Must roll the dices!');
+    }
     let stateBeforeMove = angular.copy(move.currState);
     stateBeforeMove.delta = null;
 
