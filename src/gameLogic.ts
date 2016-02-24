@@ -514,7 +514,8 @@ module gameLogic {
           throw new Error('Can only build 1 settlement during initialization!');
         }
         stateAfterMove.building.consType = Construction.Settlement;
-        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.Settlement;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] = playerIdx;
         stateAfterMove.players[playerIdx].construction[Construction.Settlement]++;
         break;
       default:
@@ -536,8 +537,86 @@ module gameLogic {
 
   export function onBuilding(move: TurnMove, turnIdx: number): IMove {
     let buildingMove = <BuildMove> move;
-    //TODO
-    return null;
+    let playerIdx = buildingMove.playerIdx;
+    if (playerIdx !== turnIdx) {
+      throw new Error('It\'s not your turn!');
+    }
+    if (!move.currState.diceRolled) {
+      throw new Error('Must roll the dices before construction!');
+    }
+
+    let stateBeforeMove: IState = angular.copy(move.currState);
+    stateBeforeMove.delta = null;
+    let stateAfterMove: IState = angular.copy(stateBeforeMove);
+    stateAfterMove.delta = stateBeforeMove;
+    stateAfterMove.players[playerIdx].construction[buildingMove.consType]++;
+    stateAfterMove.building = {
+      consType: buildingMove.consType,
+      hexRow: buildingMove.hexRow,
+      hexCol: buildingMove.hexCol,
+      vertexOrEdge: buildingMove.vertexOrEdge,
+      init: false
+    };
+
+    switch (buildingMove.consType) {
+      case Construction.Road:
+        stateAfterMove.moveType = MoveType.BUILD_ROAD;
+        if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
+          throw new Error('Invalid building instruction!');
+        }
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
+
+        stateAfterMove.bank.resources[Resource.Brick]++;
+        stateAfterMove.bank.resources[Resource.Lumber]++;
+        break;
+      case Construction.Settlement:
+        stateAfterMove.moveType = MoveType.BUILD_SETTLEMENT;
+        if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== -1) {
+          throw new Error('Invalid building instruction!');
+        }
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.Settlement;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Wool]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Grain]--;
+
+        stateAfterMove.bank.resources[Resource.Brick]++;
+        stateAfterMove.bank.resources[Resource.Lumber]++;
+        stateAfterMove.bank.resources[Resource.Wool]++;
+        stateAfterMove.bank.resources[Resource.Grain]++;
+        break;
+      case Construction.City:
+        stateAfterMove.moveType = MoveType.BUILD_CITY;
+        if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== playerIdx ||
+            move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] !== Construction.Settlement) {
+          throw new Error('Invalid building instruction!');
+        }
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.City;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Ore] -= 3;
+        stateAfterMove.players[playerIdx].resources[Resource.Grain] -= 2;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Ore] += 3;
+        stateAfterMove.players[playerIdx].resources[Resource.Grain] += 2;
+        break;
+      case Construction.DevCard:
+        stateAfterMove.moveType = MoveType.BUILD_DEVCARD;
+        //TODO: Randomly choose one dev card!
+        break;
+      default:
+        throw new Error('Invalid command!');
+    }
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onKnight(move: TurnMove, turnIdx: number): IMove {
