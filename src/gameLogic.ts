@@ -732,9 +732,37 @@ module gameLogic {
     if (move.playerIdx !== turnIdx) {
       throw new Error('Not your turn to play!');
     }
+    if (move.currState.devCardsPlayed) {
+      throw new Error('Already played development card in this turn!');
+    }
+    if (move.currState.players[turnIdx].devCards[DevCard.YearOfPlenty] <= 0) {
+      throw new Error('No Year of Plenty card on hand!');
+    }
+
     let yearOfPlentyMove = <YearOfPlentyMove> move;
-    //TODO
-    return null;
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+
+    //State transition to dev cards
+    stateAfterMove.players[turnIdx].devCards[DevCard.YearOfPlenty]--;
+    stateAfterMove.bank.devCards[DevCard.YearOfPlenty]++;
+    stateAfterMove.bank.devCardsOrder.push(DevCard.YearOfPlenty);
+
+    //State transition to resources
+    angular.forEach([yearOfPlentyMove.target1, yearOfPlentyMove.target2], function(tar) {
+      if (stateAfterMove.bank.resources[tar] > 0) {
+        stateAfterMove.players[turnIdx].resources[tar]++;
+        stateAfterMove.bank.resources[tar]--;
+      } else {
+        throw new Error('Insufficient resources in bank: ' + Resource[tar]);
+      }
+    });
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onRobberEvent(move: TurnMove, turnIdx: number): IMove {
