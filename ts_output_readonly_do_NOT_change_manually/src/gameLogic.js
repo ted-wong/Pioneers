@@ -647,6 +647,9 @@ var gameLogic;
     }
     gameLogic.onMonopoly = onMonopoly;
     function onYearOfPlenty(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
         var yearOfPlentyMove = move;
         //TODO
         return null;
@@ -659,24 +662,36 @@ var gameLogic;
     }
     gameLogic.onRobberEvent = onRobberEvent;
     function onRobberMove(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
         var robberMove = move;
         //TODO
         return null;
     }
     gameLogic.onRobberMove = onRobberMove;
     function onRobPlayer(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
         var robPlayerMove = move;
         //TODO
         return null;
     }
     gameLogic.onRobPlayer = onRobPlayer;
     function onTradingWithBank(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
         var tradeWithBankMove = move;
         //TODO
         return null;
     }
     gameLogic.onTradingWithBank = onTradingWithBank;
     function onEndTurn(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
         if (!move.currState.diceRolled) {
             throw new Error('Must roll the dices!');
         }

@@ -729,6 +729,9 @@ module gameLogic {
   }
 
   export function onYearOfPlenty(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     let yearOfPlentyMove = <YearOfPlentyMove> move;
     //TODO
     return null;
@@ -741,24 +744,36 @@ module gameLogic {
   }
 
   export function onRobberMove(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     let robberMove = <RobberMoveMove> move;
     //TODO
     return null;
   }
 
   export function onRobPlayer(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     let robPlayerMove = <RobPlayerMove> move;
     //TODO
     return null;
   }
 
   export function onTradingWithBank(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     let tradeWithBankMove = <TradeWithBankMove> move;
     //TODO
     return null;
   }
 
   export function onEndTurn(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     if (!move.currState.diceRolled) {
       throw new Error('Must roll the dices!');
     }
