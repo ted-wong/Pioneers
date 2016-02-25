@@ -227,7 +227,7 @@ module gameLogic {
       diceRolled: false,
       devCardsPlayed: false,
       delta: null,
-      moveType: MoveType.INIT, //TODO: Should be INIT_BUILD
+      moveType: MoveType.INIT_BUILD,
       eventIdx: -1,
       building: null
     };
@@ -623,8 +623,13 @@ module gameLogic {
         stateAfterMove.players[playerIdx].resources[Resource.Grain] += 2;
         break;
       case Construction.DevCard:
+        if (move.currState.bank.devCardsOrder.length <= 0) {
+          throw new Error('No development cards in bank right now!');
+        }
         stateAfterMove.moveType = MoveType.BUILD_DEVCARD;
-        //TODO: Randomly choose one dev card!
+        stateAfterMove.players[playerIdx].devCards[move.currState.bank.devCardsOrder[0]]++;
+        stateAfterMove.bank.devCards[move.currState.bank.devCardsOrder[0]]--;
+        stateAfterMove.bank.devCardsOrder = stateBeforeMove.bank.devCardsOrder.splice(0, 1);
         break;
       default:
         throw new Error('Invalid command!');
