@@ -499,6 +499,9 @@ module gameLogic {
   }
 
   export function onRollDice(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     if (move.currState.diceRolled) {
       throw new Error('Dices already rolled!');
     }
@@ -652,6 +655,9 @@ module gameLogic {
   }
 
   export function onKnight(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     if (move.currState.devCardsPlayed) {
       throw new Error('Already played development card!');
     }
@@ -684,9 +690,42 @@ module gameLogic {
   }
 
   export function onMonopoly(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
+    if (move.currState.devCardsPlayed) {
+      throw new Error('Already played development card in this turn!');
+    }
+    if (move.currState.players[turnIdx].devCards[DevCard.Monopoly] <= 0) {
+      throw new Error('No Monopoly card on hand!');
+    }
+
     let monopolyMove = <MonopolyMove> move;
-    //TODO
-    return null;
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.devCardsPlayed = true;
+
+    //State transition to dev cards
+    stateAfterMove.players[turnIdx].devCards[DevCard.Monopoly]--;
+    stateAfterMove.bank.devCards[DevCard.Monopoly]++;
+    stateAfterMove.bank.devCardsOrder.push(DevCard.Monopoly);
+
+    //State transition to resource cards
+    let numCards: number = 0;
+    for (let p = 0; p < NUM_PLAYERS; p++) {
+      if (p !== turnIdx) {
+        let resources = stateAfterMove.players[p].resources[monopolyMove.target];
+        numCards += resources > 0 ? resources : 0;
+        stateAfterMove.players[p].resources[monopolyMove.target] = 0;
+      }
+    }
+    stateAfterMove.players[turnIdx].resources[monopolyMove.target] += numCards;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onYearOfPlenty(move: TurnMove, turnIdx: number): IMove {

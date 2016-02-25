@@ -439,6 +439,9 @@ var gameLogic;
         return ret;
     }
     function onRollDice(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
         if (move.currState.diceRolled) {
             throw new Error('Dices already rolled!');
         }
@@ -577,6 +580,9 @@ var gameLogic;
     }
     gameLogic.onBuilding = onBuilding;
     function onKnight(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
         if (move.currState.devCardsPlayed) {
             throw new Error('Already played development card!');
         }
@@ -606,9 +612,38 @@ var gameLogic;
     }
     gameLogic.onKnight = onKnight;
     function onMonopoly(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (move.currState.devCardsPlayed) {
+            throw new Error('Already played development card in this turn!');
+        }
+        if (move.currState.players[turnIdx].devCards[DevCard.Monopoly] <= 0) {
+            throw new Error('No Monopoly card on hand!');
+        }
         var monopolyMove = move;
-        //TODO
-        return null;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.devCardsPlayed = true;
+        //State transition to dev cards
+        stateAfterMove.players[turnIdx].devCards[DevCard.Monopoly]--;
+        stateAfterMove.bank.devCards[DevCard.Monopoly]++;
+        stateAfterMove.bank.devCardsOrder.push(DevCard.Monopoly);
+        //State transition to resource cards
+        var numCards = 0;
+        for (var p = 0; p < gameLogic.NUM_PLAYERS; p++) {
+            if (p !== turnIdx) {
+                var resources = stateAfterMove.players[p].resources[monopolyMove.target];
+                numCards += resources > 0 ? resources : 0;
+                stateAfterMove.players[p].resources[monopolyMove.target] = 0;
+            }
+        }
+        stateAfterMove.players[turnIdx].resources[monopolyMove.target] += numCards;
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
     }
     gameLogic.onMonopoly = onMonopoly;
     function onYearOfPlenty(move, turnIdx) {
