@@ -87,6 +87,7 @@ interface Player {
 interface Bank {
   resources: Resources;
   devCards: DevCards;
+  devCardsOrder: DevCard[];
 }
 
 interface Robber {

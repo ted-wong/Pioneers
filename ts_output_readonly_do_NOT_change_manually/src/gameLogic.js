@@ -115,33 +115,51 @@ var gameLogic;
     function getInitialBank() {
         var bank = {
             resources: getInitialArray(Resource.SIZE),
-            devCards: getInitialArray(DevCard.SIZE)
+            devCards: getInitialArray(DevCard.SIZE),
+            devCardsOrder: null
         };
         //Assign total size of resources/devCards in bank according to rules
         for (var i = 0; i < Resource.SIZE; i++) {
             bank.resources[i] = 19;
         }
+        var devCardsOrder = [];
         for (var i = 0; i < DevCard.SIZE; i++) {
             switch (i) {
                 case DevCard.Knight:
                     bank.devCards[i] = 14;
+                    for (var _ = 0; _ < 14; _++) {
+                        devCardsOrder.push(DevCard.Knight);
+                    }
                     break;
                 case DevCard.Monopoly:
                     bank.devCards[i] = 2;
+                    for (var _ = 0; _ < 2; _++) {
+                        devCardsOrder.push(DevCard.Monopoly);
+                    }
                     break;
                 case DevCard.RoadBuilding:
                     bank.devCards[i] = 2;
+                    for (var _ = 0; _ < 2; _++) {
+                        devCardsOrder.push(DevCard.RoadBuilding);
+                    }
                     break;
                 case DevCard.YearOfPlenty:
                     bank.devCards[i] = 2;
+                    for (var _ = 0; _ < 2; _++) {
+                        devCardsOrder.push(DevCard.YearOfPlenty);
+                    }
                     break;
                 case DevCard.VictoryPoint:
                     bank.devCards[i] = 5;
+                    for (var _ = 0; _ < 5; _++) {
+                        devCardsOrder.push(DevCard.VictoryPoint);
+                    }
                     break;
                 default:
                     break;
             }
         }
+        bank.devCardsOrder = shuffleArray(devCardsOrder);
         return bank;
     }
     function getInitialAwards() {
