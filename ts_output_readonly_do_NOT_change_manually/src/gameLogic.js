@@ -428,6 +428,16 @@ var gameLogic;
         }
         return scores;
     }
+    function getStateBeforeMove(move) {
+        var ret = angular.copy(move.currState);
+        ret.delta = null;
+        return ret;
+    }
+    function getStateAfterMove(move, stateBeforeMove) {
+        var ret = angular.copy(move.currState);
+        ret.delta = stateBeforeMove;
+        return ret;
+    }
     function onRollDice(move, turnIdx) {
         if (move.currState.diceRolled) {
             throw new Error('Dices already rolled!');
@@ -443,9 +453,8 @@ var gameLogic;
         if (playerIdx !== move.currState.eventIdx) {
             throw new Error('It\'s not your turn to build!');
         }
-        var stateBeforeMove = angular.copy(move.currState);
-        stateBeforeMove.delta = null;
-        var stateAfterMove = angular.copy(stateBeforeMove);
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.building = {
             consType: null,
             hexRow: buildingMove.hexRow,
@@ -498,10 +507,8 @@ var gameLogic;
         if (!move.currState.diceRolled) {
             throw new Error('Must roll the dices before construction!');
         }
-        var stateBeforeMove = angular.copy(move.currState);
-        stateBeforeMove.delta = null;
-        var stateAfterMove = angular.copy(stateBeforeMove);
-        stateAfterMove.delta = stateBeforeMove;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.players[playerIdx].construction[buildingMove.consType]++;
         stateAfterMove.building = {
             consType: buildingMove.consType,
@@ -570,22 +577,21 @@ var gameLogic;
     }
     gameLogic.onBuilding = onBuilding;
     function onKnight(move, turnIdx) {
-        var stateBeforeMove = angular.copy(move.currState);
-        stateBeforeMove.delta = null;
-        if (stateBeforeMove.devCardsPlayed) {
+        if (move.currState.devCardsPlayed) {
             throw new Error('Already played development card!');
         }
-        if (stateBeforeMove.players[move.playerIdx].devCards[DevCard.Knight] <= 0) {
+        if (move.currState.players[move.playerIdx].devCards[DevCard.Knight] <= 0) {
             throw new Error('Doesn\'t have knight card on hand!');
         }
-        var stateAfterMove = angular.copy(stateBeforeMove);
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.devCardsPlayed = true;
         stateAfterMove.moveType = MoveType.KNIGHT;
         stateAfterMove.eventIdx = -1;
         stateAfterMove.building = null;
         //State transition to knight cards
-        stateAfterMove.players[move.playerIdx].knightsPlayed += 1;
-        stateAfterMove.players[move.playerIdx].devCards[DevCard.Knight] -= 1;
+        stateAfterMove.players[move.playerIdx].knightsPlayed++;
+        stateAfterMove.players[move.playerIdx].devCards[DevCard.Knight]--;
         if (stateAfterMove.players[move.playerIdx].knightsPlayed > stateBeforeMove.awards.largestArmy.num) {
             stateAfterMove.awards.largestArmy = {
                 player: move.playerIdx,
@@ -639,8 +645,7 @@ var gameLogic;
         if (!move.currState.diceRolled) {
             throw new Error('Must roll the dices!');
         }
-        var stateBeforeMove = angular.copy(move.currState);
-        stateBeforeMove.delta = null;
+        var stateBeforeMove = getStateBeforeMove(move);
         var scores = countScores(stateBeforeMove);
         var hasWinner = false;
         for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
@@ -649,13 +654,12 @@ var gameLogic;
                 break;
             }
         }
-        var stateAfterMove = angular.copy(stateBeforeMove);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.diceRolled = false;
         stateAfterMove.devCardsPlayed = false;
         stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
         stateAfterMove.eventIdx = -1;
         stateAfterMove.building = null;
-        stateAfterMove.delta = stateBeforeMove;
         return {
             endMatchScores: scores,
             turnIndexAfterMove: (turnIdx + 1) % gameLogic.NUM_PLAYERS,
