@@ -3,6 +3,10 @@ module gameLogic {
   export const COLS = 7;
   export const NUM_PLAYERS = 4;
 
+  function getRandomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
   function shuffleArray<T>(src: T[]): T[] {
     let ret: T[] = angular.copy(src);
 
@@ -515,12 +519,60 @@ module gameLogic {
       throw new Error('Dices already rolled!');
     }
 
-    //TODO
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROLL_DICE;
 
-    return null;
+    //State transition
+    stateAfterMove.diceRolled = true;
+    stateAfterMove.dices[0] = getRandomInt(1, 7);
+    stateAfterMove.dices[1] = getRandomInt(1, 7);
+    let rollNum = stateAfterMove.dices[0] + stateAfterMove.dices[1];
+
+    if (rollNum !== 7) {
+      //State transition to resources production
+      for (let i = 0; i < ROWS; i++) {
+        for (let j = 0; j < COLS; j++) {
+          if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
+              stateBeforeMove.board[i][j].hasRobber) {
+            continue;
+          }
+
+          for (let v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
+            if (stateBeforeMove.board[i][j].vertexOwner[v] === -1) {
+              continue;
+            }
+
+            let owner = stateBeforeMove.board[i][j].vertexOwner[v];
+            let resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
+            let toAdd : number = 0;
+            switch (stateBeforeMove.board[i][j].vertices[v]) {
+              case Construction.City:
+                toAdd = resourceInBank < 2 ? resourceInBank : 2;
+                break;
+              case Construction.Settlement:
+                toAdd = resourceInBank < 1 ? resourceInBank : 1;
+                break;
+              default:
+                break;
+            }
+            stateAfterMove.players[owner].resources[stateBeforeMove.board[i][j].label] += toAdd;
+            stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
+          }
+        }
+      }
+    } else {
+      //Robber event will start
+      stateAfterMove.eventIdx = 0;
+    }
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
-  //TODO: Handle eventIdx when everyone finishes
   export function onInitBuilding(move: TurnMove, turnIdx: number): IMove {
     let buildingMove = <BuildMove> move;
     let playerIdx = buildingMove.playerIdx;
@@ -566,7 +618,7 @@ module gameLogic {
     //Advance eventIdx
     let player = stateAfterMove.players[playerIdx];
     if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
-      stateAfterMove.eventIdx++;
+      stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % NUM_PLAYERS;
     }
 
     return {
@@ -798,8 +850,7 @@ module gameLogic {
       }
     }
 
-    stateAfterMove.eventIdx++;
-    stateAfterMove.eventIdx = stateAfterMove.eventIdx === NUM_PLAYERS ? -1 : stateAfterMove.eventIdx;
+    stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % NUM_PLAYERS;
 
     return {
       endMatchScores: countScores(stateAfterMove),
@@ -861,7 +912,7 @@ module gameLogic {
 
     //State transition to robbing
     resourcesOnHand = shuffleArray(resourcesOnHand);
-    let idx = Math.floor(Math.random() * resourcesOnHand.length);
+    let idx = getRandomInt(0, resourcesOnHand.length);
     stateAfterMove.players[robPlayerMove.stealingIdx].resources[resourcesOnHand[idx]]++;
     stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
 
@@ -880,6 +931,9 @@ module gameLogic {
     let stateBeforeMove = getStateBeforeMove(move);
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
     stateAfterMove.moveType = MoveType.TRANSACTION_WITH_BANK;
+    if (!stateBeforeMove.diceRolled) {
+      throw new Error('Need to roll dices first!');
+    }
 
     //State transition to transaction
     stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] -= tradeWithBankMove.sellingNum;

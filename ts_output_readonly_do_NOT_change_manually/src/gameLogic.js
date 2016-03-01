@@ -3,6 +3,9 @@ var gameLogic;
     gameLogic.ROWS = 7;
     gameLogic.COLS = 7;
     gameLogic.NUM_PLAYERS = 4;
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
     function shuffleArray(src) {
         var ret = angular.copy(src);
         for (var j = void 0, x = void 0, i = ret.length; i; j = Math.floor(Math.random() * i), x = ret[--i], ret[i] = ret[j], ret[j] = x)
@@ -453,11 +456,56 @@ var gameLogic;
         if (move.currState.diceRolled) {
             throw new Error('Dices already rolled!');
         }
-        //TODO
-        return null;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROLL_DICE;
+        //State transition
+        stateAfterMove.diceRolled = true;
+        stateAfterMove.dices[0] = getRandomInt(1, 7);
+        stateAfterMove.dices[1] = getRandomInt(1, 7);
+        var rollNum = stateAfterMove.dices[0] + stateAfterMove.dices[1];
+        if (rollNum !== 7) {
+            //State transition to resources production
+            for (var i = 0; i < gameLogic.ROWS; i++) {
+                for (var j = 0; j < gameLogic.COLS; j++) {
+                    if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
+                        stateBeforeMove.board[i][j].hasRobber) {
+                        continue;
+                    }
+                    for (var v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
+                        if (stateBeforeMove.board[i][j].vertexOwner[v] === -1) {
+                            continue;
+                        }
+                        var owner = stateBeforeMove.board[i][j].vertexOwner[v];
+                        var resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
+                        var toAdd = 0;
+                        switch (stateBeforeMove.board[i][j].vertices[v]) {
+                            case Construction.City:
+                                toAdd = resourceInBank < 2 ? resourceInBank : 2;
+                                break;
+                            case Construction.Settlement:
+                                toAdd = resourceInBank < 1 ? resourceInBank : 1;
+                                break;
+                            default:
+                                break;
+                        }
+                        stateAfterMove.players[owner].resources[stateBeforeMove.board[i][j].label] += toAdd;
+                        stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
+                    }
+                }
+            }
+        }
+        else {
+            //Robber event will start
+            stateAfterMove.eventIdx = 0;
+        }
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
     }
     gameLogic.onRollDice = onRollDice;
-    //TODO: Handle eventIdx when everyone finishes
     function onInitBuilding(move, turnIdx) {
         var buildingMove = move;
         var playerIdx = buildingMove.playerIdx;
@@ -500,7 +548,7 @@ var gameLogic;
         //Advance eventIdx
         var player = stateAfterMove.players[playerIdx];
         if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
-            stateAfterMove.eventIdx++;
+            stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
         }
         return {
             endMatchScores: countScores(stateAfterMove),
@@ -709,8 +757,7 @@ var gameLogic;
                 }
             }
         }
-        stateAfterMove.eventIdx++;
-        stateAfterMove.eventIdx = stateAfterMove.eventIdx === gameLogic.NUM_PLAYERS ? -1 : stateAfterMove.eventIdx;
+        stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
         return {
             endMatchScores: countScores(stateAfterMove),
             turnIndexAfterMove: turnIdx,
@@ -766,7 +813,7 @@ var gameLogic;
         }
         //State transition to robbing
         resourcesOnHand = shuffleArray(resourcesOnHand);
-        var idx = Math.floor(Math.random() * resourcesOnHand.length);
+        var idx = getRandomInt(0, resourcesOnHand.length);
         stateAfterMove.players[robPlayerMove.stealingIdx].resources[resourcesOnHand[idx]]++;
         stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
         return {
@@ -784,6 +831,9 @@ var gameLogic;
         var stateBeforeMove = getStateBeforeMove(move);
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.moveType = MoveType.TRANSACTION_WITH_BANK;
+        if (!stateBeforeMove.diceRolled) {
+            throw new Error('Need to roll dices first!');
+        }
         //State transition to transaction
         stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] -= tradeWithBankMove.sellingNum;
         stateAfterMove.players[turnIdx].resources[tradeWithBankMove.buyingItem] += tradeWithBankMove.buyingNum;
