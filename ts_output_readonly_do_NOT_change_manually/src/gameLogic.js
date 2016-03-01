@@ -445,8 +445,23 @@ var gameLogic;
         return ret;
     }
     function onGameStart(move, turnIdx) {
-        //TODO: A simple handler to set moveType to INIT so that game begins
-        return null;
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        if (stateBeforeMove.eventIdx !== gameLogic.NUM_PLAYERS) {
+            throw new Error('Initial construction not finished!');
+        }
+        if (stateBeforeMove.moveType !== MoveType.INIT_BUILD) {
+            throw new Error('Invalid operation!');
+        }
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.INIT;
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: 0,
+            stateAfterMove: stateAfterMove
+        };
     }
     gameLogic.onGameStart = onGameStart;
     function onRollDice(move, turnIdx) {

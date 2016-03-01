@@ -507,8 +507,27 @@ module gameLogic {
   }
 
   export function onGameStart(move: TurnMove, turnIdx: number): IMove {
-    //TODO: A simple handler to set moveType to INIT so that game begins
-    return null;
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
+    let stateBeforeMove = getStateBeforeMove(move);
+
+    if (stateBeforeMove.eventIdx !== NUM_PLAYERS) {
+      throw new Error('Initial construction not finished!');
+    }
+    if (stateBeforeMove.moveType !== MoveType.INIT_BUILD) {
+      throw new Error('Invalid operation!');
+    }
+
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+
+    stateAfterMove.moveType = MoveType.INIT;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: 0,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onRollDice(move: TurnMove, turnIdx: number): IMove {
