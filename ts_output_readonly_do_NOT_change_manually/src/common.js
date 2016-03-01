@@ -92,7 +92,6 @@ function canAffordConstruction(player, construct) {
             break;
         default:
             return false;
-            break;
     }
     return false;
 }
@@ -119,7 +118,6 @@ function hasSufficientConstructsToBuild(player, construct, bank) {
             break;
         default:
             return false;
-            break;
     }
     return false;
 }
@@ -132,6 +130,8 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
     if (board[row][col].edges[edge] >= 0)
         return false;
     var adjHex = getHexAdjcentToEdge(row, col, edge);
+    if (adjHex.length == 0)
+        return false;
     // both hexes cannot be water
     if (board[row][col].label == Resource.Water && board[adjHex[0]][adjHex[1]].label == Resource.Water) {
         return false;
@@ -173,12 +173,11 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
         }
         return true;
     }
-    // can build road off own existing settlement (for initial roads)
-    if (initial) {
-        if ((board[row][col].vertices[edge] == Construction.Settlement && board[row][col].vertexOwner[edge] == player.id) ||
-            (board[row][col].vertices[(edge + 1) % 6] == Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] == player.id))
-            return true;
-    }
+    if ((board[row][col].vertices[edge] == Construction.Settlement && board[row][col].vertexOwner[edge] == player.id) ||
+        (board[row][col].vertices[(edge + 1) % 6] == Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] == player.id) ||
+        (board[row][col].vertices[edge] == Construction.City && board[row][col].vertexOwner[edge] == player.id) ||
+        (board[row][col].vertices[(edge + 1) % 6] == Construction.City && board[row][col].vertexOwner[(edge + 1) % 6] == player.id))
+        return true;
     return false;
 }
 function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
@@ -189,14 +188,15 @@ function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
     // proposed vertex must be empty - no other settlement/city
     if (board[row][col].vertices[vertex] != -1)
         return false;
-    // one of the 3 hexes must be land
     // TODO: is Water sufficient with "ANY" being allowed?
-    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
-    if (board[row][col].label == Resource.Water &&
-        board[hex1[0]][hex1[1]].label == Resource.Water &&
-        board[hex2[0]][hex2[1]].label == Resource.Water) {
-        return false;
+    var has_land = false;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i = 0; i < hexes.length; i++) {
+        if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
+            has_land = true;
     }
+    if (has_land == false)
+        return false;
     // needs adjacent road to build on if not initial settlements
     if (!initial && !hasAdjacentRoad(player, board, row, col, vertex))
         return false;
@@ -224,15 +224,13 @@ function hasAdjacentRoad(player, board, row, col, vertex) {
         return true;
     if (board[row][col].edges[(vertex + 1) % 6] = player.id)
         return true;
-    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
-    if (board[hex1[0]][hex1[1]].edges[hex1[3]] == player.id)
-        return true;
-    if (board[hex1[0]][hex1[1]].edges[(hex1[3] + 1) % 6] == player.id)
-        return true;
-    if (board[hex2[0]][hex2[1]].edges[hex2[3]] == player.id)
-        return true;
-    if (board[hex2[0]][hex2[1]].edges[(hex2[3] + 1) % 6] == player.id)
-        return true;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i = 0; i < hexes.length; i++) {
+        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] == player.id)
+            return true;
+        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3] + 1) % 6] == player.id)
+            return true;
+    }
     return false;
 }
 function hasNearbyConstruct(board, row, col, vertex) {
@@ -244,21 +242,18 @@ function hasNearbyConstruct(board, row, col, vertex) {
         board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] == Construction.Settlement ||
         board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] == Construction.City)
         return true;
-    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
-    if (board[hex1[0]][hex1[1]].vertices[(hex1[3] + 1) % 6] == Construction.Settlement ||
-        board[hex1[0]][hex1[1]].vertices[(hex1[3] + 1) % 6] == Construction.City ||
-        board[hex1[0]][hex1[1]].vertices[((hex1[3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
-        board[hex1[0]][hex1[1]].vertices[((hex1[3] - 1) % 6 + 6) % 6] == Construction.City)
-        return true;
-    if (board[hex2[0]][hex2[1]].vertices[(hex2[3] + 1) % 6] == Construction.Settlement ||
-        board[hex2[0]][hex2[1]].vertices[(hex2[3] + 1) % 6] == Construction.City ||
-        board[hex2[0]][hex2[1]].vertices[((hex2[3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
-        board[hex2[0]][hex2[1]].vertices[((hex2[3] - 1) % 6 + 6) % 6] == Construction.City)
-        return true;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i = 0; i < hexes.length; i++) {
+        if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.City ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] == Construction.City)
+            return true;
+    }
     return false;
 }
 // return [row, col] pair that shares edge with original edge
-function getHexAdjcentToEdge(row, col, edge) {
+function getHexAdjcentToEdgeUnfiltered(row, col, edge) {
     // TODO: add check for new row/col out of bounds
     if (edge == 0)
         return [row, col + 1];
@@ -281,11 +276,16 @@ function getHexAdjcentToEdge(row, col, edge) {
     if (edge == 5 && row % 2 == 1)
         return [row + 1, col];
     // default - shouldn't happen though
-    return [-1, -1];
+    return [];
+}
+function getHexAdjcentToEdge(row, col, edge) {
+    var hex = getHexAdjcentToEdgeUnfiltered(row, col, edge);
+    if (hex[0] < 0 || hex[1] < 0 || hex[0] >= gameLogic.ROWS || hex[1] >= gameLogic.COLS)
+        return [];
+    return hex;
 }
 // will return 2 hexes in [row, col, vertex] that share the original vertex
-function getHexesAdjacentToVertex(row, col, vertex) {
-    // TODO: add check for new row/col hexes out of bounds
+function getHexesAdjacentToVertexUnfiltered(row, col, vertex) {
     if (vertex == 0 && row % 2 == 0)
         return [[row, col + 1, 2], [row - 1, col + 1, 4]];
     if (vertex == 0 && row % 2 == 1)
@@ -311,7 +311,23 @@ function getHexesAdjacentToVertex(row, col, vertex) {
     if (vertex == 5 && row % 2 == 1)
         return [[row + 1, col, 1], [row, col + 1, 3]];
     // default - shouldn't happen though
-    return [[-1, -1, -1], [-1, -1, -1]];
+    return [[]];
+}
+function getHexesAdjacentToVertex(row, col, vertex) {
+    var _a = getHexesAdjacentToVertexUnfiltered(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
+    // hex 1 oob
+    if (hex1[0] < 0 || hex1[1] < 0 || hex1[0] >= gameLogic.ROWS || hex1[1] >= gameLogic.COLS) {
+        // both hexes oob
+        if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+            return [[]];
+        }
+        return [hex2];
+    }
+    // hex2 oob
+    if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+        return [hex1];
+    }
+    return [hex1, hex2];
 }
 /**
  * Constants definitions

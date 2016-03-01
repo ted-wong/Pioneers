@@ -226,7 +226,6 @@ function canAffordConstruction(player: Player, construct: Construction): boolean
       break;
     default:
       return false;
-      break;
   }
   return false;
 }
@@ -254,7 +253,6 @@ function hasSufficientConstructsToBuild(player: Player, construct: Construction,
       break;
     default:
       return false;
-      break;
   }
   return false;
 }
@@ -340,7 +338,7 @@ function canBuildSettlementLegally(player: Player, board: Board, row: number, co
 
   // TODO: is Water sufficient with "ANY" being allowed?
   var has_land: boolean = false;
-  let [hex1, hex2] = getHexesAdjacentToVertex(row, col, vertex);
+  let hexes = getHexesAdjacentToVertex(row, col, vertex);
   for (var i = 0; i < hexes.length; i++) {
     if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
       has_land = true;
