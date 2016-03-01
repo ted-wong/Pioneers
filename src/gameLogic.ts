@@ -809,8 +809,29 @@ module gameLogic {
       throw new Error('Not your turn to play!');
     }
     let robberMove = <RobberMoveMove> move;
-    //TODO
-    return null;
+    if (isSea(robberMove.row, robberMove.col)) {
+      throw new Error('Cannot move robber to sea!');
+    }
+
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROBBER_MOVE;
+    let robber = stateBeforeMove.robber;
+    if (robber.row === robberMove.row && robber.col === robberMove.col) {
+      throw new Error('Cannot move robber to same place!');
+    }
+
+    //State transition to robber
+    stateAfterMove.board[robber.row][robber.col].hasRobber = false;
+    stateAfterMove.board[robberMove.row][robberMove.col].hasRobber = true;
+    stateAfterMove.robber.row = robberMove.row;
+    stateAfterMove.robber.col = robberMove.col;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onRobPlayer(move: TurnMove, turnIdx: number): IMove {
