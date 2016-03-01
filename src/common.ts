@@ -168,7 +168,7 @@ interface RobberMoveMove extends TurnMove {
 
 interface RobPlayerMove extends TurnMove {
   stealingIdx: number;
-  stolenIndx: number;
+  stolenIdx: number;
 }
 
 interface TradeWithBankMove extends TurnMove {

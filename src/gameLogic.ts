@@ -254,7 +254,7 @@ module gameLogic {
     null, //TRADE
     checkRobberEvent,
     checkRobberMove,
-    null, //ROB_PLAYER
+    null, //TODO: ROB_PLAYER
     checkTradeResourceWithBank
   ];
 
@@ -839,8 +839,33 @@ module gameLogic {
       throw new Error('Not your turn to play!');
     }
     let robPlayerMove = <RobPlayerMove> move;
-    //TODO
-    return null;
+    if (robPlayerMove.stealingIdx !== turnIdx || robPlayerMove.stealingIdx === robPlayerMove.stolenIdx) {
+      throw new Error('Invalid robbing action!');
+    }
+
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROB_PLAYER;
+    let resourcesOnHand: Resources = [];
+    for (let i = 0; i < Resource.SIZE; i++) {
+      if (stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i] > 0) {
+        for (let n = 0; n < stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i]; n++) {
+          resourcesOnHand.push(i);
+        }
+      }
+    }
+
+    //State transition to robbing
+    resourcesOnHand = shuffleArray(resourcesOnHand);
+    let idx = Math.floor(Math.random() * resourcesOnHand.length);
+    stateAfterMove.players[robPlayerMove.stealingIdx].resources[resourcesOnHand[idx]]++;
+    stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onTradingWithBank(move: TurnMove, turnIdx: number): IMove {

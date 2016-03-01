@@ -747,8 +747,30 @@ var gameLogic;
             throw new Error('Not your turn to play!');
         }
         var robPlayerMove = move;
-        //TODO
-        return null;
+        if (robPlayerMove.stealingIdx !== turnIdx || robPlayerMove.stealingIdx === robPlayerMove.stolenIdx) {
+            throw new Error('Invalid robbing action!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROB_PLAYER;
+        var resourcesOnHand = [];
+        for (var i = 0; i < Resource.SIZE; i++) {
+            if (stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i] > 0) {
+                for (var n = 0; n < stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i]; n++) {
+                    resourcesOnHand.push(i);
+                }
+            }
+        }
+        //State transition to robbing
+        resourcesOnHand = shuffleArray(resourcesOnHand);
+        var idx = Math.floor(Math.random() * resourcesOnHand.length);
+        stateAfterMove.players[robPlayerMove.stealingIdx].resources[resourcesOnHand[idx]]++;
+        stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
     }
     gameLogic.onRobPlayer = onRobPlayer;
     function onTradingWithBank(move, turnIdx) {
