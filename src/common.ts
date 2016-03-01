@@ -268,6 +268,8 @@ function canBuildRoadLegally(player: Player, board: Board, row: number, col: num
   if (board[row][col].edges[edge] >= 0) return false;
 
   let adjHex: number[] = getHexAdjcentToEdge(row, col, edge);
+  if (adjHex.length == 0)
+    return false;
 
   // both hexes cannot be water
   if (board[row][col].label == Resource.Water && board[adjHex[0]][adjHex[1]].label == Resource.Water) {
@@ -375,13 +377,11 @@ function hasAdjacentRoad(player: Player, board: Board, row: number, col: number,
   if (board[row][col].edges[vertex] = player.id) return true;
   if (board[row][col].edges[(vertex+1) % 6] = player.id) return true;
 
-  let [hex1, hex2] = getHexesAdjacentToVertex(row, col, vertex);
-  if (board[hex1[0]][hex1[1]].edges[hex1[3]] == player.id) return true;
-  if (board[hex1[0]][hex1[1]].edges[(hex1[3]+1) % 6] == player.id) return true;
-
-  if (board[hex2[0]][hex2[1]].edges[hex2[3]] == player.id) return true;
-  if (board[hex2[0]][hex2[1]].edges[(hex2[3]+1) % 6] == player.id) return true;
-
+  let hexes = getHexesAdjacentToVertex(row, col, vertex);
+  for (var i in hexes) {
+	  if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] == player.id) return true;
+	  if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3]+1) % 6] == player.id) return true;
+  }
   return false;
 }
 
@@ -397,26 +397,22 @@ function hasNearbyConstruct(board: Board, row: number, col: number, vertex: numb
     board[row][col].vertices[((vertex-1) % 6 + 6) % 6] == Construction.City)
     return true;
   
-  let [hex1, hex2] = getHexesAdjacentToVertex(row, col, vertex);
+  let hexes = getHexesAdjacentToVertex(row, col, vertex);
   
-  if (board[hex1[0]][hex1[1]].vertices[(hex1[3]+1) % 6] == Construction.Settlement || 
-    board[hex1[0]][hex1[1]].vertices[(hex1[3]+1) % 6] == Construction.City || 
-    board[hex1[0]][hex1[1]].vertices[((hex1[3]-1) % 6 + 6) % 6] == Construction.Settlement || 
-    board[hex1[0]][hex1[1]].vertices[((hex1[3]-1) % 6 + 6) % 6] == Construction.City)
-    return true;
-    
-  if (board[hex2[0]][hex2[1]].vertices[(hex2[3]+1) % 6] == Construction.Settlement || 
-    board[hex2[0]][hex2[1]].vertices[(hex2[3]+1) % 6] == Construction.City || 
-    board[hex2[0]][hex2[1]].vertices[((hex2[3]-1) % 6 + 6) % 6] == Construction.Settlement || 
-    board[hex2[0]][hex2[1]].vertices[((hex2[3]-1) % 6 + 6) % 6] == Construction.City)
-    return true;
-    
+  for (var i in hexes) {
+	if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3]+1) % 6] == Construction.Settlement || 
+      board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3]+1) % 6] == Construction.City || 
+      board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3]-1) % 6 + 6) % 6] == Construction.Settlement || 
+      board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3]-1) % 6 + 6) % 6] == Construction.City)
+      return true;
+  }
+  
   return false;
 }
 
 
 // return [row, col] pair that shares edge with original edge
-function getHexAdjcentToEdge(row: number, col: number, edge: number): number[] {
+function getHexAdjcentToEdgeUnfiltered(row: number, col: number, edge: number): number[] {
 
   // TODO: add check for new row/col out of bounds
 
@@ -447,13 +443,21 @@ function getHexAdjcentToEdge(row: number, col: number, edge: number): number[] {
     return [row+1, col];
 
   // default - shouldn't happen though
-  return [-1, -1];
+  return [];
 }
 
-// will return 2 hexes in [row, col, vertex] that share the original vertex
-function getHexesAdjacentToVertex(row: number, col: number, vertex: number): number[][] {
+function getHexAdjcentToEdge(row: number, col: number, edge: number): number[] {
+	let hex = getHexAdjcentToEdgeUnfiltered(row, col, edge);
 
-  // TODO: add check for new row/col hexes out of bounds
+	if (hex[0] < 0 || hex[1] < 0 || hex[0] >= gameLogic.ROWS || hex[1] >= gameLogic.COLS)
+		return [];
+		
+	return hex;
+}
+
+
+// will return 2 hexes in [row, col, vertex] that share the original vertex
+function getHexesAdjacentToVertexUnfiltered(row: number, col: number, vertex: number): number[][] {
 
   if (vertex == 0 && row%2 == 0)
     return [[row, col+1, 2], [row-1, col+1, 4]];
@@ -486,8 +490,29 @@ function getHexesAdjacentToVertex(row: number, col: number, vertex: number): num
     return [[row+1, col, 1], [row, col+1, 3]];
 
   // default - shouldn't happen though
-  return [[-1, -1, -1], [-1, -1, -1]];
+  return [[]];
 }
+
+function getHexesAdjacentToVertex(row: number, col: number, vertex: number): number[][] {
+	let [hex1, hex2] = getHexesAdjacentToVertexUnfiltered(row, col, vertex);
+	
+	// hex 1 oob
+	if (hex1[0] < 0 || hex1[1] < 0 || hex1[0] >= gameLogic.ROWS || hex1[1] >= gameLogic.COLS) {
+	
+		// both hexes oob
+		if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+			return [[]];
+		}
+		return [hex2];
+	}
+	
+	// hex2 oob
+	if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+		return [hex1];
+	}
+	return [hex1, hex2];
+}
+
 
 
 /**
