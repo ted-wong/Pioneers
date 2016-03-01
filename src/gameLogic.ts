@@ -498,6 +498,11 @@ module gameLogic {
     return ret;
   }
 
+  export function onGameStart(move: TurnMove, turnIdx: number): IMove {
+    //TODO: A simple handler to set moveType to INIT so that game begins
+    return null;
+  }
+
   export function onRollDice(move: TurnMove, turnIdx: number): IMove {
     if (move.playerIdx !== turnIdx) {
       throw new Error('Not your turn to play!');
@@ -703,6 +708,7 @@ module gameLogic {
     let monopolyMove = <MonopolyMove> move;
     let stateBeforeMove = getStateBeforeMove(move);
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.MONOPOLY;
     stateAfterMove.devCardsPlayed = true;
 
     //State transition to dev cards
@@ -742,6 +748,7 @@ module gameLogic {
     let yearOfPlentyMove = <YearOfPlentyMove> move;
     let stateBeforeMove = getStateBeforeMove(move);
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.YEAR_OF_PLENTY;
 
     //State transition to dev cards
     stateAfterMove.players[turnIdx].devCards[DevCard.YearOfPlenty]--;
@@ -767,8 +774,34 @@ module gameLogic {
 
   export function onRobberEvent(move: TurnMove, turnIdx: number): IMove {
     let robberEventMove = <RobberEventMove> move;
-    //TODO
-    return null;
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROBBER_EVENT;
+    let playerIdx = stateBeforeMove.eventIdx;
+
+    let prevSum : number = 0;
+    for (let i = 0; i < Resource.SIZE; i++) {
+      prevSum += stateBeforeMove.players[playerIdx].resources[i];
+    }
+
+    if (prevSum > 7) {
+      //State transition to toss resource cards
+      for (let i = 0; i < Resource.SIZE; i++) {
+        stateAfterMove.players[playerIdx].resources[i] -= robberEventMove.tossed[i];
+        if (stateAfterMove.players[playerIdx].resources[i] < 0) {
+          throw new Error('Insufficient resource: ' + Resource[i]);
+        }
+      }
+    }
+
+    stateAfterMove.eventIdx++;
+    stateAfterMove.eventIdx = stateAfterMove.eventIdx === NUM_PLAYERS ? -1 : stateAfterMove.eventIdx;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onRobberMove(move: TurnMove, turnIdx: number): IMove {

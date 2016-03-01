@@ -438,6 +438,11 @@ var gameLogic;
         ret.delta = stateBeforeMove;
         return ret;
     }
+    function onGameStart(move, turnIdx) {
+        //TODO: A simple handler to set moveType to INIT so that game begins
+        return null;
+    }
+    gameLogic.onGameStart = onGameStart;
     function onRollDice(move, turnIdx) {
         if (move.playerIdx !== turnIdx) {
             throw new Error('Not your turn to play!');
@@ -624,6 +629,7 @@ var gameLogic;
         var monopolyMove = move;
         var stateBeforeMove = getStateBeforeMove(move);
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.MONOPOLY;
         stateAfterMove.devCardsPlayed = true;
         //State transition to dev cards
         stateAfterMove.players[turnIdx].devCards[DevCard.Monopoly]--;
@@ -659,6 +665,7 @@ var gameLogic;
         var yearOfPlentyMove = move;
         var stateBeforeMove = getStateBeforeMove(move);
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.YEAR_OF_PLENTY;
         //State transition to dev cards
         stateAfterMove.players[turnIdx].devCards[DevCard.YearOfPlenty]--;
         stateAfterMove.bank.devCards[DevCard.YearOfPlenty]++;
@@ -682,8 +689,30 @@ var gameLogic;
     gameLogic.onYearOfPlenty = onYearOfPlenty;
     function onRobberEvent(move, turnIdx) {
         var robberEventMove = move;
-        //TODO
-        return null;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROBBER_EVENT;
+        var playerIdx = stateBeforeMove.eventIdx;
+        var prevSum = 0;
+        for (var i = 0; i < Resource.SIZE; i++) {
+            prevSum += stateBeforeMove.players[playerIdx].resources[i];
+        }
+        if (prevSum > 7) {
+            //State transition to toss resource cards
+            for (var i = 0; i < Resource.SIZE; i++) {
+                stateAfterMove.players[playerIdx].resources[i] -= robberEventMove.tossed[i];
+                if (stateAfterMove.players[playerIdx].resources[i] < 0) {
+                    throw new Error('Insufficient resource: ' + Resource[i]);
+                }
+            }
+        }
+        stateAfterMove.eventIdx++;
+        stateAfterMove.eventIdx = stateAfterMove.eventIdx === gameLogic.NUM_PLAYERS ? -1 : stateAfterMove.eventIdx;
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
     }
     gameLogic.onRobberEvent = onRobberEvent;
     function onRobberMove(move, turnIdx) {
