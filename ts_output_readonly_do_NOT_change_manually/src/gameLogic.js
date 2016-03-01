@@ -368,6 +368,9 @@ var gameLogic;
                 };
             }
         }
+        if (selling.item === Resource.Dust || buying.item === Resource.Dust) {
+            throw new Error('Missing trading item!');
+        }
         if (selling.item === buying.item) {
             throw new Error('Cannot trade the same resources');
         }
@@ -756,7 +759,7 @@ var gameLogic;
         var resourcesOnHand = [];
         for (var i = 0; i < Resource.SIZE; i++) {
             if (stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i] > 0) {
-                for (var n = 0; n < stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i]; n++) {
+                for (var _ = 0; _ < stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i]; _++) {
                     resourcesOnHand.push(i);
                 }
             }
@@ -778,8 +781,25 @@ var gameLogic;
             throw new Error('Not your turn to play!');
         }
         var tradeWithBankMove = move;
-        //TODO
-        return null;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.TRANSACTION_WITH_BANK;
+        //State transition to transaction
+        stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] -= tradeWithBankMove.sellingNum;
+        stateAfterMove.players[turnIdx].resources[tradeWithBankMove.buyingItem] += tradeWithBankMove.buyingNum;
+        stateAfterMove.bank.resources[tradeWithBankMove.sellingItem] += tradeWithBankMove.sellingNum;
+        stateAfterMove.bank.resources[tradeWithBankMove.buyingItem] -= tradeWithBankMove.buyingNum;
+        if (stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] < 0) {
+            throw new Error('Player has insufficient resources to trade!');
+        }
+        if (stateAfterMove.bank.resources[tradeWithBankMove.buyingItem] < 0) {
+            throw new Error('Bank has insufficient resources to trade!');
+        }
+        return {
+            endMatchScores: countScores(stateAfterMove),
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
     }
     gameLogic.onTradingWithBank = onTradingWithBank;
     function onEndTurn(move, turnIdx) {
