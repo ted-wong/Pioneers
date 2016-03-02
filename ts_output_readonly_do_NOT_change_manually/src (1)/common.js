@@ -92,7 +92,6 @@ function canAffordConstruction(player, construct) {
             break;
         default:
             return false;
-            break;
     }
     return false;
 }
@@ -119,7 +118,6 @@ function hasSufficientConstructsToBuild(player, construct, bank) {
             break;
         default:
             return false;
-            break;
     }
     return false;
 }
@@ -175,12 +173,11 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
         }
         return true;
     }
-    // can build road off own existing settlement (for initial roads)
-    if (initial) {
-        if ((board[row][col].vertices[edge] == Construction.Settlement && board[row][col].vertexOwner[edge] == player.id) ||
-            (board[row][col].vertices[(edge + 1) % 6] == Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] == player.id))
-            return true;
-    }
+    if ((board[row][col].vertices[edge] == Construction.Settlement && board[row][col].vertexOwner[edge] == player.id) ||
+        (board[row][col].vertices[(edge + 1) % 6] == Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] == player.id) ||
+        (board[row][col].vertices[edge] == Construction.City && board[row][col].vertexOwner[edge] == player.id) ||
+        (board[row][col].vertices[(edge + 1) % 6] == Construction.City && board[row][col].vertexOwner[(edge + 1) % 6] == player.id))
+        return true;
     return false;
 }
 function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
@@ -191,14 +188,15 @@ function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
     // proposed vertex must be empty - no other settlement/city
     if (board[row][col].vertices[vertex] != -1)
         return false;
-    // one of the 3 hexes must be land
     // TODO: is Water sufficient with "ANY" being allowed?
-    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
-    if (board[row][col].label == Resource.Water &&
-        board[hex1[0]][hex1[1]].label == Resource.Water &&
-        board[hex2[0]][hex2[1]].label == Resource.Water) {
-        return false;
+    var has_land = false;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i = 0; i < hexes.length; i++) {
+        if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
+            has_land = true;
     }
+    if (has_land == false)
+        return false;
     // needs adjacent road to build on if not initial settlements
     if (!initial && !hasAdjacentRoad(player, board, row, col, vertex))
         return false;
@@ -227,7 +225,7 @@ function hasAdjacentRoad(player, board, row, col, vertex) {
     if (board[row][col].edges[(vertex + 1) % 6] = player.id)
         return true;
     var hexes = getHexesAdjacentToVertex(row, col, vertex);
-    for (var i in hexes) {
+    for (var i = 0; i < hexes.length; i++) {
         if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] == player.id)
             return true;
         if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3] + 1) % 6] == player.id)
@@ -245,7 +243,7 @@ function hasNearbyConstruct(board, row, col, vertex) {
         board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] == Construction.City)
         return true;
     var hexes = getHexesAdjacentToVertex(row, col, vertex);
-    for (var i in hexes) {
+    for (var i = 0; i < hexes.length; i++) {
         if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.Settlement ||
             board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.City ||
             board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
@@ -330,6 +328,78 @@ function getHexesAdjacentToVertex(row, col, vertex) {
         return [hex1];
     }
     return [hex1, hex2];
+}
+function getLongestRoad(player, board) {
+    var max = 0;
+    // loop over all unique vertices
+    for (var i = 0; i < gameLogic.ROWS; i++) {
+        for (var j = 0; j < gameLogic.COLS; j++) {
+            // loop over every other vertex
+            // only need to do calculate from every other vertex to reduce computations
+            for (var k = 0; k < 6; k += 2) {
+                var roadLength = findRoadSubLength(player, board, i, j, k, []);
+                if (roadLength > max)
+                    max = roadLength;
+            }
+        }
+    }
+    return max;
+}
+// traverse each node (vertex) and recurse if a road exists between a neighboring node
+//
+// TODO: stop adding to length if other player settlement/city is inbetween roads
+//
+function findRoadSubLength(player, board, row, col, vertex, traversed) {
+    if (!hasAdjacentRoad(player, board, row, col, vertex))
+        return 0;
+    traversed.push("" + row + ", " + col + ", " + vertex + "");
+    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
+    var length1 = 0;
+    var length2 = 0;
+    var length3 = 0;
+    // TODO: fix hexes to allow for 0 or 1 hex instead of 2
+    var _b = getHexesAdjacentToVertex(row, col, (vertex + 1) % 6), h1 = _b[0], h2 = _b[1];
+    if (traversed.indexOf("" + row + ", " + col + ", " + ((vertex + 1) % 6) + "") == -1 &&
+        traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+        traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+        if (board[row][col].edges[(vertex + 1) % 6] == player.id)
+            length1 = 1 + findRoadSubLength(player, board, row, col, (vertex + 1) % 6, traversed);
+    }
+    _c = getHexesAdjacentToVertex(hex1[0], hex1[1], (hex1[2] + 1) % 6), h1 = _c[0], h2 = _c[1];
+    if (traversed.indexOf("" + hex1[0] + ", " + hex1[1] + ", " + ((hex1[2] + 1) % 6) + "") == -1 &&
+        traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+        traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+        if (board[hex1[0]][hex1[1]].edges[(hex1[2] + 1) % 6] == player.id)
+            length2 = 1 + findRoadSubLength(player, board, hex1[0], hex1[1], (hex1[2] + 1) % 6, traversed);
+    }
+    _d = getHexesAdjacentToVertex(hex2[0], hex2[1], (hex2[2] + 1) % 6), h1 = _d[0], h2 = _d[1];
+    if (traversed.indexOf("" + hex2[0] + ", " + hex2[1] + ", " + ((hex2[2] + 1) % 6) + "") == -1 &&
+        traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+        traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+        if (board[hex2[0]][hex2[1]].edges[(hex2[2] + 1) % 6] == player.id)
+            length3 = 1 + findRoadSubLength(player, board, hex2[0], hex2[1], (hex2[2] + 1) % 6, traversed);
+    }
+    // first call to finding road length
+    if (traversed.length == 1) {
+        if (length1 < length2 && length1 < length3) {
+            return length2 + length3;
+        }
+        else if (length2 < length1 && length2 < length3) {
+            return length1 + length3;
+        }
+        else {
+            return length1 + length2;
+        }
+    }
+    else {
+        if (length2 < length3) {
+            return length3;
+        }
+        else {
+            return length2;
+        }
+    }
+    var _c, _d;
 }
 /**
  * Constants definitions

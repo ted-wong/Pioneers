@@ -429,10 +429,10 @@ module gameLogic {
       for (let c = 0; c < Construction.SIZE; c++) {
         switch (c) {
           case Construction.Settlement:
-            scores[i] += 1;
+            scores[i] += 1 * player.construction[Construction.Settlement];
             break;
           case Construction.City:
-            scores[i] += 2;
+            scores[i] += 2 * player.construction[Construction.City];
             break;
           default:
             //noop
