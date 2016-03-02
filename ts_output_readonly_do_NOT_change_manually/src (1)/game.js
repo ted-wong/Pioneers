@@ -27,13 +27,8 @@ var game;
         document.addEventListener("animationend", animationEndedCallback, false); // standard
         document.addEventListener("webkitAnimationEnd", animationEndedCallback, false); // WebKit
         document.addEventListener("oanimationend", animationEndedCallback, false); // Opera
-<<<<<<< HEAD
     
         let w: any = window;
-=======
-        setTimeout(animationEndedCallback, 1000); // Just in case animationEnded is not fired by some browser.
-        var w = window;
->>>>>>> 5abd6ab3a14931818ba1634ad3ad61cdd0539114
         if (w["HTMLInspector"]) {
           setInterval(function () {
             w["HTMLInspector"].inspect({
@@ -65,8 +60,6 @@ var game;
         };
     }
     function animationEndedCallback() {
-        if (game.animationEnded)
-            return;
         $rootScope.$apply(function () {
             log.info("Animation ended");
             game.animationEnded = true;
