@@ -30,22 +30,21 @@ var Construction;
 var MoveType;
 (function (MoveType) {
     MoveType[MoveType["INIT"] = 0] = "INIT";
-    MoveType[MoveType["INIT_BUILD"] = 1] = "INIT_BUILD";
-    MoveType[MoveType["ROLL_DICE"] = 2] = "ROLL_DICE";
-    MoveType[MoveType["BUILD_ROAD"] = 3] = "BUILD_ROAD";
-    MoveType[MoveType["BUILD_SETTLEMENT"] = 4] = "BUILD_SETTLEMENT";
-    MoveType[MoveType["BUILD_CITY"] = 5] = "BUILD_CITY";
-    MoveType[MoveType["BUILD_DEVCARD"] = 6] = "BUILD_DEVCARD";
-    MoveType[MoveType["KNIGHT"] = 7] = "KNIGHT";
-    MoveType[MoveType["MONOPOLY"] = 8] = "MONOPOLY";
-    MoveType[MoveType["YEAR_OF_PLENTY"] = 9] = "YEAR_OF_PLENTY";
-    MoveType[MoveType["TRADE"] = 10] = "TRADE";
-    MoveType[MoveType["ROBBER_EVENT"] = 11] = "ROBBER_EVENT";
-    MoveType[MoveType["ROBBER_MOVE"] = 12] = "ROBBER_MOVE";
-    MoveType[MoveType["ROB_PLAYER"] = 13] = "ROB_PLAYER";
-    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 14] = "TRANSACTION_WITH_BANK";
-    MoveType[MoveType["WIN"] = 15] = "WIN";
-    MoveType[MoveType["SIZE"] = 16] = "SIZE";
+    MoveType[MoveType["ROLL_DICE"] = 1] = "ROLL_DICE";
+    MoveType[MoveType["BUILD_ROAD"] = 2] = "BUILD_ROAD";
+    MoveType[MoveType["BUILD_SETTLEMENT"] = 3] = "BUILD_SETTLEMENT";
+    MoveType[MoveType["BUILD_CITY"] = 4] = "BUILD_CITY";
+    MoveType[MoveType["BUILD_DEVCARD"] = 5] = "BUILD_DEVCARD";
+    MoveType[MoveType["KNIGHT"] = 6] = "KNIGHT";
+    MoveType[MoveType["MONOPOLY"] = 7] = "MONOPOLY";
+    MoveType[MoveType["YEAR_OF_PLENTY"] = 8] = "YEAR_OF_PLENTY";
+    MoveType[MoveType["TRADE"] = 9] = "TRADE";
+    MoveType[MoveType["ROBBER_EVENT"] = 10] = "ROBBER_EVENT";
+    MoveType[MoveType["ROBBER_MOVE"] = 11] = "ROBBER_MOVE";
+    MoveType[MoveType["ROB_PLAYER"] = 12] = "ROB_PLAYER";
+    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 13] = "TRANSACTION_WITH_BANK";
+    MoveType[MoveType["WIN"] = 14] = "WIN";
+    MoveType[MoveType["SIZE"] = 15] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
     var total = 0;
@@ -56,7 +55,7 @@ function numberResourceCards(player) {
 }
 function stealFromPlayer(playerStealing, playerStolen) {
     // no cards to steal
-    if (numberResourceCards(playerStolen) === 0)
+    if (numberResourceCards(playerStolen) == 0)
         return;
     // pick random card from other player's hand - from 1 to number of cards
     var cardIndex = Math.floor(Math.random() * numberResourceCards(playerStolen)) + 1;
@@ -128,66 +127,66 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
     if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS)
         return false;
     // edge must be empty - no other roads
-    if (board[row][col].edges[edge] !== -1)
+    if (board[row][col].edges[edge] >= 0)
         return false;
     var adjHex = getHexAdjcentToEdge(row, col, edge);
-    if (adjHex.length === 0)
+    if (adjHex.length == 0)
         return false;
     // both hexes cannot be water
-    if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
+    if (board[row][col].label == Resource.Water && board[adjHex[0]][adjHex[1]].label == Resource.Water) {
         return false;
     }
     // player owns adjacent road in current hex or adjacent road in adjacent hex
-    if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id ||
-        board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id ||
-        board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id ||
-        board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id) {
+    if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] == player.id ||
+        board[row][col].edges[((edge - 1) % 6 + 6) % 6] == player.id ||
+        board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] == player.id ||
+        board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] == player.id) {
         // check if other player's settlement/city is inbetween existing road and proposed road
         // cannot build through player's settlement/city, even with connecting road
         // building CC on same hex
-        if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[edge] === Construction.Settlement ||
-                board[row][col].vertices[edge] === Construction.City) &&
-                board[row][col].vertexOwner[edge] !== player.id)) {
+        if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] == player.id &&
+            ((board[row][col].vertices[edge] == Construction.Settlement ||
+                board[row][col].vertices[edge] == Construction.City) &&
+                board[row][col].vertexOwner[edge] != player.id)) {
             return false;
         }
         // building CW on same hex
-        if (board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
-                board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
-                board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
+        if (board[row][col].edges[((edge - 1) % 6 + 6) % 6] == player.id &&
+            ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] == Construction.Settlement ||
+                board[row][col].vertices[((edge - 1) % 6 + 6) % 6] == Construction.City) &&
+                board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] != player.id)) {
             return false;
         }
         // building CC on adj. hex
-        if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[edge] === Construction.Settlement ||
-                board[row][col].vertices[edge] === Construction.City) &&
-                board[row][col].vertexOwner[edge] !== player.id)) {
+        if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] == player.id &&
+            ((board[row][col].vertices[edge] == Construction.Settlement ||
+                board[row][col].vertices[edge] == Construction.City) &&
+                board[row][col].vertexOwner[edge] != player.id)) {
             return false;
         }
         // building CW on adj. hex
-        if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
-                board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
-                board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
+        if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] == player.id &&
+            ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] == Construction.Settlement ||
+                board[row][col].vertices[((edge - 1) % 6 + 6) % 6] == Construction.City) &&
+                board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] != player.id)) {
             return false;
         }
         return true;
     }
-    if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) ||
-        (board[row][col].vertices[(edge + 1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] === player.id) ||
-        (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
-        (board[row][col].vertices[(edge + 1) % 6] === Construction.City && board[row][col].vertexOwner[(edge + 1) % 6] === player.id))
+    if ((board[row][col].vertices[edge] == Construction.Settlement && board[row][col].vertexOwner[edge] == player.id) ||
+        (board[row][col].vertices[(edge + 1) % 6] == Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] == player.id) ||
+        (board[row][col].vertices[edge] == Construction.City && board[row][col].vertexOwner[edge] == player.id) ||
+        (board[row][col].vertices[(edge + 1) % 6] == Construction.City && board[row][col].vertexOwner[(edge + 1) % 6] == player.id))
         return true;
     return false;
 }
 function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
     if (vertex < 0 || vertex > 5)
         return false;
-    if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
+    if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS)
         return false;
     // proposed vertex must be empty - no other settlement/city
-    if (board[row][col].vertices[vertex] !== -1)
+    if (board[row][col].vertices[vertex] != -1)
         return false;
     // TODO: is Water sufficient with "ANY" being allowed?
     var has_land = false;
@@ -196,7 +195,7 @@ function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
         if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
             has_land = true;
     }
-    if (has_land === false)
+    if (has_land == false)
         return false;
     // needs adjacent road to build on if not initial settlements
     if (!initial && !hasAdjacentRoad(player, board, row, col, vertex))
@@ -209,11 +208,11 @@ function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
 function canUpgradeSettlement(player, board, row, col, vertex) {
     if (vertex < 0 || vertex > 5)
         return false;
-    if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
+    if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS)
         return false;
     // proposed vertex must be empty - no other settlement/city
-    if (board[row][col].vertices[vertex] === Construction.Settlement &&
-        board[row][col].vertexOwner[vertex] === player.id)
+    if (board[row][col].vertices[vertex] == Construction.Settlement &&
+        board[row][col].vertexOwner[vertex] == player.id)
         return true;
     return false;
 }
@@ -221,39 +220,34 @@ function canUpgradeSettlement(player, board, row, col, vertex) {
 // Helper functions for player-based functions
 // *****************
 function hasAdjacentRoad(player, board, row, col, vertex) {
-    if (board[row][col].edges[vertex] === player.id)
+    if (board[row][col].edges[vertex] = player.id)
         return true;
-    if (board[row][col].edges[(vertex + 1) % 6] === player.id)
+    if (board[row][col].edges[(vertex + 1) % 6] = player.id)
         return true;
     var hexes = getHexesAdjacentToVertex(row, col, vertex);
-    //  console.log(hexes);
     for (var i = 0; i < hexes.length; i++) {
-        if (hexes[i].length === 0)
-            continue;
-        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] === player.id)
+        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] == player.id)
             return true;
-        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3] + 1) % 6] === player.id)
+        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3] + 1) % 6] == player.id)
             return true;
     }
     return false;
 }
 function hasNearbyConstruct(board, row, col, vertex) {
-    if (board[row][col].vertices[vertex] === Construction.Settlement ||
-        board[row][col].vertices[vertex] === Construction.City)
+    if (board[row][col].vertices[vertex] == Construction.Settlement ||
+        board[row][col].vertices[vertex] == Construction.City)
         return true;
-    if (board[row][col].vertices[(vertex + 1) % 6] === Construction.Settlement ||
-        board[row][col].vertices[(vertex + 1) % 6] === Construction.City ||
-        board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] === Construction.Settlement ||
-        board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] === Construction.City)
+    if (board[row][col].vertices[(vertex + 1) % 6] == Construction.Settlement ||
+        board[row][col].vertices[(vertex + 1) % 6] == Construction.City ||
+        board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] == Construction.Settlement ||
+        board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] == Construction.City)
         return true;
     var hexes = getHexesAdjacentToVertex(row, col, vertex);
     for (var i = 0; i < hexes.length; i++) {
-        if (hexes[i] === null)
-            continue;
-        if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] === Construction.Settlement ||
-            board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] === Construction.City ||
-            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] === Construction.Settlement ||
-            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] === Construction.City)
+        if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.City ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] == Construction.City)
             return true;
     }
     return false;
@@ -261,25 +255,25 @@ function hasNearbyConstruct(board, row, col, vertex) {
 // return [row, col] pair that shares edge with original edge
 function getHexAdjcentToEdgeUnfiltered(row, col, edge) {
     // TODO: add check for new row/col out of bounds
-    if (edge === 0)
+    if (edge == 0)
         return [row, col + 1];
-    if (edge === 1 && row % 2 === 0)
+    if (edge == 1 && row % 2 == 0)
         return [row - 1, col + 1];
-    if (edge === 1 && row % 2 === 1)
+    if (edge == 1 && row % 2 == 1)
         return [row - 1, col];
-    if (edge === 2 && row % 2 === 0)
+    if (edge == 2 && row % 2 == 0)
         return [row - 1, col];
-    if (edge === 2 && row % 2 === 1)
+    if (edge == 2 && row % 2 == 1)
         return [row - 1, col - 1];
-    if (edge === 3)
+    if (edge == 3)
         return [row, col - 1];
-    if (edge === 4 && row % 2 === 0)
+    if (edge == 4 && row % 2 == 0)
         return [row + 1, col];
-    if (edge === 4 && row % 2 === 1)
+    if (edge == 4 && row % 2 == 1)
         return [row + 1, col - 1];
-    if (edge === 5 && row % 2 === 0)
+    if (edge == 5 && row % 2 == 0)
         return [row + 1, col + 1];
-    if (edge === 5 && row % 2 === 1)
+    if (edge == 5 && row % 2 == 1)
         return [row + 1, col];
     // default - shouldn't happen though
     return [];
@@ -292,29 +286,29 @@ function getHexAdjcentToEdge(row, col, edge) {
 }
 // will return 2 hexes in [row, col, vertex] that share the original vertex
 function getHexesAdjacentToVertexUnfiltered(row, col, vertex) {
-    if (vertex === 0 && row % 2 === 0)
+    if (vertex == 0 && row % 2 == 0)
         return [[row, col + 1, 2], [row - 1, col + 1, 4]];
-    if (vertex === 0 && row % 2 === 1)
+    if (vertex == 0 && row % 2 == 1)
         return [[row, col + 1, 2], [row - 1, col, 4]];
-    if (vertex === 1 && row % 2 === 0)
+    if (vertex == 1 && row % 2 == 0)
         return [[row - 1, col, 5], [row - 1, col + 1, 3]];
-    if (vertex === 1 && row % 2 === 1)
+    if (vertex == 1 && row % 2 == 1)
         return [[row - 1, col - 1, 5], [row - 1, col, 3]];
-    if (vertex === 2 && row % 2 === 0)
+    if (vertex == 2 && row % 2 == 0)
         return [[row, col - 1, 0], [row - 1, col, 4]];
-    if (vertex === 2 && row % 2 === 1)
+    if (vertex == 2 && row % 2 == 1)
         return [[row, col - 1, 0], [row - 1, col - 1, 4]];
-    if (vertex === 3 && row % 2 === 0)
+    if (vertex == 3 && row % 2 == 0)
         return [[row, col - 1, 5], [row + 1, col, 1]];
-    if (vertex === 3 && row % 2 === 1)
+    if (vertex == 3 && row % 2 == 1)
         return [[row, col - 1, 5], [row + 1, col - 1, 1]];
-    if (vertex === 4 && row % 2 === 0)
+    if (vertex == 4 && row % 2 == 0)
         return [[row + 1, col, 0], [row + 1, col + 1, 2]];
-    if (vertex === 4 && row % 2 === 1)
+    if (vertex == 4 && row % 2 == 1)
         return [[row + 1, col - 1, 0], [row + 1, col, 2]];
-    if (vertex === 5 && row % 2 === 0)
+    if (vertex == 5 && row % 2 == 0)
         return [[row + 1, col + 1, 1], [row, col + 1, 3]];
-    if (vertex === 5 && row % 2 === 1)
+    if (vertex == 5 && row % 2 == 1)
         return [[row + 1, col, 1], [row, col + 1, 3]];
     // default - shouldn't happen though
     return [[]];
@@ -358,35 +352,35 @@ function getLongestRoad(player, board) {
 function findRoadSubLength(player, board, row, col, vertex, traversed) {
     if (!hasAdjacentRoad(player, board, row, col, vertex))
         return 0;
-    traversed.push("\"" + row + ", " + col + ", " + vertex + "\"");
+    traversed.push("" + row + ", " + col + ", " + vertex + "");
     var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
     var length1 = 0;
     var length2 = 0;
     var length3 = 0;
     // TODO: fix hexes to allow for 0 or 1 hex instead of 2
     var _b = getHexesAdjacentToVertex(row, col, (vertex + 1) % 6), h1 = _b[0], h2 = _b[1];
-    if (traversed.indexOf("\"" + row + ", " + col + ", " + ((vertex + 1) % 6) + "\"") === -1 &&
-        traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") === -1 &&
-        traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") === -1) {
-        if (board[row][col].edges[(vertex + 1) % 6] === player.id)
-            length1 = 1 + findRoadSubLength(player, board, row, col, (vertex + 1) % 6, angular.copy(traversed));
+    if (traversed.indexOf("" + row + ", " + col + ", " + ((vertex + 1) % 6) + "") == -1 &&
+        traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+        traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+        if (board[row][col].edges[(vertex + 1) % 6] == player.id)
+            length1 = 1 + findRoadSubLength(player, board, row, col, (vertex + 1) % 6, traversed);
     }
     _c = getHexesAdjacentToVertex(hex1[0], hex1[1], (hex1[2] + 1) % 6), h1 = _c[0], h2 = _c[1];
-    if (traversed.indexOf("\"" + hex1[0] + ", " + hex1[1] + ", " + ((hex1[2] + 1) % 6) + "\"") === -1 &&
-        traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") === -1 &&
-        traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") === -1) {
-        if (board[hex1[0]][hex1[1]].edges[(hex1[2] + 1) % 6] === player.id)
-            length2 = 1 + findRoadSubLength(player, board, hex1[0], hex1[1], (hex1[2] + 1) % 6, angular.copy(traversed));
+    if (traversed.indexOf("" + hex1[0] + ", " + hex1[1] + ", " + ((hex1[2] + 1) % 6) + "") == -1 &&
+        traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+        traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+        if (board[hex1[0]][hex1[1]].edges[(hex1[2] + 1) % 6] == player.id)
+            length2 = 1 + findRoadSubLength(player, board, hex1[0], hex1[1], (hex1[2] + 1) % 6, traversed);
     }
     _d = getHexesAdjacentToVertex(hex2[0], hex2[1], (hex2[2] + 1) % 6), h1 = _d[0], h2 = _d[1];
-    if (traversed.indexOf("\"" + hex2[0] + ", " + hex2[1] + ", " + ((hex2[2] + 1) % 6) + "\"") === -1 &&
-        traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") === -1 &&
-        traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") === -1) {
-        if (board[hex2[0]][hex2[1]].edges[(hex2[2] + 1) % 6] === player.id)
-            length3 = 1 + findRoadSubLength(player, board, hex2[0], hex2[1], (hex2[2] + 1) % 6, angular.copy(traversed));
+    if (traversed.indexOf("" + hex2[0] + ", " + hex2[1] + ", " + ((hex2[2] + 1) % 6) + "") == -1 &&
+        traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+        traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+        if (board[hex2[0]][hex2[1]].edges[(hex2[2] + 1) % 6] == player.id)
+            length3 = 1 + findRoadSubLength(player, board, hex2[0], hex2[1], (hex2[2] + 1) % 6, traversed);
     }
     // first call to finding road length
-    if (traversed.length === 1) {
+    if (traversed.length == 1) {
         if (length1 < length2 && length1 < length3) {
             return length2 + length3;
         }

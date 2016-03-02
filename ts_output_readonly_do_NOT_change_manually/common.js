@@ -5,9 +5,10 @@ var Resource;
     Resource[Resource["Wool"] = 2] = "Wool";
     Resource[Resource["Grain"] = 3] = "Grain";
     Resource[Resource["Ore"] = 4] = "Ore";
-    Resource[Resource["Dust"] = 5] = "Dust";
-    Resource[Resource["Water"] = 6] = "Water";
-    Resource[Resource["SIZE"] = 7] = "SIZE";
+    Resource[Resource["SIZE"] = 5] = "SIZE";
+    Resource[Resource["Dust"] = 6] = "Dust";
+    Resource[Resource["Water"] = 7] = "Water";
+    Resource[Resource["ANY"] = 8] = "ANY"; //Used for harbor 3:1
 })(Resource || (Resource = {}));
 var DevCard;
 (function (DevCard) {
@@ -35,14 +36,15 @@ var MoveType;
     MoveType[MoveType["BUILD_CITY"] = 4] = "BUILD_CITY";
     MoveType[MoveType["BUILD_DEVCARD"] = 5] = "BUILD_DEVCARD";
     MoveType[MoveType["KNIGHT"] = 6] = "KNIGHT";
-    MoveType[MoveType["PROGRESS"] = 7] = "PROGRESS";
-    MoveType[MoveType["TRADE"] = 8] = "TRADE";
-    MoveType[MoveType["ROBBER_EVENT"] = 9] = "ROBBER_EVENT";
-    MoveType[MoveType["ROBBER_MOVE"] = 10] = "ROBBER_MOVE";
-    MoveType[MoveType["ROB_PLAYER"] = 11] = "ROB_PLAYER";
-    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 12] = "TRANSACTION_WITH_BANK";
-    MoveType[MoveType["WIN"] = 13] = "WIN";
-    MoveType[MoveType["SIZE"] = 14] = "SIZE";
+    MoveType[MoveType["MONOPOLY"] = 7] = "MONOPOLY";
+    MoveType[MoveType["YEAR_OF_PLENTY"] = 8] = "YEAR_OF_PLENTY";
+    MoveType[MoveType["TRADE"] = 9] = "TRADE";
+    MoveType[MoveType["ROBBER_EVENT"] = 10] = "ROBBER_EVENT";
+    MoveType[MoveType["ROBBER_MOVE"] = 11] = "ROBBER_MOVE";
+    MoveType[MoveType["ROB_PLAYER"] = 12] = "ROB_PLAYER";
+    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 13] = "TRANSACTION_WITH_BANK";
+    MoveType[MoveType["WIN"] = 14] = "WIN";
+    MoveType[MoveType["SIZE"] = 15] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
     var total = 0;
@@ -94,23 +96,26 @@ function canAffordConstruction(player, construct) {
     }
     return false;
 }
-function hasSuffucientConstructsToBuild(player, construct, bank) {
+function hasSufficientConstructsToBuild(player, construct, bank) {
     switch (construct) {
         case Construction.Road:
-            if (player.Construction[Construction.Road] < 15)
+            if (player.construction[Construction.Road] < 15)
                 return true;
             break;
         case Construction.Settlement:
-            if (player.Construction[Construction.Settlement] < 5)
+            if (player.construction[Construction.Settlement] < 5)
                 return true;
             break;
         case Construction.City:
-            if (player.Construction[Construction.City] < 4 && player.Construction[Construction.Settlement] > 0)
+            if (player.construction[Construction.City] < 4 && player.construction[Construction.Settlement] > 0)
                 return true;
             break;
         case Construction.DevCard:
-            if (bank.devCards > 0)
-                return true;
+            for (var i = 0; i < bank.devCards.length; i++) {
+                if (bank.devCards[i] > 0) {
+                    return true;
+                }
+            }
             break;
         default:
             return false;
@@ -127,6 +132,8 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
     if (board[row][col].edges[edge] >= 0)
         return false;
     var adjHex = getHexAdjcentToEdge(row, col, edge);
+    if (adjHex.length == 0)
+        return false;
     // both hexes cannot be water
     if (board[row][col].label == Resource.Water && board[adjHex[0]][adjHex[1]].label == Resource.Water) {
         return false;
@@ -211,25 +218,23 @@ function canUpgradeSettlement(player, board, row, col, vertex) {
         return true;
     return false;
 }
+// *****************
+// Helper functions for player-based functions
+// *****************
 function hasAdjacentRoad(player, board, row, col, vertex) {
     if (board[row][col].edges[vertex] = player.id)
         return true;
     if (board[row][col].edges[(vertex + 1) % 6] = player.id)
         return true;
-    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
-    if (board[hex1[0]][hex1[1]].edges[hex1[3]] == player.id)
-        return true;
-    if (board[hex1[0]][hex1[1]].edges[(hex1[3] + 1) % 6] == player.id)
-        return true;
-    if (board[hex2[0]][hex2[1]].edges[hex2[3]] == player.id)
-        return true;
-    if (board[hex2[0]][hex2[1]].edges[(hex2[3] + 1) % 6] == player.id)
-        return true;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i in hexes) {
+        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] == player.id)
+            return true;
+        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3] + 1) % 6] == player.id)
+            return true;
+    }
     return false;
 }
-// *****************
-// Helper functions for player-based functions
-// *****************
 function hasNearbyConstruct(board, row, col, vertex) {
     if (board[row][col].vertices[vertex] == Construction.Settlement ||
         board[row][col].vertices[vertex] == Construction.City)
@@ -239,21 +244,18 @@ function hasNearbyConstruct(board, row, col, vertex) {
         board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] == Construction.Settlement ||
         board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] == Construction.City)
         return true;
-    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
-    if (board[hex1[0]][hex1[1]].vertices[(hex1[3] + 1) % 6] == Construction.Settlement ||
-        board[hex1[0]][hex1[1]].vertices[(hex1[3] + 1) % 6] == Construction.City ||
-        board[hex1[0]][hex1[1]].vertices[((hex1[3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
-        board[hex1[0]][hex1[1]].vertices[((hex1[3] - 1) % 6 + 6) % 6] == Construction.City)
-        return true;
-    if (board[hex2[0]][hex2[1]].vertices[(hex2[3] + 1) % 6] == Construction.Settlement ||
-        board[hex2[0]][hex2[1]].vertices[(hex2[3] + 1) % 6] == Construction.City ||
-        board[hex2[0]][hex2[1]].vertices[((hex2[3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
-        board[hex2[0]][hex2[1]].vertices[((hex2[3] - 1) % 6 + 6) % 6] == Construction.City)
-        return true;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i in hexes) {
+        if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] == Construction.City ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] == Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] == Construction.City)
+            return true;
+    }
     return false;
 }
 // return [row, col] pair that shares edge with original edge
-function getHexAdjcentToEdge(row, col, edge) {
+function getHexAdjcentToEdgeUnfiltered(row, col, edge) {
     // TODO: add check for new row/col out of bounds
     if (edge == 0)
         return [row, col + 1];
@@ -276,11 +278,16 @@ function getHexAdjcentToEdge(row, col, edge) {
     if (edge == 5 && row % 2 == 1)
         return [row + 1, col];
     // default - shouldn't happen though
-    return [-1, -1];
+    return [];
+}
+function getHexAdjcentToEdge(row, col, edge) {
+    var hex = getHexAdjcentToEdgeUnfiltered(row, col, edge);
+    if (hex[0] < 0 || hex[1] < 0 || hex[0] >= gameLogic.ROWS || hex[1] >= gameLogic.COLS)
+        return [];
+    return hex;
 }
 // will return 2 hexes in [row, col, vertex] that share the original vertex
-function getHexesAdjacentToVertex(row, col, vertex) {
-    // TODO: add check for new row/col hexes out of bounds
+function getHexesAdjacentToVertexUnfiltered(row, col, vertex) {
     if (vertex == 0 && row % 2 == 0)
         return [[row, col + 1, 2], [row - 1, col + 1, 4]];
     if (vertex == 0 && row % 2 == 1)
@@ -306,6 +313,99 @@ function getHexesAdjacentToVertex(row, col, vertex) {
     if (vertex == 5 && row % 2 == 1)
         return [[row + 1, col, 1], [row, col + 1, 3]];
     // default - shouldn't happen though
-    return [[-1, -1, -1], [-1, -1, -1]];
+    return [[]];
 }
+function getHexesAdjacentToVertex(row, col, vertex) {
+    var _a = getHexesAdjacentToVertexUnfiltered(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
+    // hex 1 oob
+    if (hex1[0] < 0 || hex1[1] < 0 || hex1[0] >= gameLogic.ROWS || hex1[1] >= gameLogic.COLS) {
+        // both hexes oob
+        if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+            return [[]];
+        }
+        return [hex2];
+    }
+    // hex2 oob
+    if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+        return [hex1];
+    }
+    return [hex1, hex2];
+}
+/**
+ * Constants definitions
+ */
+var tokens = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11];
+var terrains = [
+    Resource.Brick,
+    Resource.Brick,
+    Resource.Brick,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Ore,
+    Resource.Ore,
+    Resource.Ore,
+    Resource.Dust
+];
+/**
+ * Constants for harbors
+ */
+var harborPos = [
+    [1, 3],
+    [1, 4],
+    [2, 1],
+    [2, 4],
+    [3, 1],
+    [4, 1],
+    [4, 4],
+    [5, 3],
+    [5, 4]
+];
+var harbors = [
+    {
+        trading: Resource.ANY,
+        vertices: [1, 2]
+    },
+    {
+        trading: Resource.Ore,
+        vertices: [0, 1]
+    },
+    {
+        trading: Resource.Lumber,
+        vertices: [1, 2]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [0, 5]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [2, 3]
+    },
+    {
+        trading: Resource.Wool,
+        vertices: [3, 4]
+    },
+    {
+        trading: Resource.Brick,
+        vertices: [0, 5]
+    },
+    {
+        trading: Resource.Grain,
+        vertices: [3, 4]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [4, 5]
+    }
+];
 //# sourceMappingURL=common.js.map
