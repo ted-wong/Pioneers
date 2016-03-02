@@ -230,7 +230,7 @@ var gameLogic;
         null,
         checkRobberEvent,
         checkRobberMove,
-        null,
+        checkRobPlayer,
         checkTradeResourceWithBank
     ];
     function checkInitBuild(prevState, nextState, idx) {
@@ -343,6 +343,50 @@ var gameLogic;
             }
         }
         return 4;
+    }
+    function checkRobPlayer(prevState, nextState, idx) {
+        var stealing = { player: -1, item: Resource.Dust, num: 0 };
+        var stolen = { player: -1, item: Resource.Dust, num: 0 };
+        for (var p = 0; p < gameLogic.NUM_PLAYERS; p++) {
+            for (var r = 0; r < Resource.SIZE; r++) {
+                if (nextState.players[p].resources[r] < prevState.players[p].resources[r]) {
+                    //Stolen scenario
+                    if (stolen.player !== -1 || stolen.item !== Resource.Dust) {
+                        throw new Error('Cannot steal multiple players!');
+                    }
+                    stolen = { player: p, item: r,
+                        num: prevState.players[0].resources[r] - nextState.players[p].resources[r] };
+                }
+                if (nextState.players[p].resources[r] > prevState.players[p].resources[r]) {
+                    //Stealing scenario
+                    if (stealing.player !== -1 || stolen.item !== Resource.Dust) {
+                        throw new Error('Cannot have multiple stealings!');
+                    }
+                    stealing = { player: p, item: r,
+                        num: nextState.players[p].resources[r] - prevState.players[p].resources[r] };
+                }
+            }
+        }
+        if (stealing.player !== idx) {
+            throw new Error('Only current player can steal from others!');
+        }
+        if (stealing.player === stolen.player) {
+            throw new Error('Cannot steal from self!');
+        }
+        if (stealing.item !== stolen.item) {
+            throw new Error('Error! Stealing item is not matching stolen item!');
+        }
+        if (stealing.item === Resource.Dust) {
+            throw new Error('Must designate what to steal!');
+        }
+        if (stealing.num !== stolen.num) {
+            throw new Error('Error! Stealing number is not matching stolen number!');
+        }
+        if (stealing.num !== 1) {
+            throw new Error('Must steal one resource at a time!');
+        }
+        checkResources(nextState.players[stealing.player].resources);
+        checkResources(nextState.players[stolen.player].resources);
     }
     function checkTradeResourceWithBank(prevState, nextState, idx) {
         if (!prevState.diceRolled) {
