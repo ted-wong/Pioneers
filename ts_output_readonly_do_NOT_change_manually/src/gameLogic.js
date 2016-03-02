@@ -444,7 +444,6 @@ var gameLogic;
     gameLogic.checkMoveOk = checkMoveOk;
     /**
      * create move logics
-     * TODO: ensure correct behavior of eventIdx
      * TODO: double check codes with validation logics
      */
     function countScores(state) {
@@ -487,6 +486,8 @@ var gameLogic;
     }
     function getStateAfterMove(move, stateBeforeMove) {
         var ret = angular.copy(move.currState);
+        ret.eventIdx = -1;
+        ret.building = null;
         ret.delta = stateBeforeMove;
         return ret;
     }
@@ -558,7 +559,7 @@ var gameLogic;
         }
         else {
             //Robber event will start
-            stateAfterMove.eventIdx = 0;
+            stateAfterMove.eventIdx = turnIdx;
         }
         return {
             endMatchScores: countScores(stateAfterMove),
@@ -575,6 +576,7 @@ var gameLogic;
         }
         var stateBeforeMove = getStateBeforeMove(move);
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.INIT_BUILD;
         stateAfterMove.building = {
             consType: null,
             hexRow: buildingMove.hexRow,
@@ -609,7 +611,10 @@ var gameLogic;
         //Advance eventIdx
         var player = stateAfterMove.players[playerIdx];
         if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
-            stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
+            stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
+        }
+        else {
+            stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
         }
         return {
             endMatchScores: countScores(stateAfterMove),
@@ -710,8 +715,6 @@ var gameLogic;
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.devCardsPlayed = true;
         stateAfterMove.moveType = MoveType.KNIGHT;
-        stateAfterMove.eventIdx = -1;
-        stateAfterMove.building = null;
         //State transition to knight cards
         stateAfterMove.players[move.playerIdx].knightsPlayed++;
         stateAfterMove.players[move.playerIdx].devCards[DevCard.Knight]--;
@@ -818,7 +821,7 @@ var gameLogic;
                 }
             }
         }
-        stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
+        stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
         return {
             endMatchScores: countScores(stateAfterMove),
             turnIndexAfterMove: turnIdx,
@@ -933,8 +936,6 @@ var gameLogic;
         stateAfterMove.diceRolled = false;
         stateAfterMove.devCardsPlayed = false;
         stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
-        stateAfterMove.eventIdx = -1;
-        stateAfterMove.building = null;
         return {
             endMatchScores: scores,
             turnIndexAfterMove: (turnIdx + 1) % gameLogic.NUM_PLAYERS,

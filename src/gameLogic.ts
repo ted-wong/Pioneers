@@ -505,7 +505,6 @@ module gameLogic {
 
   /**
    * create move logics
-   * TODO: ensure correct behavior of eventIdx
    * TODO: double check codes with validation logics
    */
   function countScores(state: IState): number[] {
@@ -554,6 +553,8 @@ module gameLogic {
 
   function getStateAfterMove(move: TurnMove, stateBeforeMove: IState): IState {
     let ret: IState = angular.copy(move.currState);
+    ret.eventIdx = -1;
+    ret.building = null;
     ret.delta = stateBeforeMove;
     return ret;
   }
@@ -634,7 +635,7 @@ module gameLogic {
       }
     } else {
       //Robber event will start
-      stateAfterMove.eventIdx = 0;
+      stateAfterMove.eventIdx = turnIdx;
     }
 
     return {
@@ -653,6 +654,7 @@ module gameLogic {
 
     let stateBeforeMove = getStateBeforeMove(move);
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.INIT_BUILD;
     stateAfterMove.building = {
       consType: null,
       hexRow: buildingMove.hexRow,
@@ -689,7 +691,9 @@ module gameLogic {
     //Advance eventIdx
     let player = stateAfterMove.players[playerIdx];
     if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
-      stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % NUM_PLAYERS;
+      stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % NUM_PLAYERS;
+    } else {
+      stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
     }
 
     return {
@@ -801,8 +805,6 @@ module gameLogic {
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
     stateAfterMove.devCardsPlayed = true;
     stateAfterMove.moveType = MoveType.KNIGHT;
-    stateAfterMove.eventIdx = -1;
-    stateAfterMove.building = null;
 
     //State transition to knight cards
     stateAfterMove.players[move.playerIdx].knightsPlayed++;
@@ -921,7 +923,7 @@ module gameLogic {
       }
     }
 
-    stateAfterMove.eventIdx = (stateAfterMove.eventIdx + 1) % NUM_PLAYERS;
+    stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % NUM_PLAYERS;
 
     return {
       endMatchScores: countScores(stateAfterMove),
@@ -1048,8 +1050,6 @@ module gameLogic {
     stateAfterMove.diceRolled = false;
     stateAfterMove.devCardsPlayed = false;
     stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
-    stateAfterMove.eventIdx = -1;
-    stateAfterMove.building = null;
 
     return {
       endMatchScores: scores,
