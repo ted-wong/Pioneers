@@ -1,5 +1,5 @@
 0 info it worked if it ends with ok
-1 verbose cli [ 'C:\\Program Files (x86)\\nodejs\\node.exe',
+1 verbose cli [ 'C:\\Program Files\\nodejs\\node.exe',
 1 verbose cli   'C:\\Users\\Ted\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js',
 1 verbose cli   'run',
 1 verbose cli   'test' ]
@@ -10,7 +10,7 @@
 6 silly lifecycle Pioneers@1.0.0~pretest: no script for pretest, continuing
 7 info lifecycle Pioneers@1.0.0~test: Pioneers@1.0.0
 8 verbose lifecycle Pioneers@1.0.0~test: unsafe-perm in lifecycle true
-9 verbose lifecycle Pioneers@1.0.0~test: PATH: C:\Users\Ted\AppData\Roaming\npm\node_modules\npm\bin\node-gyp-bin;C:\Users\Ted\Google Drive\NYU\csci3033_004\Pioneers\node_modules\.bin;C:\cygwin64\usr\local\bin;C:\cygwin64\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\Program Files (x86)\PharosSystems\Core;C:\Program Files\Microsoft SQL Server\110\Tools\Binn;C:\Program Files (x86)\RemObjects Software\Elements\bin;C:\Users\Ted\Desktop\SMLNJ\bin;C:\Program Files (x86)\nodejs;C:\Users\Ted\Anaconda2;C:\Users\Ted\Anaconda2\Scripts;C:\Users\Ted\Anaconda2\Library\bin;C:\Users\Ted\AppData\Roaming\npm;C:\cygwin64\lib\lapack;C:\cygwin64\usr\local\bin;C:\cygwin64\bin;C:\cygwin64\bin;C:\cygwin64\usr\sbin;C:\Program Files (x86)\TkDiff\;C:\cygwin64\usr\local\bin;C:\cygwin64\bin;C:\cygwin64\bin;C:\cygwin64\usr\sbin;C:\Program Files (x86)\TkDiff\
+9 verbose lifecycle Pioneers@1.0.0~test: PATH: C:\Users\Ted\AppData\Roaming\npm\node_modules\npm\bin\node-gyp-bin;C:\Users\Ted\Google Drive\NYU\csci3033_004\Pioneers\node_modules\.bin;C:\cygwin64\usr\local\bin;C:\cygwin64\bin;C:\Program Files\Common Files\Microsoft Shared\Windows Live;C:\Program Files (x86)\Common Files\Microsoft Shared\Windows Live;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Program Files (x86)\MiKTeX 2.9\miktex\bin;C:\Program Files (x86)\Windows Live\Shared;C:\Users\Ted\Desktop\sml\bin;C:\Program Files\nodejs;C:\Users\Ted\AppData\Roaming\npm;C:\cygwin64\lib\lapack;C:\Program Files\Java\jdk1.7.0_79\bin\
 10 verbose lifecycle Pioneers@1.0.0~test: CWD: C:\Users\Ted\Google Drive\NYU\csci3033_004\Pioneers
 11 silly lifecycle Pioneers@1.0.0~test: Args: [ '/d /s /c', 'node --harmony ./node_modules/.bin/grunt karma' ]
 12 silly lifecycle Pioneers@1.0.0~test: Returned: code: 1  signal: null
@@ -27,8 +27,8 @@
 14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:211:5)
 15 verbose pkgid Pioneers@1.0.0
 16 verbose cwd C:\Users\Ted\Google Drive\NYU\csci3033_004\Pioneers
-17 error Windows_NT 6.3.9600
-18 error argv "C:\\Program Files (x86)\\nodejs\\node.exe" "C:\\Users\\Ted\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js" "run" "test"
+17 error Windows_NT 6.1.7601
+18 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\Ted\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js" "run" "test"
 19 error node v4.2.6
 20 error npm  v3.6.0
 21 error code ELIFECYCLE

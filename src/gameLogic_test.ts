@@ -175,6 +175,32 @@ describe('Construction Tests', function() {
     check(4, 2, 0); // adj vertex - different hex
   });
 
+  it('Check valid initial settlement placement far away', function() {
+    function check(x: number, y: number, v:number): void {
+      let state: IState = gameLogic.getInitialState();
+      let player: Player = state.players[0];
+      
+      state.board[3][3].vertices[3] = 1; // settlement
+      state.board[3][3].vertexOwner[3] = 0; // owned by player 0
+      
+      // updating other 2 hexes
+      state.board[3][2].vertices[5] = 1;
+      state.board[3][2].vertexOwner[5] = 0;
+      
+      state.board[4][2].vertices[1] = 1;
+      state.board[4][2].vertexOwner[1] = 0;
+      
+      if (!canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+        throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    // all 3 valid spots - same vertex
+    check(4, 4, 1);
+    check(3, 4, 5);
+    check(3, 5, 3);
+  });
+
+
   // non-initial settlements
   it('Check settlement placement wrt road', function() {
     function check(x: number, y: number, v:number): void {
@@ -197,14 +223,13 @@ describe('Construction Tests', function() {
       state.board[3][3].edges[2] = 0;
       state.board[2][2].edges[5] = 0;
       
-      
       if (!canBuildSettlementLegally(player, state.board, x, y, v, false)) {
-        throw new Error('Can build settlement legally at legal location (' + x + ', ' + y + '): ' + v + '!');
+        throw new Error('Cannot build settlement legally at legal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
     // all 3 are legal spots
     check(2, 2, 5);
-    check(2, 3, 3);
+    //check(2, 3, 3);
     check(3, 3, 1);
   });
 
@@ -259,22 +284,25 @@ describe('Construction Tests', function() {
       state.board[3][3].vertices[3] = 1;
       state.board[3][3].vertexOwner[3] = 0;
             
-      if (canBuildRoadLegally(player, state.board, x, y, v, true)) {
+      if (!canBuildRoadLegally(player, state.board, x, y, v, true)) {
         throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
     check(3, 3, 2)
   });
 
-  it('Check road length', function() {
+  it('Check simple road length', function() {
     function check(): void {
       let state: IState = gameLogic.getInitialState();
       let cnt: number = 0;
       let player: Player = state.players[0];
       
       state.board[3][3].edges[3] = 0;
+      state.board[3][2].edges[0] = 0;
+
       state.board[3][3].edges[2] = 0;
-            
+      state.board[2][2].edges[5] = 0;
+
       if (getLongestRoad(player, state.board) != 2) {
         throw new Error('Road length is not 2');
       }

@@ -263,7 +263,7 @@ function canBuildRoadLegally(player: Player, board: Board, row: number, col: num
   if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS) return false;
 
   // edge must be empty - no other roads
-  if (board[row][col].edges[edge] >= 0) return false;
+  if (board[row][col].edges[edge] != -1) return false;
 
   let adjHex: number[] = getHexAdjcentToEdge(row, col, edge);
   if (adjHex.length == 0)
@@ -331,7 +331,7 @@ function canBuildRoadLegally(player: Player, board: Board, row: number, col: num
 function canBuildSettlementLegally(player: Player, board: Board, row: number, col: number, vertex: number, initial: boolean): boolean {
 
   if (vertex < 0 || vertex > 5) return false;
-  if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS) return false;
+  if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS) return false;
 
   // proposed vertex must be empty - no other settlement/city
   if (board[row][col].vertices[vertex] != -1) return false;
@@ -373,11 +373,13 @@ function canUpgradeSettlement(player: Player, board: Board, row: number, col: nu
 
 function hasAdjacentRoad(player: Player, board: Board, row: number, col: number, vertex: number): boolean {
 
-  if (board[row][col].edges[vertex] = player.id) return true;
-  if (board[row][col].edges[(vertex+1) % 6] = player.id) return true;
+  if (board[row][col].edges[vertex] == player.id) return true;
+  if (board[row][col].edges[(vertex+1) % 6] == player.id) return true;
 
   let hexes = getHexesAdjacentToVertex(row, col, vertex);
+//  console.log(hexes);
   for (var i=0; i < hexes.length; i++) {
+    if (hexes[i].length == 0) continue;
     if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] == player.id) return true;
     if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3]+1) % 6] == player.id) return true;
   }
@@ -399,7 +401,8 @@ function hasNearbyConstruct(board: Board, row: number, col: number, vertex: numb
   let hexes = getHexesAdjacentToVertex(row, col, vertex);
   
   for (var i = 0; i < hexes.length; i++) {
-  if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3]+1) % 6] == Construction.Settlement || 
+    if (hexes[i] == null) continue;
+    if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3]+1) % 6] == Construction.Settlement || 
       board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3]+1) % 6] == Construction.City || 
       board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3]-1) % 6 + 6) % 6] == Construction.Settlement || 
       board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3]-1) % 6 + 6) % 6] == Construction.City)
@@ -525,6 +528,7 @@ function getLongestRoad(player: Player, board: Board): number {
       for (var k=0; k < 6; k += 2) {
       
         var roadLength = findRoadSubLength(player, board, i, j, k, []);
+
         if (roadLength > max)
           max = roadLength;
       }
@@ -541,7 +545,7 @@ function findRoadSubLength(player: Player, board: Board, row: number, col: numbe
   if (!hasAdjacentRoad(player, board, row, col, vertex))
     return 0;
 
-  traversed.push("" + row + ", " + col + ", " + vertex + "");
+  traversed.push("\"" + row + ", " + col + ", " + vertex + "\"");
   let [hex1, hex2] = getHexesAdjacentToVertex(row, col, vertex);
   
   var length1 = 0;
@@ -551,31 +555,32 @@ function findRoadSubLength(player: Player, board: Board, row: number, col: numbe
   // TODO: fix hexes to allow for 0 or 1 hex instead of 2
   
   var [h1, h2] = getHexesAdjacentToVertex(row, col, (vertex+1) % 6);
-  if (traversed.indexOf("" + row + ", " + col + ", " + ((vertex+1) % 6) + "") == -1 && 
-    traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
-    traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+  if (traversed.indexOf("\"" + row + ", " + col + ", " + ((vertex+1) % 6) + "\"") == -1 && 
+    traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") == -1 &&
+    traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") == -1) {
     if (board[row][col].edges[(vertex+1) % 6] == player.id)
-      length1 = 1 + findRoadSubLength(player, board, row, col, (vertex+1) % 6, traversed);
+      length1 = 1 + findRoadSubLength(player, board, row, col, (vertex+1) % 6, angular.copy(traversed));
   }
   
   [h1, h2] = getHexesAdjacentToVertex(hex1[0], hex1[1], (hex1[2]+1) % 6);
-  if (traversed.indexOf("" + hex1[0] + ", " + hex1[1] + ", " + ((hex1[2]+1) % 6) + "") == -1 && 
-    traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
-    traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+  if (traversed.indexOf("\"" + hex1[0] + ", " + hex1[1] + ", " + ((hex1[2]+1) % 6) + "\"") == -1 && 
+    traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") == -1 &&
+    traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") == -1) {
     if (board[hex1[0]][hex1[1]].edges[(hex1[2]+1)%6] == player.id)
-      length2 = 1 + findRoadSubLength(player, board, hex1[0], hex1[1], (hex1[2]+1) % 6, traversed);
+      length2 = 1 + findRoadSubLength(player, board, hex1[0], hex1[1], (hex1[2]+1) % 6, angular.copy(traversed));
   }
   
   [h1, h2] = getHexesAdjacentToVertex(hex2[0], hex2[1], (hex2[2]+1) % 6);
-  if (traversed.indexOf("" + hex2[0] + ", " + hex2[1] + ", " + ((hex2[2]+1) % 6) + "") == -1 && 
-    traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
-    traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+  if (traversed.indexOf("\"" + hex2[0] + ", " + hex2[1] + ", " + ((hex2[2]+1) % 6) + "\"") == -1 && 
+    traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") == -1 &&
+    traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") == -1) {
     if (board[hex2[0]][hex2[1]].edges[(hex2[2]+1)%6] == player.id)
-      length3 = 1 + findRoadSubLength(player, board, hex2[0], hex2[1], (hex2[2]+1) % 6, traversed);
+      length3 = 1 + findRoadSubLength(player, board, hex2[0], hex2[1], (hex2[2]+1) % 6, angular.copy(traversed));
   }
   
   // first call to finding road length
   if (traversed.length == 1) {
+  
     if (length1 < length2 && length1 < length3) {
       return length2 +  length3;
     } else if (length2 < length1 && length2 < length3) {
