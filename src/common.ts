@@ -512,6 +512,86 @@ function getHexesAdjacentToVertex(row: number, col: number, vertex: number): num
   return [hex1, hex2];
 }
 
+function getLongestRoad(player: Player, board: Board): number {
+
+  var max = 0;
+
+  // loop over all unique vertices
+  for (var i=0; i < gameLogic.ROWS; i++) {
+    for (var j=0; j < gameLogic.COLS; j++) {
+      
+      // loop over every other vertex
+      // only need to do calculate from every other vertex to reduce computations
+      for (var k=0; k < 6; k += 2) {
+      
+        var roadLength = findRoadSubLength(player, board, i, j, k, []);
+        if (roadLength > max)
+          max = roadLength;
+      }
+    }
+  }
+  return max;
+}
+
+// traverse each node (vertex) and recurse if a road exists between a neighboring node
+//
+// TODO: stop adding to length if other player settlement/city is inbetween roads
+//
+function findRoadSubLength(player: Player, board: Board, row: number, col: number, vertex: number, traversed: string[]): number {
+  if (!hasAdjacentRoad(player, board, row, col, vertex))
+    return 0;
+
+  traversed.push("" + row + ", " + col + ", " + vertex + "");
+  let [hex1, hex2] = getHexesAdjacentToVertex(row, col, vertex);
+  
+  var length1 = 0;
+  var length2 = 0;
+  var length3 = 0;
+  
+  // TODO: fix hexes to allow for 0 or 1 hex instead of 2
+  
+  var [h1, h2] = getHexesAdjacentToVertex(row, col, (vertex+1) % 6);
+  if (traversed.indexOf("" + row + ", " + col + ", " + ((vertex+1) % 6) + "") == -1 && 
+    traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+    traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+    if (board[row][col].edges[(vertex+1) % 6] == player.id)
+      length1 = 1 + findRoadSubLength(player, board, row, col, (vertex+1) % 6, traversed);
+  }
+  
+  [h1, h2] = getHexesAdjacentToVertex(hex1[0], hex1[1], (hex1[2]+1) % 6);
+  if (traversed.indexOf("" + hex1[0] + ", " + hex1[1] + ", " + ((hex1[2]+1) % 6) + "") == -1 && 
+    traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+    traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+    if (board[hex1[0]][hex1[1]].edges[(hex1[2]+1)%6] == player.id)
+      length2 = 1 + findRoadSubLength(player, board, hex1[0], hex1[1], (hex1[2]+1) % 6, traversed);
+  }
+  
+  [h1, h2] = getHexesAdjacentToVertex(hex2[0], hex2[1], (hex2[2]+1) % 6);
+  if (traversed.indexOf("" + hex2[0] + ", " + hex2[1] + ", " + ((hex2[2]+1) % 6) + "") == -1 && 
+    traversed.indexOf("" + h1[0] + ", " + h1[1] + ", " + h1[2] + "") == -1 &&
+    traversed.indexOf("" + h2[0] + ", " + h2[1] + ", " + h2[2] + "") == -1) {
+    if (board[hex2[0]][hex2[1]].edges[(hex2[2]+1)%6] == player.id)
+      length3 = 1 + findRoadSubLength(player, board, hex2[0], hex2[1], (hex2[2]+1) % 6, traversed);
+  }
+  
+  // first call to finding road length
+  if (traversed.length == 1) {
+    if (length1 < length2 && length1 < length3) {
+      return length2 +  length3;
+    } else if (length2 < length1 && length2 < length3) {
+      return length1 + length3;
+    } else {
+      return length1 + length2;
+    }
+  } else {
+    if (length2 < length3) {
+      return length3;
+    } else {
+      return length2;
+    }
+  }
+}
+
 
 
 /**
