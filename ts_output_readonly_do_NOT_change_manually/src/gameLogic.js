@@ -400,6 +400,8 @@ var gameLogic;
     gameLogic.checkMoveOk = checkMoveOk;
     /**
      * create move logics
+     * TODO: ensure correct behavior of eventIdx
+     * TODO: double check codes with validation logics
      */
     function countScores(state) {
         var scores = [];

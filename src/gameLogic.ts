@@ -455,6 +455,8 @@ module gameLogic {
 
   /**
    * create move logics
+   * TODO: ensure correct behavior of eventIdx
+   * TODO: double check codes with validation logics
    */
   function countScores(state: IState): number[] {
     let scores: number[] = [];
