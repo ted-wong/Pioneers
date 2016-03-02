@@ -310,6 +310,33 @@ describe('Construction Tests', function() {
     check();
   });
 
+  it('Check longer road length', function() {
+    function check(): void {
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+      let player: Player = state.players[0];
+      
+      state.board[3][3].edges[3] = 0;
+      state.board[3][2].edges[0] = 0;
+
+      state.board[3][3].edges[2] = 0;
+      state.board[2][2].edges[5] = 0;
+	  
+      state.board[3][3].edges[1] = 0;
+      state.board[2][3].edges[4] = 0;
+	  
+      // creating fork in road path
+      state.board[2][3].edges[3] = 0;
+      state.board[2][2].edges[0] = 0;
+
+      if (getLongestRoad(player, state.board) != 3) {
+        throw new Error('Road length is not 3');
+      }
+    }
+    check();
+  });
+
+
 
 });
 
