@@ -32,6 +32,7 @@ enum Construction {
 
 enum MoveType {
   INIT,
+  INIT_BUILD,
   ROLL_DICE,
   BUILD_ROAD,
   BUILD_SETTLEMENT,
@@ -86,6 +87,7 @@ interface Player {
 interface Bank {
   resources: Resources;
   devCards: DevCards;
+  devCardsOrder: DevCard[];
 }
 
 interface Robber {
@@ -166,7 +168,7 @@ interface RobberMoveMove extends TurnMove {
 
 interface RobPlayerMove extends TurnMove {
   stealingIdx: number;
-  stolenIndx: number;
+  stolenIdx: number;
 }
 
 interface TradeWithBankMove extends TurnMove {

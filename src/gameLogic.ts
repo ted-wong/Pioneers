@@ -3,6 +3,10 @@ module gameLogic {
   export const COLS = 7;
   export const NUM_PLAYERS = 4;
 
+  function getRandomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
   function shuffleArray<T>(src: T[]): T[] {
     let ret: T[] = angular.copy(src);
 
@@ -133,34 +137,50 @@ module gameLogic {
   function getInitialBank(): Bank {
     let bank: Bank = {
       resources: getInitialArray(Resource.SIZE),
-      devCards: getInitialArray(DevCard.SIZE)
+      devCards: getInitialArray(DevCard.SIZE),
+      devCardsOrder: null
     };
 
     //Assign total size of resources/devCards in bank according to rules
     for (let i = 0; i < Resource.SIZE; i++) {
       bank.resources[i] = 19;
     }
+    let devCardsOrder: DevCard[] = [];
     for (let i = 0; i < DevCard.SIZE; i++) {
       switch (i) {
         case DevCard.Knight:
           bank.devCards[i] = 14;
+          for (let _ = 0; _ < 14; _++) {
+            devCardsOrder.push(DevCard.Knight);
+          }
           break;
         case DevCard.Monopoly:
           bank.devCards[i] = 2;
+          for (let _ = 0; _ < 2; _++) {
+            devCardsOrder.push(DevCard.Monopoly);
+          }
           break;
         case DevCard.RoadBuilding:
           bank.devCards[i] = 2;
+          for (let _ = 0; _ < 2; _++) {
+            devCardsOrder.push(DevCard.RoadBuilding);
+          }
           break;
         case DevCard.YearOfPlenty:
           bank.devCards[i] = 2;
+          for (let _ = 0; _ < 2; _++) {
+            devCardsOrder.push(DevCard.YearOfPlenty);
+          }
           break;
         case DevCard.VictoryPoint:
           bank.devCards[i] = 5;
-          break;
-        default:
+          for (let _ = 0; _ < 5; _++) {
+            devCardsOrder.push(DevCard.VictoryPoint);
+          }
           break;
       }
     }
+    bank.devCardsOrder = shuffleArray(devCardsOrder);
 
     return bank;
   }
@@ -209,7 +229,7 @@ module gameLogic {
       diceRolled: false,
       devCardsPlayed: false,
       delta: null,
-      moveType: MoveType.INIT, //TODO: Should be INIT_BUILD
+      moveType: MoveType.INIT_BUILD,
       eventIdx: -1,
       building: null
     };
@@ -224,6 +244,7 @@ module gameLogic {
    */
   let validateHandlers: {(p: IState, n: IState, i: number): void}[] = [
     null, //INIT
+    checkInitBuild,
     checkRollDice,
     checkBuildRoad,
     checkBuildSettlement,
@@ -235,9 +256,22 @@ module gameLogic {
     null, //TRADE
     checkRobberEvent,
     checkRobberMove,
-    null, //ROB_PLAYER
+    checkRobPlayer,
     checkTradeResourceWithBank
   ];
+
+  function checkInitBuild(prevState: IState, nextState: IState, idx: number): void {
+    switch (nextState.building.consType) {
+      case Construction.Road:
+        checkBuildRoad(prevState, nextState, idx);
+        break;
+      case Construction.Settlement:
+        checkBuildSettlement(prevState, nextState, idx);
+        break;
+      default:
+        throw new Error('Invalid build during initialization!');
+    }
+  }
 
   function checkRollDice(prevState: IState, nextState: IState, idx: number): void {
     if (prevState.diceRolled) {
@@ -360,6 +394,56 @@ module gameLogic {
     return 4;
   }
 
+  function checkRobPlayer(prevState: IState, nextState: IState, idx: number): void {
+    let stealing = {player: -1, item: Resource.Dust, num: 0};
+    let stolen = {player: -1, item: Resource.Dust, num: 0};
+
+    for (let p = 0; p < NUM_PLAYERS; p++) {
+      for (let r = 0; r < Resource.SIZE; r++) {
+        if (nextState.players[p].resources[r] < prevState.players[p].resources[r]) {
+          //Stolen scenario
+          if (stolen.player !== -1 || stolen.item !== Resource.Dust) {
+            throw new Error('Cannot steal multiple players!');
+          }
+
+          stolen = {player: p, item: r,
+              num: prevState.players[0].resources[r] - nextState.players[p].resources[r]};
+        }
+
+        if (nextState.players[p].resources[r] > prevState.players[p].resources[r]) {
+          //Stealing scenario
+          if (stealing.player !== -1 || stolen.item !== Resource.Dust) {
+            throw new Error('Cannot have multiple stealings!');
+          }
+
+          stealing = {player: p, item: r,
+              num: nextState.players[p].resources[r] - prevState.players[p].resources[r]};
+        }
+      }
+    }
+
+    if (stealing.player !== idx) {
+      throw new Error('Only current player can steal from others!');
+    }
+    if (stealing.player === stolen.player) {
+      throw new Error('Cannot steal from self!');
+    }
+    if (stealing.item !== stolen.item) {
+      throw new Error('Error! Stealing item is not matching stolen item!');
+    }
+    if (stealing.item === Resource.Dust) {
+      throw new Error('Must designate what to steal!');
+    }
+    if (stealing.num !== stolen.num) {
+      throw new Error('Error! Stealing number is not matching stolen number!');
+    }
+    if (stealing.num !== 1) {
+      throw new Error('Must steal one resource at a time!');
+    }
+    checkResources(nextState.players[stealing.player].resources);
+    checkResources(nextState.players[stolen.player].resources);
+  }
+
   function checkTradeResourceWithBank(prevState: IState, nextState: IState, idx: number): void {
     if (!prevState.diceRolled) {
       throw new Error('Need to roll dices first');
@@ -388,6 +472,10 @@ module gameLogic {
         };
       }
     }
+
+    if (selling.item === Resource.Dust || buying.item === Resource.Dust) {
+      throw new Error('Missing trading item!');
+    }
     if (selling.item === buying.item) {
       throw new Error('Cannot trade the same resources');
     }
@@ -399,8 +487,7 @@ module gameLogic {
   export function checkMoveOk(stateTransition: IStateTransition): void {
     let prevState: IState = stateTransition.stateBeforeMove;
     let nextState: IState = stateTransition.move.stateAfterMove;
-    let prevIdx: number = nextState.moveType === MoveType.ROBBER_EVENT ?
-            prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+    let prevIdx: number = prevState.eventIdx === -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
     //TODO: What are these for, exactly?
     let nextIdx: number = stateTransition.move.turnIndexAfterMove;
     let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
@@ -434,9 +521,6 @@ module gameLogic {
           case Construction.City:
             scores[i] += 2 * player.construction[Construction.City];
             break;
-          default:
-            //noop
-            break;
         }
       }
 
@@ -455,46 +539,268 @@ module gameLogic {
     return scores;
   }
 
+  function getStateBeforeMove(move: TurnMove): IState {
+    let ret: IState = angular.copy(move.currState);
+    ret.delta = null;
+    return ret;
+  }
+
+  function getStateAfterMove(move: TurnMove, stateBeforeMove: IState): IState {
+    let ret: IState = angular.copy(move.currState);
+    ret.eventIdx = -1;
+    ret.building = null;
+    ret.delta = stateBeforeMove;
+    return ret;
+  }
+
+  export function onGameStart(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
+    let stateBeforeMove = getStateBeforeMove(move);
+
+    if (stateBeforeMove.eventIdx !== NUM_PLAYERS) {
+      throw new Error('Initial construction not finished!');
+    }
+    if (stateBeforeMove.moveType !== MoveType.INIT_BUILD) {
+      throw new Error('Invalid operation!');
+    }
+
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+
+    stateAfterMove.moveType = MoveType.INIT;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: 0,
+      stateAfterMove: stateAfterMove
+    };
+  }
+
   export function onRollDice(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     if (move.currState.diceRolled) {
       throw new Error('Dices already rolled!');
     }
 
-    //TODO
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROLL_DICE;
 
-    return null;
+    //State transition
+    stateAfterMove.diceRolled = true;
+    stateAfterMove.dices[0] = getRandomInt(1, 7);
+    stateAfterMove.dices[1] = getRandomInt(1, 7);
+    let rollNum = stateAfterMove.dices[0] + stateAfterMove.dices[1];
+
+    if (rollNum !== 7) {
+      //State transition to resources production
+      for (let i = 0; i < ROWS; i++) {
+        for (let j = 0; j < COLS; j++) {
+          if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
+              stateBeforeMove.board[i][j].hasRobber) {
+            continue;
+          }
+
+          for (let v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
+            if (stateBeforeMove.board[i][j].vertexOwner[v] === -1) {
+              continue;
+            }
+
+            let owner = stateBeforeMove.board[i][j].vertexOwner[v];
+            let resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
+            let toAdd : number = 0;
+            switch (stateBeforeMove.board[i][j].vertices[v]) {
+              case Construction.City:
+                toAdd = resourceInBank < 2 ? resourceInBank : 2;
+                break;
+              case Construction.Settlement:
+                toAdd = resourceInBank < 1 ? resourceInBank : 1;
+                break;
+            }
+            stateAfterMove.players[owner].resources[stateBeforeMove.board[i][j].label] += toAdd;
+            stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
+          }
+        }
+      }
+    } else {
+      //Robber event will start
+      stateAfterMove.eventIdx = turnIdx;
+    }
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onInitBuilding(move: TurnMove, turnIdx: number): IMove {
-    //TODO
-    return null;
+    let buildingMove = <BuildMove> move;
+    let playerIdx = buildingMove.playerIdx;
+    if (playerIdx !== move.currState.eventIdx) {
+      throw new Error('It\'s not your turn to build!');
+    }
+
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.INIT_BUILD;
+    stateAfterMove.building = {
+      consType: null,
+      hexRow: buildingMove.hexRow,
+      hexCol: buildingMove.hexCol,
+      vertexOrEdge: buildingMove.vertexOrEdge,
+      init: true
+    };
+
+    switch (buildingMove.consType) {
+      case Construction.Road:
+        if (move.currState.players[playerIdx].construction[Construction.Road] >= 2) {
+          throw new Error('Can only build 2 roads during initialization!');
+        }
+        if (stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
+          throw new Error('Road already built on this place!');
+        }
+        stateAfterMove.building.consType = Construction.Road;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.players[playerIdx].construction[Construction.Road]++;
+        break;
+      case Construction.Settlement:
+        if (move.currState.players[playerIdx].construction[Construction.Settlement] >= 1) {
+          throw new Error('Can only build 1 settlement during initialization!');
+        }
+        stateAfterMove.building.consType = Construction.Settlement;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.Settlement;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.players[playerIdx].construction[Construction.Settlement]++;
+        break;
+      default:
+        throw new Error('Can only build road/settlement during initialization!');
+    }
+
+    //Advance eventIdx
+    let player = stateAfterMove.players[playerIdx];
+    if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
+      stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % NUM_PLAYERS;
+    } else {
+      stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+    }
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onBuilding(move: TurnMove, turnIdx: number): IMove {
     let buildingMove = <BuildMove> move;
-    //TODO
-    return null;
+    let playerIdx = buildingMove.playerIdx;
+    if (playerIdx !== turnIdx) {
+      throw new Error('It\'s not your turn!');
+    }
+    if (!move.currState.diceRolled) {
+      throw new Error('Must roll the dices before construction!');
+    }
+
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.players[playerIdx].construction[buildingMove.consType]++;
+    stateAfterMove.building = {
+      consType: buildingMove.consType,
+      hexRow: buildingMove.hexRow,
+      hexCol: buildingMove.hexCol,
+      vertexOrEdge: buildingMove.vertexOrEdge,
+      init: false
+    };
+
+    switch (buildingMove.consType) {
+      case Construction.Road:
+        stateAfterMove.moveType = MoveType.BUILD_ROAD;
+        if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
+          throw new Error('Invalid building instruction!');
+        }
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
+
+        stateAfterMove.bank.resources[Resource.Brick]++;
+        stateAfterMove.bank.resources[Resource.Lumber]++;
+        break;
+      case Construction.Settlement:
+        stateAfterMove.moveType = MoveType.BUILD_SETTLEMENT;
+        if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== -1) {
+          throw new Error('Invalid building instruction!');
+        }
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.Settlement;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Wool]--;
+        stateAfterMove.players[playerIdx].resources[Resource.Grain]--;
+
+        stateAfterMove.bank.resources[Resource.Brick]++;
+        stateAfterMove.bank.resources[Resource.Lumber]++;
+        stateAfterMove.bank.resources[Resource.Wool]++;
+        stateAfterMove.bank.resources[Resource.Grain]++;
+        break;
+      case Construction.City:
+        stateAfterMove.moveType = MoveType.BUILD_CITY;
+        if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== playerIdx ||
+            move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] !== Construction.Settlement) {
+          throw new Error('Invalid building instruction!');
+        }
+        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.City;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Ore] -= 3;
+        stateAfterMove.players[playerIdx].resources[Resource.Grain] -= 2;
+
+        stateAfterMove.players[playerIdx].resources[Resource.Ore] += 3;
+        stateAfterMove.players[playerIdx].resources[Resource.Grain] += 2;
+        break;
+      case Construction.DevCard:
+        if (move.currState.bank.devCardsOrder.length <= 0) {
+          throw new Error('No development cards in bank right now!');
+        }
+        stateAfterMove.moveType = MoveType.BUILD_DEVCARD;
+        stateAfterMove.players[playerIdx].devCards[move.currState.bank.devCardsOrder[0]]++;
+        stateAfterMove.bank.devCards[move.currState.bank.devCardsOrder[0]]--;
+        stateAfterMove.bank.devCardsOrder = stateBeforeMove.bank.devCardsOrder.splice(0, 1);
+        break;
+      default:
+        throw new Error('Invalid command!');
+    }
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onKnight(move: TurnMove, turnIdx: number): IMove {
-    let stateBeforeMove = angular.copy(move.currState);
-    stateBeforeMove.delta = null;
-    if (stateBeforeMove.devCardsPlayed) {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
+    if (move.currState.devCardsPlayed) {
       throw new Error('Already played development card!');
     }
-    if (stateBeforeMove.players[move.playerIdx].devCards[DevCard.Knight] <= 0) {
+    if (move.currState.players[move.playerIdx].devCards[DevCard.Knight] <= 0) {
       throw new Error('Doesn\'t have knight card on hand!');
     }
 
-    let stateAfterMove: IState = angular.copy(stateBeforeMove);
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
     stateAfterMove.devCardsPlayed = true;
     stateAfterMove.moveType = MoveType.KNIGHT;
-    stateAfterMove.eventIdx = -1;
-    stateAfterMove.building = null;
 
     //State transition to knight cards
-    stateAfterMove.players[move.playerIdx].knightsPlayed += 1;
-    stateAfterMove.players[move.playerIdx].devCards[DevCard.Knight] -= 1;
+    stateAfterMove.players[move.playerIdx].knightsPlayed++;
+    stateAfterMove.players[move.playerIdx].devCards[DevCard.Knight]--;
     if (stateAfterMove.players[move.playerIdx].knightsPlayed > stateBeforeMove.awards.largestArmy.num) {
       stateAfterMove.awards.largestArmy = {
         player: move.playerIdx,
@@ -510,44 +816,218 @@ module gameLogic {
   }
 
   export function onMonopoly(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
+    if (move.currState.devCardsPlayed) {
+      throw new Error('Already played development card in this turn!');
+    }
+    if (move.currState.players[turnIdx].devCards[DevCard.Monopoly] <= 0) {
+      throw new Error('No Monopoly card on hand!');
+    }
+
     let monopolyMove = <MonopolyMove> move;
-    //TODO
-    return null;
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.MONOPOLY;
+    stateAfterMove.devCardsPlayed = true;
+
+    //State transition to dev cards
+    stateAfterMove.players[turnIdx].devCards[DevCard.Monopoly]--;
+    stateAfterMove.bank.devCards[DevCard.Monopoly]++;
+    stateAfterMove.bank.devCardsOrder.push(DevCard.Monopoly);
+
+    //State transition to resource cards
+    let numCards: number = 0;
+    for (let p = 0; p < NUM_PLAYERS; p++) {
+      if (p !== turnIdx) {
+        let resources = stateAfterMove.players[p].resources[monopolyMove.target];
+        numCards += resources > 0 ? resources : 0;
+        stateAfterMove.players[p].resources[monopolyMove.target] = 0;
+      }
+    }
+    stateAfterMove.players[turnIdx].resources[monopolyMove.target] += numCards;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onYearOfPlenty(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
+    if (move.currState.devCardsPlayed) {
+      throw new Error('Already played development card in this turn!');
+    }
+    if (move.currState.players[turnIdx].devCards[DevCard.YearOfPlenty] <= 0) {
+      throw new Error('No Year of Plenty card on hand!');
+    }
+
     let yearOfPlentyMove = <YearOfPlentyMove> move;
-    //TODO
-    return null;
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.YEAR_OF_PLENTY;
+
+    //State transition to dev cards
+    stateAfterMove.players[turnIdx].devCards[DevCard.YearOfPlenty]--;
+    stateAfterMove.bank.devCards[DevCard.YearOfPlenty]++;
+    stateAfterMove.bank.devCardsOrder.push(DevCard.YearOfPlenty);
+
+    //State transition to resources
+    angular.forEach([yearOfPlentyMove.target1, yearOfPlentyMove.target2], function(tar) {
+      if (stateAfterMove.bank.resources[tar] > 0) {
+        stateAfterMove.players[turnIdx].resources[tar]++;
+        stateAfterMove.bank.resources[tar]--;
+      } else {
+        throw new Error('Insufficient resources in bank: ' + Resource[tar]);
+      }
+    });
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onRobberEvent(move: TurnMove, turnIdx: number): IMove {
     let robberEventMove = <RobberEventMove> move;
-    //TODO
-    return null;
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROBBER_EVENT;
+    let playerIdx = stateBeforeMove.eventIdx;
+
+    let prevSum : number = 0;
+    for (let i = 0; i < Resource.SIZE; i++) {
+      prevSum += stateBeforeMove.players[playerIdx].resources[i];
+    }
+
+    if (prevSum > 7) {
+      //State transition to toss resource cards
+      for (let i = 0; i < Resource.SIZE; i++) {
+        stateAfterMove.players[playerIdx].resources[i] -= robberEventMove.tossed[i];
+        if (stateAfterMove.players[playerIdx].resources[i] < 0) {
+          throw new Error('Insufficient resource: ' + Resource[i]);
+        }
+      }
+    }
+
+    stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % NUM_PLAYERS;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onRobberMove(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     let robberMove = <RobberMoveMove> move;
-    //TODO
-    return null;
+    if (isSea(robberMove.row, robberMove.col)) {
+      throw new Error('Cannot move robber to sea!');
+    }
+
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROBBER_MOVE;
+    let robber = stateBeforeMove.robber;
+    if (robber.row === robberMove.row && robber.col === robberMove.col) {
+      throw new Error('Cannot move robber to same place!');
+    }
+
+    //State transition to robber
+    stateAfterMove.board[robber.row][robber.col].hasRobber = false;
+    stateAfterMove.board[robberMove.row][robberMove.col].hasRobber = true;
+    stateAfterMove.robber.row = robberMove.row;
+    stateAfterMove.robber.col = robberMove.col;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onRobPlayer(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     let robPlayerMove = <RobPlayerMove> move;
-    //TODO
-    return null;
+    if (robPlayerMove.stealingIdx !== turnIdx || robPlayerMove.stealingIdx === robPlayerMove.stolenIdx) {
+      throw new Error('Invalid robbing action!');
+    }
+
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.ROB_PLAYER;
+    let resourcesOnHand: Resources = [];
+    for (let i = 0; i < Resource.SIZE; i++) {
+      if (stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i] > 0) {
+        for (let _ = 0; _ < stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i]; _++) {
+          resourcesOnHand.push(i);
+        }
+      }
+    }
+
+    //State transition to robbing
+    resourcesOnHand = shuffleArray(resourcesOnHand);
+    let idx = getRandomInt(0, resourcesOnHand.length);
+    stateAfterMove.players[robPlayerMove.stealingIdx].resources[resourcesOnHand[idx]]++;
+    stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onTradingWithBank(move: TurnMove, turnIdx: number): IMove {
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
     let tradeWithBankMove = <TradeWithBankMove> move;
-    //TODO
-    return null;
+    let stateBeforeMove = getStateBeforeMove(move);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+    stateAfterMove.moveType = MoveType.TRANSACTION_WITH_BANK;
+    if (!stateBeforeMove.diceRolled) {
+      throw new Error('Need to roll dices first!');
+    }
+
+    //State transition to transaction
+    stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] -= tradeWithBankMove.sellingNum;
+    stateAfterMove.players[turnIdx].resources[tradeWithBankMove.buyingItem] += tradeWithBankMove.buyingNum;
+    stateAfterMove.bank.resources[tradeWithBankMove.sellingItem] += tradeWithBankMove.sellingNum;
+    stateAfterMove.bank.resources[tradeWithBankMove.buyingItem] -= tradeWithBankMove.buyingNum;
+
+    if (stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] < 0) {
+      throw new Error('Player has insufficient resources to trade!');
+    }
+    if (stateAfterMove.bank.resources[tradeWithBankMove.buyingItem] < 0) {
+      throw new Error('Bank has insufficient resources to trade!');
+    }
+
+    return {
+      endMatchScores: countScores(stateAfterMove),
+      turnIndexAfterMove: turnIdx,
+      stateAfterMove: stateAfterMove
+    };
   }
 
   export function onEndTurn(move: TurnMove, turnIdx: number): IMove {
-    let stateBeforeMove = angular.copy(move.currState);
-    stateBeforeMove.delta = null;
+    if (move.playerIdx !== turnIdx) {
+      throw new Error('Not your turn to play!');
+    }
+    if (!move.currState.diceRolled) {
+      throw new Error('Must roll the dices!');
+    }
+    let stateBeforeMove = getStateBeforeMove(move);
 
     let scores: number[] = countScores(stateBeforeMove);
     let hasWinner: boolean = false;
@@ -558,13 +1038,10 @@ module gameLogic {
       }
     }
 
-    let stateAfterMove: IState = angular.copy(stateBeforeMove);
+    let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
     stateAfterMove.diceRolled = false;
     stateAfterMove.devCardsPlayed = false;
     stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
-    stateAfterMove.eventIdx = -1;
-    stateAfterMove.building = null;
-    stateAfterMove.delta = stateBeforeMove;
 
     return {
       endMatchScores: scores,

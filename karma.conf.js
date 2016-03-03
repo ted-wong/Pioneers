@@ -18,7 +18,8 @@ module.exports = function(config) {
       // Source files, that you wanna generate coverage for.
       // (these files will be instrumented by Istanbul)
       // Do not include tests or libraries.
-      'ts_output_readonly_do_NOT_change_manually/src/gameLogic.js': ['coverage']
+      'ts_output_readonly_do_NOT_change_manually/src/gameLogic.js': ['coverage'],
+      'ts_output_readonly_do_NOT_change_manually/src/common.js': ['coverage']
     },
 
     // optionally, configure the reporter
