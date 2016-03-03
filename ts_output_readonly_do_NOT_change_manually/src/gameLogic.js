@@ -158,8 +158,6 @@ var gameLogic;
                         devCardsOrder.push(DevCard.VictoryPoint);
                     }
                     break;
-                default:
-                    break;
             }
         }
         bank.devCardsOrder = shuffleArray(devCardsOrder);
@@ -444,7 +442,6 @@ var gameLogic;
     gameLogic.checkMoveOk = checkMoveOk;
     /**
      * create move logics
-     * TODO: double check codes with validation logics
      */
     function countScores(state) {
         var scores = [];
@@ -461,9 +458,6 @@ var gameLogic;
                         break;
                     case Construction.City:
                         scores[i] += 2 * player.construction[Construction.City];
-                        break;
-                    default:
-                        //noop
                         break;
                 }
             }
@@ -547,8 +541,6 @@ var gameLogic;
                                 break;
                             case Construction.Settlement:
                                 toAdd = resourceInBank < 1 ? resourceInBank : 1;
-                                break;
-                            default:
                                 break;
                         }
                         stateAfterMove.players[owner].resources[stateBeforeMove.board[i][j].label] += toAdd;
