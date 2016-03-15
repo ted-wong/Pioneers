@@ -13,15 +13,15 @@ var game;
     game.height = 0;
     game.width = 0;
     function getPlayerInfo(playerIndex) {
-        if (game.state == null)
-            game.state = gameLogic.getInitialState();
+        //    if (state == null)
+        //      state = gameLogic.getInitialState();
         return game.state.players[playerIndex];
     }
     game.getPlayerInfo = getPlayerInfo;
     // type 0 for resource cards, 1 for dev cards
     function getPlayerCardCount(playerIndex, type) {
-        if (game.state == null)
-            game.state = gameLogic.getInitialState();
+        //    if (state == null)
+        //      state = gameLogic.getInitialState();
         var total = 0;
         if (type === 0) {
             for (var i = 0; i < Resource.SIZE; i++) {
@@ -44,32 +44,29 @@ var game;
     function init() {
         resizeGameAreaService.setWidthToHeight(1.33333);
         //resizeGameAreaService.setWidthToHeight(1.33333, init_callback);
-        /*
         translate.setTranslations(getTranslations());
         translate.setLanguage('en');
         log.log("Translation of 'RULES_OF_TICTACTOE' is " + translate('RULES_OF_TICTACTOE'));
-        resizeGameAreaService.setWidthToHeight(1);
+        //    resizeGameAreaService.setWidthToHeight(1);
+        resizeGameAreaService.setWidthToHeight(1.33333);
         moveService.setGame({
-          minNumberOfPlayers: 2,
-          maxNumberOfPlayers: 2,
-          checkMoveOk: gameLogic.checkMoveOk,
-          updateUI: updateUI
+            minNumberOfPlayers: 4,
+            maxNumberOfPlayers: 4,
+            checkMoveOk: gameLogic.checkMoveOk,
+            updateUI: updateUI
         });
-    
         // See http://www.sitepoint.com/css3-animation-javascript-event-handlers/
         document.addEventListener("animationend", animationEndedCallback, false); // standard
         document.addEventListener("webkitAnimationEnd", animationEndedCallback, false); // WebKit
         document.addEventListener("oanimationend", animationEndedCallback, false); // Opera
-    
-        let w: any = window;
+        var w = window;
         if (w["HTMLInspector"]) {
-          setInterval(function () {
-            w["HTMLInspector"].inspect({
-              excludeRules: ["unused-classes", "script-placement"],
-            });
-          }, 3000);
+            setInterval(function () {
+                w["HTMLInspector"].inspect({
+                    excludeRules: ["unused-classes", "script-placement"],
+                });
+            }, 3000);
         }
-        */
     }
     game.init = init;
     function getTranslations() {
@@ -173,14 +170,11 @@ var game;
     }
     game.shouldVertexSlowlyAppear = shouldVertexSlowlyAppear;
     function clickedOnModal(evt) {
-        /*
         if (evt.target === evt.currentTarget) {
-          evt.preventDefault();
-          evt.stopPropagation();
-          isHelpModalShown = false;
+            evt.preventDefault();
+            evt.stopPropagation();
+            game.isHelpModalShown = false;
         }
-        return true;
-        */
         return true;
     }
     game.clickedOnModal = clickedOnModal;

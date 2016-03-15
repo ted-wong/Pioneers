@@ -18,27 +18,27 @@ module game {
   
 
   export function getPlayerInfo(playerIndex:number): Player {
-    if (state == null)
-		state = gameLogic.getInitialState();
+//    if (state == null)
+//      state = gameLogic.getInitialState();
     return state.players[playerIndex];
   }
 
   // type 0 for resource cards, 1 for dev cards
   export function getPlayerCardCount(playerIndex:number, type:number): number {
-    if (state == null)
-		state = gameLogic.getInitialState();
+//    if (state == null)
+//      state = gameLogic.getInitialState();
   
     var total: number = 0;
     if (type === 0) {
       for (var i = 0; i < Resource.SIZE; i++) {
         total += state.players[playerIndex].resources[i];
       }
-	} else {
+    } else {
       for (var i = 0; i < DevCard.SIZE; i++) {
         total += state.players[playerIndex].devCards[i];
       }
-	}
-	return total;
+    }
+    return total;
   }
 
   export function init_callback(gameAreaWidth: number, gameAreaHeight: number): void {
@@ -48,14 +48,15 @@ module game {
   export function init() {
     resizeGameAreaService.setWidthToHeight(1.33333);
     //resizeGameAreaService.setWidthToHeight(1.33333, init_callback);
-    /*
+    
     translate.setTranslations(getTranslations());
     translate.setLanguage('en');
     log.log("Translation of 'RULES_OF_TICTACTOE' is " + translate('RULES_OF_TICTACTOE'));
-    resizeGameAreaService.setWidthToHeight(1);
+//    resizeGameAreaService.setWidthToHeight(1);
+    resizeGameAreaService.setWidthToHeight(1.33333);
     moveService.setGame({
-      minNumberOfPlayers: 2,
-      maxNumberOfPlayers: 2,
+      minNumberOfPlayers: 4,
+      maxNumberOfPlayers: 4,
       checkMoveOk: gameLogic.checkMoveOk,
       updateUI: updateUI
     });
@@ -73,7 +74,7 @@ module game {
         });
       }, 3000);
     }
-    */
+    
   }
 
   function getTranslations(): Translations {
@@ -183,14 +184,11 @@ module game {
 
 
   export function clickedOnModal(evt: Event) {
-    /*
     if (evt.target === evt.currentTarget) {
       evt.preventDefault();
       evt.stopPropagation();
       isHelpModalShown = false;
     }
-    return true;
-    */
     return true;
   }
 }
