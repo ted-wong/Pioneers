@@ -10,7 +10,40 @@ var game;
     game.move = null;
     game.state = null;
     game.isHelpModalShown = false;
+    game.height = 0;
+    game.width = 0;
+    function getPlayerInfo(playerIndex) {
+        if (game.state == null)
+            game.state = gameLogic.getInitialState();
+        return game.state.players[playerIndex];
+    }
+    game.getPlayerInfo = getPlayerInfo;
+    // type 0 for resource cards, 1 for dev cards
+    function getPlayerCardCount(playerIndex, type) {
+        if (game.state == null)
+            game.state = gameLogic.getInitialState();
+        var total = 0;
+        if (type === 0) {
+            for (var i = 0; i < Resource.SIZE; i++) {
+                total += game.state.players[playerIndex].resources[i];
+            }
+        }
+        else {
+            for (var i = 0; i < DevCard.SIZE; i++) {
+                total += game.state.players[playerIndex].devCards[i];
+            }
+        }
+        return total;
+    }
+    game.getPlayerCardCount = getPlayerCardCount;
+    function init_callback(gameAreaWidth, gameAreaHeight) {
+        game.height = gameAreaHeight;
+        game.width = gameAreaWidth;
+    }
+    game.init_callback = init_callback;
     function init() {
+        resizeGameAreaService.setWidthToHeight(1.33333);
+        //resizeGameAreaService.setWidthToHeight(1.33333, init_callback);
         /*
         translate.setTranslations(getTranslations());
         translate.setLanguage('en');
@@ -121,25 +154,7 @@ var game;
         */
     }
     game.cellClicked = cellClicked;
-    function shouldShowImage(row, col) {
-        /*
-        let cell = state.board[row][col];
-        return cell !== "";
-        */
-        return true;
-    }
-    game.shouldShowImage = shouldShowImage;
-    function isPieceX(row, col) {
-        //return state.board[row][col] === 'X';
-        return true;
-    }
-    game.isPieceX = isPieceX;
-    function isPieceO(row, col) {
-        //return state.board[row][col] === 'O';
-        return true;
-    }
-    game.isPieceO = isPieceO;
-    function shouldSlowlyAppear(row, col) {
+    function shouldEdgeSlowlyAppear(row, col, edge) {
         /*
         return !animationEnded &&
             state.delta &&
@@ -147,7 +162,16 @@ var game;
         */
         return false;
     }
-    game.shouldSlowlyAppear = shouldSlowlyAppear;
+    game.shouldEdgeSlowlyAppear = shouldEdgeSlowlyAppear;
+    function shouldVertexSlowlyAppear(row, col, vertex) {
+        /*
+        return !animationEnded &&
+            state.delta &&
+            state.delta.row === row && state.delta.col === col;
+        */
+        return false;
+    }
+    game.shouldVertexSlowlyAppear = shouldVertexSlowlyAppear;
     function clickedOnModal(evt) {
         /*
         if (evt.target === evt.currentTarget) {

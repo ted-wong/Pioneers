@@ -13,8 +13,41 @@ module game {
   export let move: IMove = null;
   export let state: IState = null;
   export let isHelpModalShown: boolean = false;
+  export let height: number = 0;
+  export let width: number = 0;
+  
 
+  export function getPlayerInfo(playerIndex:number): Player {
+    if (state == null)
+		state = gameLogic.getInitialState();
+    return state.players[playerIndex];
+  }
+
+  // type 0 for resource cards, 1 for dev cards
+  export function getPlayerCardCount(playerIndex:number, type:number): number {
+    if (state == null)
+		state = gameLogic.getInitialState();
+  
+    var total: number = 0;
+    if (type === 0) {
+      for (var i = 0; i < Resource.SIZE; i++) {
+        total += state.players[playerIndex].resources[i];
+      }
+	} else {
+      for (var i = 0; i < DevCard.SIZE; i++) {
+        total += state.players[playerIndex].devCards[i];
+      }
+	}
+	return total;
+  }
+
+  export function init_callback(gameAreaWidth: number, gameAreaHeight: number): void {
+    height = gameAreaHeight;
+    width = gameAreaWidth;
+  }
   export function init() {
+    resizeGameAreaService.setWidthToHeight(1.33333);
+    //resizeGameAreaService.setWidthToHeight(1.33333, init_callback);
     /*
     translate.setTranslations(getTranslations());
     translate.setLanguage('en');
@@ -130,25 +163,7 @@ module game {
     */
   }
 
-  export function shouldShowImage(row: number, col: number): boolean {
-    /*
-    let cell = state.board[row][col];
-    return cell !== "";
-    */
-    return true;
-  }
-
-  export function isPieceX(row: number, col: number): boolean {
-    //return state.board[row][col] === 'X';
-    return true;
-  }
-
-  export function isPieceO(row: number, col: number): boolean {
-    //return state.board[row][col] === 'O';
-    return true;
-  }
-
-  export function shouldSlowlyAppear(row: number, col: number): boolean {
+  export function shouldEdgeSlowlyAppear(row: number, col: number, edge:number): boolean {
     /*
     return !animationEnded &&
         state.delta &&
@@ -156,6 +171,16 @@ module game {
     */
     return false;
   }
+
+  export function shouldVertexSlowlyAppear(row: number, col: number, vertex:number): boolean {
+    /*
+    return !animationEnded &&
+        state.delta &&
+        state.delta.row === row && state.delta.col === col;
+    */
+    return false;
+  }
+
 
   export function clickedOnModal(evt: Event) {
     /*

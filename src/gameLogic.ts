@@ -7,6 +7,13 @@ module gameLogic {
     return Math.floor(Math.random() * (max - min)) + min;
   }
 
+
+  export function test_func():number {
+    var is: IState = getInitialState();
+    return is.board[3][3].label;
+  }
+
+
   function shuffleArray<T>(src: T[]): T[] {
     let ret: T[] = angular.copy(src);
 
@@ -77,7 +84,7 @@ module gameLogic {
     return null;
   }
 
-  function getInitialBoard(): Board {
+  export function getInitialBoard(): Board {
     let board: Board = [];
 
     //Shuffle & terrains
@@ -513,17 +520,9 @@ module gameLogic {
     for (let i = 0; i < NUM_PLAYERS; i++) {
       //Count scores from construction
       let player: Player = state.players[i];
-      for (let c = 0; c < Construction.SIZE; c++) {
-        switch (c) {
-          case Construction.Settlement:
-            scores[i] += 1 * player.construction[Construction.Settlement];
-            break;
-          case Construction.City:
-            scores[i] += 2 * player.construction[Construction.City];
-            break;
-        }
-      }
-
+      scores[i] += 1 * player.construction[Construction.Settlement];
+      scores[i] += 2 * player.construction[Construction.City];
+      
       //Count scores from victory point cards
       scores[i] += player.devCards[DevCard.VictoryPoint];
     }
