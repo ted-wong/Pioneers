@@ -31,3 +31,10 @@ td {
 	color:#fff;
 }
 
+.hex* {
+	background-image: url('imgs/resource7.jpg');
+	background-position: center center;
+	background-repeat: repeat;
+	background-size: 100% 100%;
+}
+

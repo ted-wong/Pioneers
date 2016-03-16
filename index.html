@@ -98,13 +98,45 @@
     </div>
   </div>
 
+<div id="hexModal" class="hexModal" ng-click="game.clickedOnCellModal($event)"
+    ng-class="{zeroOpacity: !game.isHexModalShown, oneOpacity: game.isHexModalShown}" aria-hidden="true">
+  <div class="hex-modal-dialog">
+    <div class="hex-modal-content">
+    </div>
+  </div>
+</div>
+
 <div id="gameArea">
 
   <div class="not-bottom" style="position:absolute; top:0; left:0; width:100%; height:85%;">
-    <div id="board" class="board" style="position:absolute; top:0; left:36.25%; width:63.75%; height:100%; border:2px solid">
-      <svg id ="b" version"1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <div id="board" class="board" style="position:absolute; top:0; left:36.25%; width:63.75%; height:100%; border:2px solid; background-image:url(imgs/water1.jpg);">
+      <svg id="b" version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="r0" patternUnits="userSpaceOnUse" width="274" height="184">
+            <image xlink:href="imgs/terrain0.jpg" x="0" y="0" width="274" height="184" />
+          </pattern>
+          <pattern id="r1" patternUnits="userSpaceOnUse" width="286" height="176">
+            <image xlink:href="imgs/terrain1.jpg" x="0" y="0" width="286" height="176" />
+          </pattern>
+          <pattern id="r2" patternUnits="userSpaceOnUse" width="259" height="194">
+            <image xlink:href="imgs/terrain2.jpg" x="0" y="0" width="259" height="194" />
+          </pattern>
+          <pattern id="r3" patternUnits="userSpaceOnUse" width="276" height="183">
+            <image xlink:href="imgs/terrain3.jpg" x="0" y="0" width="276" height="183" />
+          </pattern>
+          <pattern id="r4" patternUnits="userSpaceOnUse" width="242" height="208">
+            <image xlink:href="imgs/terrain4.jpg" x="0" y="0" width="242" height="208" />
+          </pattern>
+          <pattern id="r6" patternUnits="userSpaceOnUse" width="290" height="174">
+            <image xlink:href="imgs/terrain6.jpg" x="0" y="0" width="290" height="174" />
+          </pattern>
+          <pattern id="r7" patternUnits="userSpaceOnUse" width="251" height="201">
+            <image xlink:href="imgs/terrain7.jpg" x="0" y="0" width="251" height="201" />
+          </pattern>
+        </defs>
       </svg>
-      <script>
+      <script ng-if="game.viewBoard">
+	    if (game.state == null) game.state = gameLogic.getInitialState();
         function hexPoints(x, y, radius) {
           var points = [];
           for (var theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
@@ -116,7 +148,7 @@
           return points.join(' ');
         }
         var row, col, x, y, pointX, pointY, theta;
-        var svg = document.getElementById('b');
+        var board_dom = document.getElementById('b');
         var radius = 45;
         for (row = 0; row < 7; row++) {
           for (col = 0; col < 7; col++) {
@@ -130,23 +162,31 @@
             if (row%2 === 1)
               x -= offset;
             var polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            polygon.style.fill = 'white';
-            polygon.style.stroke = 'black';
-            polygon.style.strokeWidth = '2px';
+			polygon.id = "hex_" + row + "_" + col;
+			polygon.class = "hex" + game.state.board[row][col].label;
+			if (game.state.board[row][col].rollNum !== -1)
+              polygon.textContent = game.state.board[row][col].rollNum;
+			polygon.style.fill = "url(#r" + game.state.board[row][col].label + ")";
+            polygon.style.stroke = "#E8D0A9";
+            polygon.style.strokeWidth = '3px';
             polygon.setAttribute('points', hexPoints(x, y, radius));
-            //polygon.fill('imgs/resource0');
-            //polygon.style.backgroundImage = url("./src/resource0");
-            polygon.style.backgroundImage = "url('imgs/resource0.jpg')";
-//            polygon.style.backgroundImage = "url('http://java2s.com/style/demo/border.png')";
-//            polygon.style.src = "src/resource0";
-//            if (row === 1 && col === 1)
-//              console.log(polygon);
-        
-            polygon.addEventListener('click', function (event) {
-              event.target.style.boxShadow = '0 0 5px blue inset';
+
+            polygon.addEventListener("mouseover", function (event) {
+//              event.target.style.boxShadow = '10px 10px 20px blue inset';
+              event.target.style.strokeWidth = '5px';
+			  event.target.style.stroke = 'black';
+//			  event.target.style.zIndex = 1;
             }, false);
-        
-            b.appendChild(polygon);
+            polygon.addEventListener("mouseout", function (event) {
+//              event.target.style.boxShadow = '10px 10px 20px blue inset';
+              event.target.style.strokeWidth = '1px';
+			  event.target.style.stroke = '#E8D0A9';
+//			  event.target.style.zIndex = 0;
+            }, false);
+            
+			
+			
+            board_dom.appendChild(polygon);
           }
         }
       </script>

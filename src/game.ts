@@ -13,6 +13,8 @@ module game {
   export let move: IMove = null;
   export let state: IState = null;
   export let isHelpModalShown: boolean = false;
+  export let isHexModalShown: boolean = false;
+  export let viewBoard: boolean = false;
   export let height: number = 0;
   export let width: number = 0;
   
@@ -181,6 +183,15 @@ module game {
     */
     return false;
   }
+  export function clickedOnHexModal(evt: Event) {
+    if (evt.target === evt.currentTarget) {
+      evt.preventDefault();
+      evt.stopPropagation();
+      isHelpModalShown = false;
+    }
+    return true;
+  }
+
 
 
   export function clickedOnModal(evt: Event) {

@@ -10,6 +10,8 @@ var game;
     game.move = null;
     game.state = null;
     game.isHelpModalShown = false;
+    game.isHexModalShown = false;
+    game.viewBoard = false;
     game.height = 0;
     game.width = 0;
     function getPlayerInfo(playerIndex) {
@@ -169,6 +171,15 @@ var game;
         return false;
     }
     game.shouldVertexSlowlyAppear = shouldVertexSlowlyAppear;
+    function clickedOnHexModal(evt) {
+        if (evt.target === evt.currentTarget) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            game.isHelpModalShown = false;
+        }
+        return true;
+    }
+    game.clickedOnHexModal = clickedOnHexModal;
     function clickedOnModal(evt) {
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
