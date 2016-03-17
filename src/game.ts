@@ -14,7 +14,8 @@ module game {
   export let state: IState = null;
   export let isHelpModalShown: boolean = false;
   export let isHexModalShown: boolean = false;
-  export let viewBoard: boolean = false;
+  export let hexRow: number = 3;
+  export let hexCol: number = 3;
   export let height: number = 0;
   export let width: number = 0;
   
@@ -183,16 +184,17 @@ module game {
     */
     return false;
   }
+
   export function clickedOnHexModal(evt: Event) {
+    console.log("test");
     if (evt.target === evt.currentTarget) {
+	  console.log("in if");
       evt.preventDefault();
       evt.stopPropagation();
-      isHelpModalShown = false;
+      isHexModalShown = true;
     }
     return true;
   }
-
-
 
   export function clickedOnModal(evt: Event) {
     if (evt.target === evt.currentTarget) {

@@ -98,18 +98,68 @@
     </div>
   </div>
 
-<div id="hexModal" class="hexModal" ng-click="game.clickedOnCellModal($event)"
-    ng-class="{zeroOpacity: !game.isHexModalShown, oneOpacity: game.isHexModalShown}" aria-hidden="true">
-  <div class="hex-modal-dialog">
-    <div class="hex-modal-content">
-    </div>
-  </div>
-</div>
 
 <div id="gameArea">
 
   <div class="not-bottom" style="position:absolute; top:0; left:0; width:100%; height:85%;">
     <div id="board" class="board" style="position:absolute; top:0; left:36.25%; width:63.75%; height:100%; border:2px solid; background-image:url(imgs/water1.jpg);">
+	  <div id="hexModal" class="hexOverlayModal" ng-if="game.isHexModalShown == true"
+    	  ng-class="{hexZeroOpacity: !game.isHexModalShown, hexOneOpacity: game.isHexModalShown}" aria-hidden="true" style="top:25%; left:25%; height:50%; width:50%;">
+		<div class="hex-modal-dialog" style="width:100%; height:100%; background:white">
+    	  <div class="hex-modal-content">
+        	  <div class="hex-modal-header">
+        		<button type="button" class="close" ng-click="game.isHexModalShown = false" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        		<h4 id="hex_modal_title" class="hex-modal-title">
+        		</h4>
+        	  </div>
+        	  <div class="hex-modal-body" style="width:100%; height:90%">
+			    <p>test - {{game.hexRow}}, {{game.hexCol}} -> {{game.state.board[game.hexRow][game.hexCol].label}}</p>
+			    <svg id="hex_svg_modal" version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+				</svg>
+    			<script ng-if="game.isHexModalShown == true">
+				  function load_hex_modal() {
+					console.log("drawing hex for " + game.hexRow + ", " + game.hexCol);
+	            	//if (game.state == null) game.state = gameLogic.getInitialState();
+					console.log("in script");
+        			function hexPoints(x, y, radius) {
+        			  var points = [];
+        			  for (var theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
+            			var pointX, pointY;
+            			pointX = x + radius * Math.sin(theta);
+            			pointY = y + radius * Math.cos(theta);
+            			points.push(pointX + ',' + pointY);
+        			  }
+        			  return points.join(' ');
+        			}
+        			var row, col, x, y, pointX, pointY, theta;
+        			var svg_dom = document.getElementById('hex_svg_modal');
+        			var radius = 120;
+            		var offset = (Math.sqrt(3) * radius) / 2;
+            		x = 120;
+            		y = 100;
+            		var polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+
+					polygon.id = "hex_" + game.hexRow + "_" + game.hexCol + "_modal";
+					polygon.class = "hex" + game.state.board[game.hexRow][game.hexCol].label + "_modal";
+					if (game.state.board[game.hexRow][game.hexCol].rollNum !== -1)
+            		  polygon.textContent = game.state.board[game.hexRow][game.hexCol].rollNum;
+					polygon.style.fill = "url(#r" + game.state.board[game.hexRow][game.hexCol].label + ")";
+            		polygon.style.stroke = "#E8D0A9";
+            		polygon.style.strokeWidth = '3px';
+            		polygon.setAttribute('points', hexPoints(x, y, radius));
+            		svg_dom.appendChild(polygon);
+				  }
+				  load_hex_modal();
+    		    </script>
+        	  </div>
+        	  <div class="hex-modal-footer" style="top:90%; left:90%">
+        		<button type="button" class="btn btn-primary" ng-click="game.isHexModalShown = false">
+            	  {{ 'CLOSE' | translate }}
+        		</button>
+        	  </div>
+    	  </div>
+		</div>
+	  </div>
       <svg id="b" version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="r0" patternUnits="userSpaceOnUse" width="274" height="184">
@@ -135,7 +185,7 @@
           </pattern>
         </defs>
       </svg>
-      <script ng-if="game.viewBoard">
+      <script>
 	    if (game.state == null) game.state = gameLogic.getInitialState();
         function hexPoints(x, y, radius) {
           var points = [];
@@ -170,10 +220,20 @@
             polygon.style.stroke = "#E8D0A9";
             polygon.style.strokeWidth = '3px';
             polygon.setAttribute('points', hexPoints(x, y, radius));
+			
+			polygon.addEventListener("click", function (event) {
+			  game.isHexModalShown = true;
+			  game.clickedOnHexModal(event);
+			  var re = new RegExp(/(\d)_(\d)/);
+			  var nums = re.exec(event.target.id);
+			  game.hexRow = nums[1];
+			  game.hexCol = nums[2];
+            }, false);
 
             polygon.addEventListener("mouseover", function (event) {
 //              event.target.style.boxShadow = '10px 10px 20px blue inset';
               event.target.style.strokeWidth = '5px';
+			  
 			  event.target.style.stroke = 'black';
 //			  event.target.style.zIndex = 1;
             }, false);
