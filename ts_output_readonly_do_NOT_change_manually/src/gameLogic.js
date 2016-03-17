@@ -6,6 +6,11 @@ var gameLogic;
     function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
+    function test_func() {
+        var is = getInitialState();
+        return is.board[3][3].label;
+    }
+    gameLogic.test_func = test_func;
     function shuffleArray(src) {
         var ret = angular.copy(src);
         for (var j = void 0, x = void 0, i = ret.length; i; j = Math.floor(Math.random() * i), x = ret[--i], ret[i] = ret[j], ret[j] = x)
@@ -93,6 +98,7 @@ var gameLogic;
         }
         return assignRollNum(board);
     }
+    gameLogic.getInitialBoard = getInitialBoard;
     function getInitialArray(size) {
         var ret = [];
         for (var i = 0; i < size; i++) {
@@ -451,16 +457,8 @@ var gameLogic;
         for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
             //Count scores from construction
             var player = state.players[i];
-            for (var c = 0; c < Construction.SIZE; c++) {
-                switch (c) {
-                    case Construction.Settlement:
-                        scores[i] += 1 * player.construction[Construction.Settlement];
-                        break;
-                    case Construction.City:
-                        scores[i] += 2 * player.construction[Construction.City];
-                        break;
-                }
-            }
+            scores[i] += 1 * player.construction[Construction.Settlement];
+            scores[i] += 2 * player.construction[Construction.City];
             //Count scores from victory point cards
             scores[i] += player.devCards[DevCard.VictoryPoint];
         }

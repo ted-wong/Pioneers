@@ -5,8 +5,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>TicTacToe</title>
-  <meta name="description" content="TicTacToe game">
+  <title>Pioneers</title>
+  <meta name="description" content="Pioneers game">
   <link rel="shortcut icon"type="image/x-icon" href="data:image/x-icon;,"><!-- Suppress browser request for favicon.ico -->
 
   <!-- To ensure CSS files are downloaded in parallel, always include external CSS before external JavaScript. -->
@@ -39,6 +39,7 @@
   <!-- build:js js/everything.min.js -->
   <script src="ts_output_readonly_do_NOT_change_manually/src/gameLogic.js"></script>
   <script src="ts_output_readonly_do_NOT_change_manually/src/game.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/common.js"></script>
   <script src="ts_output_readonly_do_NOT_change_manually/src/aiService.js"></script>
   <!-- /build -->
 
@@ -97,36 +98,272 @@
     </div>
   </div>
 
+
 <div id="gameArea">
 
-  <div ng-repeat="row in [0, 1, 2]"
-      style="position:absolute; top:{{row * 33}}%; left:0; width:100%; height:33%;">
-    <div ng-repeat="col in [0, 1, 2]"
-        style="position:absolute; top:0; left:{{col * 33}}%; width:33%; height:100%;"
-        ng-class="{r: col < 2, b: row < 2}"
-        ng-click="game.cellClicked(row, col)"
-        id="{{'e2e_test_div_' + row + 'x' + col}}">
-      <div style="width:100%; height: 100%"
-          ng-class="{slowlyAppear: game.shouldSlowlyAppear(row, col)}"
-          ng-if="game.shouldShowImage(row, col)">
-        <svg ng-if="game.isPieceO(row, col)"
-            id="{{'e2e_test_pieceO_' + row + 'x' + col}}"
-            width="100%" height="100%">
-          <circle cx="50%" cy="50%" r="27%"
-            stroke="blue" stroke-width="5%" fill="white" />
-        </svg>
-        <svg ng-if="game.isPieceX(row, col)"
-            id="{{'e2e_test_pieceX_' + row + 'x' + col}}"
-            width="100%" height="100%">
-          <line x1="25%" y1="25%"
-                x2="75%" y2="75%"
-                stroke="red"
-                stroke-width="5%"/>
-          <line x1="25%" y1="75%"
-                x2="75%" y2="25%"
-                stroke="red"
-                stroke-width="5%"/>
-        </svg>
+  <div class="not-bottom" style="position:absolute; top:0; left:0; width:100%; height:85%;">
+    <div id="board" class="board" style="position:absolute; top:0; left:36.25%; width:63.75%; height:100%; border:2px solid; background-image:url(imgs/water1.jpg);">
+	  <div id="hexModal" class="hexOverlayModal" ng-if="game.isHexModalShown == true"
+    	  ng-class="{hexZeroOpacity: !game.isHexModalShown, hexOneOpacity: game.isHexModalShown}" aria-hidden="true" style="top:25%; left:25%; height:50%; width:50%;">
+		<div class="hex-modal-dialog" style="width:100%; height:100%; background:white">
+    	  <div class="hex-modal-content">
+        	  <div class="hex-modal-header">
+        		<button type="button" class="close" ng-click="game.isHexModalShown = false" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        		<h4 id="hex_modal_title" class="hex-modal-title">
+        		</h4>
+        	  </div>
+        	  <div class="hex-modal-body" style="width:100%; height:90%">
+			    <p>test - {{game.hexRow}}, {{game.hexCol}} -> {{game.state.board[game.hexRow][game.hexCol].label}}</p>
+			    <svg id="hex_svg_modal" version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+				</svg>
+    			<script ng-if="game.isHexModalShown == true">
+				  function load_hex_modal() {
+					console.log("drawing hex for " + game.hexRow + ", " + game.hexCol);
+	            	if (game.state == null) game.state = gameLogic.getInitialState();
+					console.log("in script");
+        			function hexPoints(x, y, radius) {
+        			  var points = [];
+        			  for (var theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
+            			var pointX, pointY;
+            			pointX = x + radius * Math.sin(theta);
+            			pointY = y + radius * Math.cos(theta);
+            			points.push(pointX + ',' + pointY);
+        			  }
+        			  return points.join(' ');
+        			}
+        			var row, col, x, y, pointX, pointY, theta;
+        			var svg_dom = document.getElementById('hex_svg_modal');
+        			var radius = 120;
+            		var offset = (Math.sqrt(3) * radius) / 2;
+            		x = 120;
+            		y = 100;
+            		var polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+
+					polygon.id = "hex_" + game.hexRow + "_" + game.hexCol + "_modal";
+					polygon.class = "hex" + game.state.board[game.hexRow][game.hexCol].label + "_modal";
+					if (game.state.board[game.hexRow][game.hexCol].rollNum !== -1)
+            		  polygon.textContent = game.state.board[game.hexRow][game.hexCol].rollNum;
+					polygon.style.fill = "url(#r" + game.state.board[game.hexRow][game.hexCol].label + ")";
+            		polygon.style.stroke = "#E8D0A9";
+            		polygon.style.strokeWidth = '3px';
+            		polygon.setAttribute('points', hexPoints(x, y, radius));
+            		svg_dom.appendChild(polygon);
+				  }
+				  load_hex_modal();
+    		    </script>
+        	  </div>
+        	  <div class="hex-modal-footer" style="top:90%; left:90%">
+        		<button type="button" class="btn btn-primary" ng-click="game.isHexModalShown = false">
+            	  {{ 'CLOSE' | translate }}
+        		</button>
+        	  </div>
+    	  </div>
+		</div>
+	  </div>
+      <svg id="b" version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="r0" patternUnits="userSpaceOnUse" width="274" height="184">
+            <image xlink:href="imgs/terrain0.jpg" x="0" y="0" width="274" height="184" />
+          </pattern>
+          <pattern id="r1" patternUnits="userSpaceOnUse" width="286" height="176">
+            <image xlink:href="imgs/terrain1.jpg" x="0" y="0" width="286" height="176" />
+          </pattern>
+          <pattern id="r2" patternUnits="userSpaceOnUse" width="259" height="194">
+            <image xlink:href="imgs/terrain2.jpg" x="0" y="0" width="259" height="194" />
+          </pattern>
+          <pattern id="r3" patternUnits="userSpaceOnUse" width="276" height="183">
+            <image xlink:href="imgs/terrain3.jpg" x="0" y="0" width="276" height="183" />
+          </pattern>
+          <pattern id="r4" patternUnits="userSpaceOnUse" width="242" height="208">
+            <image xlink:href="imgs/terrain4.jpg" x="0" y="0" width="242" height="208" />
+          </pattern>
+          <pattern id="r6" patternUnits="userSpaceOnUse" width="290" height="174">
+            <image xlink:href="imgs/terrain6.jpg" x="0" y="0" width="290" height="174" />
+          </pattern>
+          <pattern id="r7" patternUnits="userSpaceOnUse" width="251" height="201">
+            <image xlink:href="imgs/terrain7.jpg" x="0" y="0" width="251" height="201" />
+          </pattern>
+        </defs>
+      </svg>
+      <script>
+	    if (game.state == null) game.state = gameLogic.getInitialState();
+        function hexPoints(x, y, radius) {
+          var points = [];
+          for (var theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
+            var pointX, pointY;
+            pointX = x + radius * Math.sin(theta);
+            pointY = y + radius * Math.cos(theta);
+            points.push(pointX + ',' + pointY);
+          }
+          return points.join(' ');
+        }
+        var row, col, x, y, pointX, pointY, theta;
+        var board_dom = document.getElementById('b');
+        var radius = 45;
+        for (row = 0; row < 7; row++) {
+          for (col = 0; col < 7; col++) {
+		    if ((row === 0 || row === 6) && (col === 0 || col > 4)) continue;
+		    if ((row === 1 || row === 5) && (col === 0 || col === 6)) continue;
+		    if ((row === 2 || row === 4) && col === 6) continue;
+			
+            var offset = (Math.sqrt(3) * radius) / 2;
+            x = 120 + offset * col * 2;
+            y = 100 + offset * row * Math.sqrt(3);
+            if (row%2 === 1)
+              x -= offset;
+            var polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+			polygon.id = "hex_" + row + "_" + col;
+			polygon.class = "hex" + game.state.board[row][col].label;
+			if (game.state.board[row][col].rollNum !== -1)
+              polygon.textContent = game.state.board[row][col].rollNum;
+			polygon.style.fill = "url(#r" + game.state.board[row][col].label + ")";
+            polygon.style.stroke = "#E8D0A9";
+            polygon.style.strokeWidth = '3px';
+            polygon.setAttribute('points', hexPoints(x, y, radius));
+			
+			polygon.addEventListener("click", function (event) {
+			  game.isHexModalShown = true;
+			  game.clickedOnHexModal(event);
+			  var re = new RegExp(/(\d)_(\d)/);
+			  var nums = re.exec(event.target.id);
+			  game.hexRow = nums[1];
+			  game.hexCol = nums[2];
+            }, false);
+
+            polygon.addEventListener("mouseover", function (event) {
+//              event.target.style.boxShadow = '10px 10px 20px blue inset';
+              event.target.style.strokeWidth = '5px';
+			  
+			  event.target.style.stroke = 'black';
+//			  event.target.style.zIndex = 1;
+            }, false);
+            polygon.addEventListener("mouseout", function (event) {
+//              event.target.style.boxShadow = '10px 10px 20px blue inset';
+              event.target.style.strokeWidth = '3px';
+			  event.target.style.stroke = '#E8D0A9';
+//			  event.target.style.zIndex = 0;
+            }, false);
+            
+			
+			
+            board_dom.appendChild(polygon);
+          }
+        }
+      </script>
+    </div>
+    <div class="left-panel" style="position:absolute; top:0; left:0; width:36.25%; height:100%;">
+      <div class="dice_roll" style="position:absolute; top:0; left:0; width:100%; height:20%;"
+          ng-if="game.canRollDice() == true" ng-click="game.rollDice()">
+        <img ng-src="imgs/dice1.png">
+      </div>
+      <div class="dice_no_roll" style="position:absolute; top:0; left:0; width:100%; height:20%;"
+          ng-if="game.canRollDice() == false">
+        <img ng-src="imgs/dice2.png">
+      </div>
+      <div class="buildings" style="position:absolute; top:20%; left:0; width:100%; height:20%;">
+        <div class="roads_left" style="position:absolute; top:0; left:0; width:33%; height:100%;" ng-click="game.buildRoad()">
+          <p>{{15-game.getPlayerInfo(0).construction[0]}} roads can still be built</p>
+        </div>
+        <div class="settlements_left" style="position:absolute; top:0; left:33%; width:33%; height:100%;" ng-click="game.buildSettlement()">
+          <p>{{5-game.getPlayerInfo(0).construction[1]}} roads can still be built</p>
+        </div>
+        <div class="cities_left" style="position:absolute; top:0; left:66%; width:33%; height:100%;" ng-click="game.buildCity()">
+          <p>{{4-game.getPlayerInfo(0).construction[2]}} roads can still be built</p>
+        </div>
+      </div>
+      <div id="p1_status" class="player_status" style="position:absolute; top:40%; left:0; width:100%; height:15%; background-color:#FF5050">
+	    <div id="p1_name" class="player_name" style="position:absolute; top:0%; left:0; width:100%; height:30%;">
+		  <p>Player 1</p>
+		</div>
+        <div id="p1_points" class="player_points" style="position:absolute; top:30%; left:0; width:25%; height:70%;">
+          <p>{{game.getPlayerInfo(0).points}} points</p>
+        </div>
+        <div id="p1_knights" class="player_knights" style="position:absolute; top:30%; left:25%; width:25%; height:70%;">
+          <p>{{game.getPlayerInfo(0).knightsPlayed}} knights played</p>
+        </div>
+        <div id="p1_resource" class="player_resource" style="position:absolute; top:30%; left:50%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(0, 0)}} resource cards</p>
+        </div>
+        <div id="p1_dev" class="player_dev" style="position:absolute; top:30%; left:75%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(0, 1)}} development cards</p>
+        </div>
+      </div>
+      <div id="p2_status" class="player_status" style="position:absolute; top:55%; left:0; width:100%; height:15%; background-color:#5050FF">
+	    <div id="p2_name" class="player_name" style="position:absolute; top:0%; left:0; width:100%; height:30%;">
+		  <p>Player 2</p>
+		</div>
+        <div id="p2_points" class="player_points"  style="position:absolute; top:30%; left:0; width:25%; height:70%;">
+        <p>{{game.getPlayerInfo(1).points}} points</p>
+        </div>
+        <div id="p2_knights" class="player_knights" style="position:absolute; top:30%; left:25%; width:25%; height:70%;">
+          <p>{{game.getPlayerInfo(1).knightsPlayed}} knights played</p>
+        </div>
+        <div id="p2_resource" class="player_resource" style="position:absolute; top:30%; left:50%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(1, 0)}} resource cards</p>
+        </div>
+        <div id="p2_dev" class="player_dev" style="position:absolute; top:30%; left:75%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(1, 1)}} development cards</p>
+        </div>
+      </div>
+      <div id="p3_status" class="player_status"  style="position:absolute; top:70%; left:0; width:100%; height:15%; background-color:#78DADD">
+	    <div id="p3_name" class="player_name" style="position:absolute; top:0%; left:0; width:100%; height:30%;">
+		  <p>Player 3</p>
+		</div>
+        <div id="p3_points" class="player_points"  style="position:absolute; top:30%; left:0; width:25%; height:70%;">
+          <p>{{game.getPlayerInfo(2).points}} points</p>
+        </div>
+        <div id="p3_knights" class="player_knights" style="position:absolute; top:30%; left:25%; width:25%; height:70%;">
+          <p>{{game.getPlayerInfo(2).knightsPlayed}} knights played</p>
+        </div>
+        <div id="p3_resource" class="player_resource" style="position:absolute; top:30%; left:50%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(2, 0)}} resource cards</p>
+        </div>
+        <div id="p3_dev" class="player_dev" style="position:absolute; top:30%; left:75%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(2, 1)}} development cards</p>
+        </div>
+      </div>
+      <div id="p4_status" class="player_status"  style="position:absolute; top:85%; left:0; width:100%; height:15%; background-color:#8855AA">
+	    <div id="p4_name" class="player_name" style="position:absolute; top:0%; left:0; width:100%; height:30%;">
+		  <p>Player 4</p>
+		</div>
+        <div id="p4_points" class="player_points"  style="position:absolute; top:30%; left:0; width:25%; height:70%;">
+          <p>{{game.getPlayerInfo(3).points}} points</p>
+        </div>
+        <div id="p4_knights" class="player_knights" style="position:absolute; top:30%; left:25%; width:25%; height:70%;">
+          <p>{{game.getPlayerInfo(3).knightsPlayed}} knights played</p>
+        </div>
+        <div id="p4_resource" class="player_resource" style="position:absolute; top:30%; left:50%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(3, 0)}} resource cards</p>
+        </div>
+        <div id="p4_dev" class="player_dev" style="position:absolute; top:30%; left:75%; width:25%; height:70%;">
+          <p>{{game.getPlayerCardCount(3, 1)}} development cards</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom" style="position:absolute; top:85%; left:0; width:100%; height:15%;">
+    <div id="bank" style="position:absolute; top:0; left:0; width:37.5%; height:100%; border:2px solid">
+      <div ng-repeat="col in [0, 1, 2, 3, 4, 5]"
+          style="position:absolute; top:0%; left:{{col * 16.666}}%; width:16.666%; height:100%;">
+          <div class="resource_icon" style="position:absolute; top:0; left:0; width:100%; height:67%;">
+            <img src="imgs/resource{{col}}.jpg" style="width:100%" alt="resource{{col}}" ng-if="col < 5">
+			<img src="imgs/dev_card.jpg" style="width:100%" alt="development card" ng-if="col == 5">
+          </div>
+          <div class="resource_count" style="position:absolute; top:67%; left:0; width:100%; height:33%;">
+            <p>{{}}</p>
+          </div>
+      </div>
+    </div>
+    <div id="player_cards" style="position:absolute; top:0; left:37.5%; width:62.5%; height:100%; border:2px solid">
+      <div ng-repeat="col in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"
+          style="position:absolute; top:0%; left:{{col * 10}}%; width:10%; height:100%;">
+         <img src="imgs/resource{{col}}.jpg" style="width:100%" alt="resource{{col}}" ng-if="col < 5">
+         <img src="imgs/knight2.jpg" style="width:100%" alt="knight" ng-if="col == 5">
+         <img src="imgs/monopoly.jpg" style="width:100%" alt="monopoly"ng-if="col == 6">
+         <img src="imgs/roadbuilding.jpg" style="width:100%" alt="road building"ng-if="col == 7">
+         <img src="imgs/year_of_plenty.jpg" style="width:100%" alt="year of plenty"ng-if="col == 8">
+         <img src="imgs/victory_point.jpg" style="width:100%" alt="victory point"ng-if="col == 9">
+         <p ng-if="col < 5">{{game.getPlayerInfo(0).resource[col]}}</p>
       </div>
     </div>
   </div>

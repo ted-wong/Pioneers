@@ -10,33 +10,66 @@ var game;
     game.move = null;
     game.state = null;
     game.isHelpModalShown = false;
+    game.isHexModalShown = false;
+    game.hexRow = 3;
+    game.hexCol = 3;
+    game.height = 0;
+    game.width = 0;
+    function getPlayerInfo(playerIndex) {
+        //    if (state == null)
+        //      state = gameLogic.getInitialState();
+        return game.state.players[playerIndex];
+    }
+    game.getPlayerInfo = getPlayerInfo;
+    // type 0 for resource cards, 1 for dev cards
+    function getPlayerCardCount(playerIndex, type) {
+        //    if (state == null)
+        //      state = gameLogic.getInitialState();
+        var total = 0;
+        if (type === 0) {
+            for (var i = 0; i < Resource.SIZE; i++) {
+                total += game.state.players[playerIndex].resources[i];
+            }
+        }
+        else {
+            for (var i = 0; i < DevCard.SIZE; i++) {
+                total += game.state.players[playerIndex].devCards[i];
+            }
+        }
+        return total;
+    }
+    game.getPlayerCardCount = getPlayerCardCount;
+    function init_callback(gameAreaWidth, gameAreaHeight) {
+        game.height = gameAreaHeight;
+        game.width = gameAreaWidth;
+    }
+    game.init_callback = init_callback;
     function init() {
-        /*
+        resizeGameAreaService.setWidthToHeight(1.33333);
+        //resizeGameAreaService.setWidthToHeight(1.33333, init_callback);
         translate.setTranslations(getTranslations());
         translate.setLanguage('en');
         log.log("Translation of 'RULES_OF_TICTACTOE' is " + translate('RULES_OF_TICTACTOE'));
-        resizeGameAreaService.setWidthToHeight(1);
+        //    resizeGameAreaService.setWidthToHeight(1);
+        resizeGameAreaService.setWidthToHeight(1.33333);
         moveService.setGame({
-          minNumberOfPlayers: 2,
-          maxNumberOfPlayers: 2,
-          checkMoveOk: gameLogic.checkMoveOk,
-          updateUI: updateUI
+            minNumberOfPlayers: 4,
+            maxNumberOfPlayers: 4,
+            checkMoveOk: gameLogic.checkMoveOk,
+            updateUI: updateUI
         });
-    
         // See http://www.sitepoint.com/css3-animation-javascript-event-handlers/
         document.addEventListener("animationend", animationEndedCallback, false); // standard
         document.addEventListener("webkitAnimationEnd", animationEndedCallback, false); // WebKit
         document.addEventListener("oanimationend", animationEndedCallback, false); // Opera
-    
-        let w: any = window;
+        var w = window;
         if (w["HTMLInspector"]) {
-          setInterval(function () {
-            w["HTMLInspector"].inspect({
-              excludeRules: ["unused-classes", "script-placement"],
-            });
-          }, 3000);
+            setInterval(function () {
+                w["HTMLInspector"].inspect({
+                    excludeRules: ["unused-classes", "script-placement"],
+                });
+            }, 3000);
         }
-        */
     }
     game.init = init;
     function getTranslations() {
@@ -121,25 +154,7 @@ var game;
         */
     }
     game.cellClicked = cellClicked;
-    function shouldShowImage(row, col) {
-        /*
-        let cell = state.board[row][col];
-        return cell !== "";
-        */
-        return true;
-    }
-    game.shouldShowImage = shouldShowImage;
-    function isPieceX(row, col) {
-        //return state.board[row][col] === 'X';
-        return true;
-    }
-    game.isPieceX = isPieceX;
-    function isPieceO(row, col) {
-        //return state.board[row][col] === 'O';
-        return true;
-    }
-    game.isPieceO = isPieceO;
-    function shouldSlowlyAppear(row, col) {
+    function shouldEdgeSlowlyAppear(row, col, edge) {
         /*
         return !animationEnded &&
             state.delta &&
@@ -147,16 +162,33 @@ var game;
         */
         return false;
     }
-    game.shouldSlowlyAppear = shouldSlowlyAppear;
-    function clickedOnModal(evt) {
+    game.shouldEdgeSlowlyAppear = shouldEdgeSlowlyAppear;
+    function shouldVertexSlowlyAppear(row, col, vertex) {
         /*
+        return !animationEnded &&
+            state.delta &&
+            state.delta.row === row && state.delta.col === col;
+        */
+        return false;
+    }
+    game.shouldVertexSlowlyAppear = shouldVertexSlowlyAppear;
+    function clickedOnHexModal(evt) {
+        console.log("test");
         if (evt.target === evt.currentTarget) {
-          evt.preventDefault();
-          evt.stopPropagation();
-          isHelpModalShown = false;
+            console.log("in if");
+            evt.preventDefault();
+            evt.stopPropagation();
+            game.isHexModalShown = true;
         }
         return true;
-        */
+    }
+    game.clickedOnHexModal = clickedOnHexModal;
+    function clickedOnModal(evt) {
+        if (evt.target === evt.currentTarget) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            game.isHelpModalShown = false;
+        }
         return true;
     }
     game.clickedOnModal = clickedOnModal;
