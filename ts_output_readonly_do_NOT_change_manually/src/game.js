@@ -192,10 +192,48 @@ var game;
         return true;
     }
     game.clickedOnModal = clickedOnModal;
+    function getOffset(row, radius) {
+        return (Math.sqrt(3) * radius) / 2;
+    }
+    function getHexPoints(x, y, radius) {
+        var ret = [];
+        for (var theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
+            var pointX = x + radius * Math.sin(theta);
+            var pointY = y + radius * Math.cos(theta);
+            ret.push(pointX + ',' + pointY);
+        }
+        return ret.join(' ');
+    }
+    function getBoardHex(row, col) {
+        var offset = getOffset(row, 45);
+        var x = 120 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
+        var y = 120 + offset * row * Math.sqrt(3);
+        return getHexPoints(x, y, 45);
+    }
+    game.getBoardHex = getBoardHex;
+    function showHex(row, col) {
+        if ((row === 0 || row === 6) && (col === 0 || col > 4))
+            return false;
+        if ((row === 1 || row === 5) && (col === 0 || col === 6))
+            return false;
+        if ((row === 2 || row === 4) && col === 6)
+            return false;
+        return true;
+    }
+    game.showHex = showHex;
 })(game || (game = {}));
+function getArray(length) {
+    var ret = [];
+    for (var i = 0; i < length; i++) {
+        ret[i] = i;
+    }
+    return ret;
+}
 angular.module('myApp', ['ngTouch', 'ui.bootstrap', 'gameServices'])
     .run(function () {
     $rootScope['game'] = game;
+    $rootScope['rows'] = getArray(gameLogic.ROWS);
+    $rootScope['cols'] = getArray(gameLogic.COLS);
     game.init();
 });
 //# sourceMappingURL=game.js.map

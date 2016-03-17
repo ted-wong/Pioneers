@@ -47,6 +47,15 @@ td {
   position: relative;
 }
 
+#GameBoard {
+  background-image: url(../imgs/water1.jpg);
+}
+
+.default-hex {
+  stroke: #E8D0A9;
+  stroke-width: 3px;
+}
+
 #b {
   width: 100%;
   height: 100%;

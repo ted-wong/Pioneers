@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!-- build:[manifest] index.min.appcache -->
+<html lang="en" ng-app="myApp" ng-strict-di>
+<!-- /build -->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Pioneers</title>
+  <meta name="description" content="Pioneers game">
+  <link rel="shortcut icon"type="image/x-icon" href="data:image/x-icon;,"><!-- Suppress browser request for favicon.ico -->
+
+  <!-- To ensure CSS files are downloaded in parallel, always include external CSS before external JavaScript. -->
+  <!-- build:[href] css/everything.min.css -->
+  <link rel="stylesheet" type="text/css" href="css/game.css">
+  <!-- /build -->
+  <link crossorigin="anonymous" rel="stylesheet" type="text/css" href="http://yoav-zibin.github.io/emulator/main.css">
+
+  <!-- build:[href] http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css -->
+  <link crossorigin="anonymous" rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.css">
+  <!-- /build -->
+
+  <!-- The crossorigin attribute controls, for scripts that are obtained from other origins, whether error information will be exposed. -->
+  <!-- build:[src] http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js -->
+  <script crossorigin="anonymous" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.js"></script>
+  <!-- /build -->
+
+  <!-- For the game rules/instructions, I use carousel from Angular UI + Bootstrap -->
+  <!-- build:[src] http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-touch.min.js -->
+  <script crossorigin="anonymous" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-touch.js"></script>
+  <!-- /build -->
+  <!-- build:[src] http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.1/ui-bootstrap-tpls.min.js -->
+  <script crossorigin="anonymous" src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.1/ui-bootstrap-tpls.js"></script>
+  <!-- /build -->
+
+  <!-- build:[src] http://yoav-zibin.github.io/emulator/dist/turnBasedServices.3.min.js -->
+  <script crossorigin="anonymous" src="http://yoav-zibin.github.io/emulator/dist/turnBasedServices.3.js"></script>
+  <!-- /build -->
+
+  <!-- build:js js/everything.min.js -->
+  <script src="ts_output_readonly_do_NOT_change_manually/src/gameLogic.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/game.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/common.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/aiService.js"></script>
+  <!-- /build -->
+
+  <!-- build:remove -->
+  <!-- https://github.com/philipwalton/html-inspector#getting-started -->
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/html-inspector/0.8.2/html-inspector.js"></script>
+  <!-- /build -->
+</head>
+<body ng-cloak>
+  <div id="e2e_test_open_rules_modal" class="help-tip" ng-click="game.isHelpModalShown = true" aria-hidden="true"></div>
+
+  <div class="overlayModal" ng-click="game.clickedOnModal($event)"
+      ng-class="{zeroOpacity: !game.isHelpModalShown, oneOpacity: game.isHelpModalShown}" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" ng-click="game.isHelpModalShown = false" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 id="e2e_test_rules_title" class="modal-title">
+            {{ 'RULES_OF_TICTACTOE' | translate }}
+          </h4>
+        </div>
+        <div class="modal-body">
+          <carousel style="height: 150px">
+            <slide>
+              <table>
+                <tr>
+                  <td id="e2e_test_rules_slide1_text">
+                    {{ 'RULES_SLIDE1' | translate }}
+                  </td>
+                  <td>
+                    <img src="imgs/HelpSlide1.png" alt="Help slide 1" style="height:100px;">
+                  </td>
+                </tr>
+              </table>
+            </slide>
+            <slide>
+              <table>
+                <tr>
+                  <td id="e2e_test_rules_slide2_text">
+                  {{ 'RULES_SLIDE2' | translate }}
+                  </td>
+                  <td>
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:100px;">
+                  </td>
+                </tr>
+              </table>
+            </slide>
+          </carousel>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" ng-click="game.isHelpModalShown = false">
+            {{ 'CLOSE' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<div id="gameArea">
+  <div class="container-fluid">
+    <div class="row" id="gameBoardAndPlayersInfoAndBuildingInfo">
+      <div class="col-md-4" id="BuildingInfoAndPlayersInfo">
+        <div class="panel-default" id="BuildingInfo">
+          <div class="panel-heading">Building Info</div>
+          <div class="panel-body">Content1</div>
+        </div>
+        <div class="panel-default" id="Player1Info">
+          <div class="panel-heading">Player 1</div>
+          <div class="panel-body">Content1</div>
+        </div>
+        <div class="panel-default" id="Player2Info">
+          <div class="panel-heading">Player 2</div>
+          <div class="panel-body">Content1</div>
+        </div>
+        <div class="panel-default" id="Player3Info">
+          <div class="panel-heading">Player 3</div>
+          <div class="panel-body">Content1</div>
+        </div>
+        <div class="panel-default" id="Player4Info">
+          <div class="panel-heading">Player 4</div>
+          <div class="panel-body">Content1</div>
+        </div>
+      </div>
+      <div class="col-md-8" id="GameBoard">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="600" height="600">
+          <defs>
+            <pattern id="r0" patternUnits="userSpaceOnUse" width="274" height="184">
+              <image xlink:href="imgs/terrain0.jpg" x="0" y="0" width="274" height="184" />
+            </pattern>
+            <pattern id="r1" patternUnits="userSpaceOnUse" width="286" height="176">
+              <image xlink:href="imgs/terrain1.jpg" x="0" y="0" width="286" height="176" />
+            </pattern>
+            <pattern id="r2" patternUnits="userSpaceOnUse" width="259" height="194">
+              <image xlink:href="imgs/terrain2.jpg" x="0" y="0" width="259" height="194" />
+            </pattern>
+            <pattern id="r3" patternUnits="userSpaceOnUse" width="276" height="183">
+              <image xlink:href="imgs/terrain3.jpg" x="0" y="0" width="276" height="183" />
+            </pattern>
+            <pattern id="r4" patternUnits="userSpaceOnUse" width="242" height="208">
+              <image xlink:href="imgs/terrain4.jpg" x="0" y="0" width="242" height="208" />
+            </pattern>
+            <pattern id="r6" patternUnits="userSpaceOnUse" width="290" height="174">
+              <image xlink:href="imgs/terrain6.jpg" x="0" y="0" width="290" height="174" />
+            </pattern>
+            <pattern id="r7" patternUnits="userSpaceOnUse" width="251" height="201">
+              <image xlink:href="imgs/terrain7.jpg" x="0" y="0" width="251" height="201" />
+            </pattern>
+          </defs>
+          <g ng-repeat="row in rows">
+            <g ng-repeat="col in cols">
+              <polygon class="default-hex" ng-attr-points="{{game.getBoardHex(row, col)}}"
+                       ng-if="game.showHex(row, col)"
+                       ng-attr-fill="url(#r{{game.state.board[row][col].label}})"
+              />
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="row" id="MyResourcesInfoAndBankInfo">
+      <div class="col-md-5" id="MyResourcesInfo">
+        <div class="panel-default">
+          <div class="panel-heading">My Resource Details</div>
+          <div class="panel-body">Content3</div>
+        </div>
+      </div>
+      <div class="col-md-7" id="BankInfo">
+        <div class="panel-default">
+          <div class="panel-heading">Bank Info</div>
+          <div class="panel-body">Content4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
