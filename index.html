@@ -119,7 +119,7 @@
     			<script ng-if="game.isHexModalShown == true">
 				  function load_hex_modal() {
 					console.log("drawing hex for " + game.hexRow + ", " + game.hexCol);
-	            	//if (game.state == null) game.state = gameLogic.getInitialState();
+	            	if (game.state == null) game.state = gameLogic.getInitialState();
 					console.log("in script");
         			function hexPoints(x, y, radius) {
         			  var points = [];
