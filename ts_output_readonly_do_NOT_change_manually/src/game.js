@@ -302,7 +302,7 @@ var game;
     }
     game.showRollNum = showRollNum;
     function getRollColor(row, col) {
-        return game.state.board[row][col].hasRobber ? 'red' : 'black';
+        return game.state.board[row][col].hasRobber || (game.state.board[row][col].rollNum >= 6 && game.state.board[row][col].rollNum <= 8) ? 'red' : 'black';
     }
     game.getRollColor = getRollColor;
     function getNumSettlementCanBuild() {
@@ -314,7 +314,6 @@ var game;
     }
     game.getNumCityCanBuild = getNumCityCanBuild;
     function getNumRoadCanBuild() {
-        console.log(game.myIndex >= 0 ? 15 - game.state.players[game.myIndex].construction[Construction.Road] : 0);
         return game.myIndex >= 0 ? 15 - game.state.players[game.myIndex].construction[Construction.Road] : 0;
     }
     game.getNumRoadCanBuild = getNumRoadCanBuild;

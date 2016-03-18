@@ -325,7 +325,7 @@ module game {
   }
 
   export function getRollColor(row: number, col: number): string {
-    return state.board[row][col].hasRobber ? 'red' : 'black';
+    return state.board[row][col].hasRobber || (state.board[row][col].rollNum >= 6 && state.board[row][col].rollNum <= 8) ? 'red' : 'black';
   }
 
   export function getNumSettlementCanBuild(): number {
@@ -337,7 +337,6 @@ module game {
   }
 
   export function getNumRoadCanBuild(): number {
-    console.log(myIndex >= 0 ? 15 - state.players[myIndex].construction[Construction.Road] : 0);
     return myIndex >= 0 ? 15 - state.players[myIndex].construction[Construction.Road] : 0;
   }
 
