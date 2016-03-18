@@ -16,8 +16,9 @@ var game;
     game.height = 0;
     game.width = 0;
     game.coordinates = [];
-    game.hexRowChosen = -1;
-    game.hexColChosen = -1;
+    game.playerColor = ['red', 'blue', 'brown', 'white'];
+    game.myIndex = -2;
+    var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -76,7 +77,9 @@ var game;
         for (var row = 0; row < gameLogic.ROWS; row++) {
             game.coordinates[row] = [];
             for (var col = 0; col < gameLogic.COLS; col++) {
-                game.coordinates[row][col] = getBoardHex(row, col);
+                var coords = getBoardHex(row, col);
+                //To conform data model
+                game.coordinates[row][col] = coords.slice(2).concat(coords.slice(0, 2));
             }
         }
     }
@@ -123,6 +126,7 @@ var game;
         if (!game.state) {
             game.state = gameLogic.getInitialState();
         }
+        game.myIndex = params.yourPlayerIndex;
         //TODO: REMOVE!!
         game.state.board[3][3].edges[2] = 1;
         game.state.board[3][3].vertices[1] = Construction.Settlement;
@@ -233,12 +237,6 @@ var game;
         return true;
     }
     game.showHex = showHex;
-    function onHexClicked(row, col) {
-        this.hexRowChosen = row;
-        this.hexColChosen = col;
-        this.isHexModalShown = true;
-    }
-    game.onHexClicked = onHexClicked;
     function onClickedHexModal(evt) {
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
@@ -247,14 +245,6 @@ var game;
         }
     }
     game.onClickedHexModal = onClickedHexModal;
-    function getHelperHex() {
-        return getHexPoints(120, 100, 120).join(' ');
-    }
-    game.getHelperHex = getHelperHex;
-    function getHelperHexLabel() {
-        return this.state.board[this.hexRowChosen][this.hexColChosen].label;
-    }
-    game.getHelperHexLabel = getHelperHexLabel;
     function getHexVertices(row, col) {
         return game.coordinates[row][col].join(' ');
     }
@@ -268,6 +258,42 @@ var game;
         return [game.coordinates[row][col][src].split(','), game.coordinates[row][col][edge].split(',')];
     }
     game.getEdgeCoordinates = getEdgeCoordinates;
+    function showVertex(row, col, vertex) {
+        return game.state.board[row][col].vertices[vertex] === -1;
+    }
+    game.showVertex = showVertex;
+    function showEdge(row, col, edge) {
+        return game.state.board[row][col].edges[edge] === -1;
+    }
+    game.showEdge = showEdge;
+    function showSettlement(row, col, vertex) {
+        return game.state.board[row][col].vertices[vertex] === Construction.Settlement;
+    }
+    game.showSettlement = showSettlement;
+    function showCity(row, col, vertex) {
+        return game.state.board[row][col].vertices[vertex] === Construction.City;
+    }
+    game.showCity = showCity;
+    function getColor(idx) {
+        return idx > 0 ? game.playerColor[idx] : 'black';
+    }
+    game.getColor = getColor;
+    function getSettlement(row, col, vertex) {
+        var v = game.coordinates[row][col][vertex].split(',');
+        var x = parseFloat(v[0]);
+        var y = parseFloat(v[1]);
+        var start = 'M' + x + ',' + (y - 10);
+        return start + ' l-10,10' + ' v10' + ' h20' + ' v-10' + ' l-12,-12';
+    }
+    game.getSettlement = getSettlement;
+    function getCity(row, col, vertex) {
+        var v = game.coordinates[row][col][vertex].split(',');
+        var x = parseFloat(v[0]);
+        var y = parseFloat(v[1]);
+        var start = 'M' + x + ',' + (y - 10);
+        return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
+    }
+    game.getCity = getCity;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

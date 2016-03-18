@@ -154,23 +154,38 @@
               <polygon class="default-hex" ng-attr-points="{{game.getHexVertices(row, col)}}"
                        ng-if="game.showHex(row, col)"
                        ng-attr-fill="url(#r{{game.state.board[row][col].label}})"/>
+            </g>
+          </g>
 
-              <g ng-repeat="edge in edges">
+          <g ng-repeat="row in rows">
+            <g ng-repeat="col in cols">
+              <g ng-repeat="edge in edges" ng-if="game.showHex(row, col)">
                 <line ng-attr-x1="{{game.getEdgeCoordinates(row, col, edge)[0][0]}}"
                       ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
                       ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
                       ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
-                      stroke="#E8D0A9"
-                      stroke-width="10"
-                      ng-if="game.showHex(row, col)"/>
+                      ng-attr-stroke="{{game.getColor(game.state.board[row][col].edges[edge])}}"
+                      stroke-width="7"
+                      ng-if="!game.showEdge(row, col, edge)"/>
               </g>
+            </g>
+          </g>
 
-              <g ng-repeat="vertex in vertices">
+          <g ng-repeat="row in rows">
+            <g ng-repeat="col in cols">
+              <g ng-repeat="vertex in vertices" ng-if="game.showHex(row, col)">
                 <circle ng-attr-cx="{{game.getVertexCenter(row, col, vertex)[0]}}"
                         ng-attr-cy="{{game.getVertexCenter(row, col, vertex)[1]}}"
                         r="8"
                         fill="red"
-                        ng-if="game.showHex(row, col)"/>
+                        opacity="0.5"
+                        ng-if="game.showVertex(row, col, vertex)"/>
+                <path ng-attr-d="{{game.showSettlement(row, col, vertex) ? 
+                                    game.getSettlement(row, col, vertex) : game.getCity(row, col, vertex)}}"
+                      ng-attr-stroke="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
+                      stroke-width="5"
+                      ng-attr-fill="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
+                      ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"/>
               </g>
             </g>
           </g>

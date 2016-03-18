@@ -20,9 +20,11 @@ module game {
   export let width: number = 0;
 
   export let coordinates: string[][][] = [];
-  export let hexRowChosen: number = -1;
-  export let hexColChosen: number = -1;
+  export let playerColor = ['red', 'blue', 'brown', 'white'];
+  export let myIndex: number = -2;
   
+  let settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
+                         
 
   export function getPlayerInfo(playerIndex:number): Player {
 //    if (state == null)
@@ -85,7 +87,9 @@ module game {
     for (let row = 0; row < gameLogic.ROWS; row++) {
       coordinates[row] = [];
       for (let col = 0; col < gameLogic.COLS; col++) {
-        coordinates[row][col] = getBoardHex(row, col);
+        let coords = getBoardHex(row, col);
+        //To conform data model
+        coordinates[row][col] = coords.slice(2).concat(coords.slice(0, 2));
       }
     }
   }
@@ -136,6 +140,7 @@ module game {
       state = gameLogic.getInitialState();
     }
 
+    myIndex = params.yourPlayerIndex;
     //TODO: REMOVE!!
     state.board[3][3].edges[2] = 1;
     state.board[3][3].vertices[1] = Construction.Settlement;
@@ -252,26 +257,12 @@ module game {
     return true;
   }
 
-  export function onHexClicked(row: number, col: number) {
-    this.hexRowChosen = row;
-    this.hexColChosen = col;
-    this.isHexModalShown = true;
-  }
-
   export function onClickedHexModal(evt: Event) {
     if (evt.target === evt.currentTarget) {
       evt.preventDefault();
       evt.stopPropagation();
       this.isHexModalShown = false;
     }
-  }
-
-  export function getHelperHex(): string {
-    return getHexPoints(120, 100, 120).join(' ');
-  }
-
-  export function getHelperHexLabel(): number {
-    return this.state.board[this.hexRowChosen][this.hexColChosen].label;
   }
 
   export function getHexVertices(row: number, col: number): string {
@@ -285,6 +276,44 @@ module game {
   export function getEdgeCoordinates(row: number, col: number, edge: number): string[][] {
     let src = edge === 0 ? 5 : edge - 1;
     return [coordinates[row][col][src].split(','), coordinates[row][col][edge].split(',')];
+  }
+
+  export function showVertex(row: number, col: number, vertex: number): boolean {
+    return state.board[row][col].vertices[vertex] === -1;
+  }
+
+  export function showEdge(row: number, col: number, edge: number): boolean {
+    return state.board[row][col].edges[edge] === -1;
+  }
+
+  export function showSettlement(row: number, col: number, vertex: number): boolean {
+    return state.board[row][col].vertices[vertex] === Construction.Settlement;
+  }
+
+  export function showCity(row: number, col: number, vertex: number): boolean {
+    return state.board[row][col].vertices[vertex] === Construction.City;
+  }
+
+  export function getColor(idx: number): string {
+    return idx > 0 ? playerColor[idx] : 'black';
+  }
+
+  export function getSettlement(row: number, col: number, vertex: number): string {
+    let v = coordinates[row][col][vertex].split(',');
+    let x = parseFloat(v[0]);
+    let y = parseFloat(v[1]);
+
+    let start = 'M' + x + ',' + (y - 10);
+    return start + ' l-10,10' + ' v10' + ' h20' + ' v-10' + ' l-12,-12';
+  }
+
+  export function getCity(row: number, col: number, vertex: number): string {
+    let v = coordinates[row][col][vertex].split(',');
+    let x = parseFloat(v[0]);
+    let y = parseFloat(v[1]);
+
+    let start = 'M' + x + ',' + (y - 10);
+    return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
   }
 
   //TODO: onMouseOverHex & onMouseOutHex
