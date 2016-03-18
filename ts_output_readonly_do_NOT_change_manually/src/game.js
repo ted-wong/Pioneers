@@ -227,6 +227,13 @@ var game;
         var y = 120 + offset * row * Math.sqrt(3);
         return getHexPoints(x, y, 45);
     }
+    function getCenter(row, col) {
+        var offset = getOffset(row, 45);
+        var x = 120 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
+        var y = 120 + offset * row * Math.sqrt(3);
+        return [x.toString(), y.toString()];
+    }
+    game.getCenter = getCenter;
     function showHex(row, col) {
         if ((row === 0 || row === 6) && (col === 0 || col > 4))
             return false;
@@ -294,6 +301,10 @@ var game;
         return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
     }
     game.getCity = getCity;
+    function showRollNum(row, col) {
+        return game.state.board[row][col].rollNum > 0;
+    }
+    game.showRollNum = showRollNum;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

@@ -249,6 +249,14 @@ module game {
     return getHexPoints(x, y, 45);
   }
 
+  export function getCenter(row: number, col: number): string[] {
+    let offset = getOffset(row, 45);
+    let x = 120 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
+    let y = 120 + offset * row * Math.sqrt(3);
+
+    return [x.toString(), y.toString()];
+  }
+
   export function showHex(row: number, col: number): boolean {
     if ((row === 0 || row === 6) && (col === 0 || col > 4)) return false;
     if ((row === 1 || row === 5) && (col === 0 || col === 6)) return false;
@@ -314,6 +322,10 @@ module game {
 
     let start = 'M' + x + ',' + (y - 10);
     return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
+  }
+
+  export function showRollNum(row: number, col: number): boolean {
+    return state.board[row][col].rollNum > 0;
   }
 
   //TODO: onMouseOverHex & onMouseOutHex

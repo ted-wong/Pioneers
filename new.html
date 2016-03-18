@@ -154,6 +154,14 @@
               <polygon class="default-hex" ng-attr-points="{{game.getHexVertices(row, col)}}"
                        ng-if="game.showHex(row, col)"
                        ng-attr-fill="url(#r{{game.state.board[row][col].label}})"/>
+              <circle ng-attr-cx="{{game.getCenter(row, col)[0]}}"
+                      ng-attr-cy="{{game.getCenter(row, col)[1]}}"
+                      r="15" fill="white"
+                      ng-if="game.showRollNum(row, col)"/>
+              <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
+                    ng-attr-y="{{game.getCenter(row, col)[1]}}"
+                    text-anchor="middle" font-weight="bold" fill="black"
+                    ng-if="game.showRollNum(row, col)">{{game.state.board[row][col].rollNum}}</text>
             </g>
           </g>
 
