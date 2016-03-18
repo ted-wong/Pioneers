@@ -15,6 +15,9 @@ var game;
     game.hexCol = 3;
     game.height = 0;
     game.width = 0;
+    game.coordinates = [];
+    game.hexRowChosen = -1;
+    game.hexColChosen = -1;
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -70,6 +73,12 @@ var game;
                 });
             }, 3000);
         }
+        for (var row = 0; row < gameLogic.ROWS; row++) {
+            game.coordinates[row] = [];
+            for (var col = 0; col < gameLogic.COLS; col++) {
+                game.coordinates[row][col] = getBoardHex(row, col);
+            }
+        }
     }
     game.init = init;
     function getTranslations() {
@@ -114,6 +123,10 @@ var game;
         if (!game.state) {
             game.state = gameLogic.getInitialState();
         }
+        //TODO: REMOVE!!
+        game.state.board[3][3].edges[2] = 1;
+        game.state.board[3][3].vertices[1] = Construction.Settlement;
+        game.state.board[3][3].vertexOwner[1] = 1;
         game.canMakeMove = game.move.turnIndexAfterMove >= 0 &&
             params.yourPlayerIndex === game.move.turnIndexAfterMove; // it's my turn
         // Is it the computer's turn?
@@ -202,7 +215,7 @@ var game;
             var pointY = y + radius * Math.cos(theta);
             ret.push(pointX + ',' + pointY);
         }
-        return ret.join(' ');
+        return ret;
     }
     function getBoardHex(row, col) {
         var offset = getOffset(row, 45);
@@ -210,7 +223,6 @@ var game;
         var y = 120 + offset * row * Math.sqrt(3);
         return getHexPoints(x, y, 45);
     }
-    game.getBoardHex = getBoardHex;
     function showHex(row, col) {
         if ((row === 0 || row === 6) && (col === 0 || col > 4))
             return false;
@@ -221,6 +233,41 @@ var game;
         return true;
     }
     game.showHex = showHex;
+    function onHexClicked(row, col) {
+        this.hexRowChosen = row;
+        this.hexColChosen = col;
+        this.isHexModalShown = true;
+    }
+    game.onHexClicked = onHexClicked;
+    function onClickedHexModal(evt) {
+        if (evt.target === evt.currentTarget) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            this.isHexModalShown = false;
+        }
+    }
+    game.onClickedHexModal = onClickedHexModal;
+    function getHelperHex() {
+        return getHexPoints(120, 100, 120).join(' ');
+    }
+    game.getHelperHex = getHelperHex;
+    function getHelperHexLabel() {
+        return this.state.board[this.hexRowChosen][this.hexColChosen].label;
+    }
+    game.getHelperHexLabel = getHelperHexLabel;
+    function getHexVertices(row, col) {
+        return game.coordinates[row][col].join(' ');
+    }
+    game.getHexVertices = getHexVertices;
+    function getVertexCenter(row, col, vertex) {
+        return game.coordinates[row][col][vertex].split(',');
+    }
+    game.getVertexCenter = getVertexCenter;
+    function getEdgeCoordinates(row, col, edge) {
+        var src = edge === 0 ? 5 : edge - 1;
+        return [game.coordinates[row][col][src].split(','), game.coordinates[row][col][edge].split(',')];
+    }
+    game.getEdgeCoordinates = getEdgeCoordinates;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];
@@ -234,6 +281,8 @@ angular.module('myApp', ['ngTouch', 'ui.bootstrap', 'gameServices'])
     $rootScope['game'] = game;
     $rootScope['rows'] = getArray(gameLogic.ROWS);
     $rootScope['cols'] = getArray(gameLogic.COLS);
+    $rootScope['vertices'] = getArray(6);
+    $rootScope['edges'] = getArray(6);
     game.init();
 });
 //# sourceMappingURL=game.js.map

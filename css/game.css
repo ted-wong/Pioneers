@@ -62,3 +62,11 @@ td {
   position: absolute;
 }
 
+.building-color-player1 {
+  fill: red;
+}
+
+.building-color-player2 {
+  color: blue;
+}
+

@@ -125,7 +125,7 @@
         </div>
       </div>
       <div class="col-md-8" id="GameBoard">
-        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="600" height="600">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 600 600">
           <defs>
             <pattern id="r0" patternUnits="userSpaceOnUse" width="274" height="184">
               <image xlink:href="imgs/terrain0.jpg" x="0" y="0" width="274" height="184" />
@@ -151,10 +151,27 @@
           </defs>
           <g ng-repeat="row in rows">
             <g ng-repeat="col in cols">
-              <polygon class="default-hex" ng-attr-points="{{game.getBoardHex(row, col)}}"
+              <polygon class="default-hex" ng-attr-points="{{game.getHexVertices(row, col)}}"
                        ng-if="game.showHex(row, col)"
-                       ng-attr-fill="url(#r{{game.state.board[row][col].label}})"
-              />
+                       ng-attr-fill="url(#r{{game.state.board[row][col].label}})"/>
+
+              <g ng-repeat="edge in edges">
+                <line ng-attr-x1="{{game.getEdgeCoordinates(row, col, edge)[0][0]}}"
+                      ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
+                      ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
+                      ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
+                      stroke="#E8D0A9"
+                      stroke-width="10"
+                      ng-if="game.showHex(row, col)"/>
+              </g>
+
+              <g ng-repeat="vertex in vertices">
+                <circle ng-attr-cx="{{game.getVertexCenter(row, col, vertex)[0]}}"
+                        ng-attr-cy="{{game.getVertexCenter(row, col, vertex)[1]}}"
+                        r="8"
+                        fill="red"
+                        ng-if="game.showHex(row, col)"/>
+              </g>
             </g>
           </g>
         </svg>
