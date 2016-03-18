@@ -104,7 +104,7 @@
     <div class="row" id="gameBoardAndPlayersInfoAndBuildingInfo">
       <div class="col-md-4" id="BuildingInfoAndPlayersInfo">
         <div class="panel-default" id="BuildingInfo">
-          <div class="panel-heading">Constructions you can make</div>
+          <div class="panel-heading">You can Build:</div>
           <div class="panel-body">
             <span id="num-settlement" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="30" height="30" viewBox="0 0 30 30">
@@ -162,7 +162,8 @@
         </div>
       </div>
       <div class="col-md-8" id="GameBoard">
-        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 600 600">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 600 600"
+             ng-mouseleave="game.onMouseLeaveBoard()">
           <defs>
             <pattern id="r0" patternUnits="userSpaceOnUse" width="274" height="184">
               <image xlink:href="imgs/terrain0.jpg" x="0" y="0" width="274" height="184" />
@@ -190,6 +191,8 @@
             <g ng-repeat="col in cols">
               <polygon class="default-hex" ng-attr-points="{{game.getHexVertices(row, col)}}"
                        ng-if="game.showHex(row, col)"
+                       ng-mouseover="game.onMouseOverHex(row, col)"
+                       ng-click="game.onClickHex(row, col)"
                        ng-attr-fill="url(#r{{game.state.board[row][col].label}})"/>
               <circle ng-attr-cx="{{game.getCenter(row, col)[0]}}"
                       ng-attr-cy="{{game.getCenter(row, col)[1]}}"
@@ -214,7 +217,16 @@
                       ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
                       ng-attr-stroke="{{game.getColor(game.state.board[row][col].edges[edge])}}"
                       stroke-width="7"
-                      ng-if="!game.showEdge(row, col, edge)"/>
+                      ng-if="game.showRoad(row, col, edge)"/>
+ 
+                <line ng-attr-x1="{{game.getEdgeCoordinates(row, col, edge)[0][0]}}"
+                      ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
+                      ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
+                      ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
+                      ng-attr-class="{{game.getEdgeClass(row, col, edge)}}"
+                      ng-mouseover="game.onMouseOverEdge(row, col, edge)"
+                      ng-click="game.onClickEdge(row, col, edge)"
+                      ng-if="game.showEdge(row, col, edge)"/>
               </g>
             </g>
           </g>
@@ -224,9 +236,9 @@
               <g ng-repeat="vertex in vertices" ng-if="game.showHex(row, col)">
                 <circle ng-attr-cx="{{game.getVertexCenter(row, col, vertex)[0]}}"
                         ng-attr-cy="{{game.getVertexCenter(row, col, vertex)[1]}}"
-                        r="8"
-                        fill="red"
-                        opacity="0.5"
+                        ng-attr-class="{{game.getVertexClass(row, col, vertex)}}"
+                        ng-mouseover="game.onMouseOverVertex(row, col, vertex)"
+                        ng-click="game.onClickVertex(row, col, vertex)"
                         ng-if="game.showVertex(row, col, vertex)"/>
                 <path ng-attr-d="{{game.showSettlement(row, col, vertex) ? 
                                     game.getSettlement(row, col, vertex) : game.getCity(row, col, vertex)}}"

@@ -1,4 +1,11 @@
 ;
+var MouseTarget;
+(function (MouseTarget) {
+    MouseTarget[MouseTarget["NONE"] = 0] = "NONE";
+    MouseTarget[MouseTarget["HEX"] = 1] = "HEX";
+    MouseTarget[MouseTarget["VERTEX"] = 2] = "VERTEX";
+    MouseTarget[MouseTarget["EDGE"] = 3] = "EDGE";
+})(MouseTarget || (MouseTarget = {}));
 var game;
 (function (game) {
     // I export all variables to make it easy to debug in the browser by
@@ -19,6 +26,10 @@ var game;
     game.playerColor = ['red', 'blue', 'brown', 'white'];
     game.myIndex = -2;
     var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
+    var mouseTarget = MouseTarget.NONE;
+    var mouseRow = 0;
+    var mouseCol = 0;
+    var targetNum = 0;
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -79,7 +90,7 @@ var game;
             for (var col = 0; col < gameLogic.COLS; col++) {
                 var coords = getBoardHex(row, col);
                 //To conform data model
-                game.coordinates[row][col] = coords.slice(2).concat(coords.slice(0, 2));
+                game.coordinates[row][col] = coords.slice(2, 6).concat(coords.slice(0, 2));
             }
         }
     }
@@ -127,6 +138,12 @@ var game;
             game.state = gameLogic.getInitialState();
         }
         game.myIndex = params.yourPlayerIndex;
+        /*
+        //TODO: REMOVE!!
+        state.board[3][3].edges[2] = 1;
+        state.board[3][3].vertices[1] = Construction.Settlement;
+        state.board[3][3].vertexOwner[1] = 1;
+        */
         game.canMakeMove = game.move.turnIndexAfterMove >= 0 &&
             params.yourPlayerIndex === game.move.turnIndexAfterMove; // it's my turn
         // Is it the computer's turn?
@@ -262,13 +279,75 @@ var game;
     }
     game.getEdgeCoordinates = getEdgeCoordinates;
     function showVertex(row, col, vertex) {
-        return game.state.board[row][col].vertices[vertex] === -1;
+        if (game.state.board[row][col].vertices[vertex] !== -1) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
+            return false;
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.VERTEX) {
+            return targetNum === vertex;
+        }
+        else {
+            return true;
+        }
     }
     game.showVertex = showVertex;
+    function getVertexClass(row, col, vertex) {
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
+            return '';
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return '';
+        }
+        if (mouseTarget === MouseTarget.VERTEX) {
+            return targetNum === vertex ? 'emphasize-vertex' : '';
+        }
+        else {
+            return 'mouse-to-display-vertex';
+        }
+    }
+    game.getVertexClass = getVertexClass;
     function showEdge(row, col, edge) {
-        return game.state.board[row][col].edges[edge] === -1;
+        if (game.state.board[row][col].edges[edge] !== -1) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.VERTEX) {
+            return false;
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.EDGE) {
+            return targetNum === edge;
+        }
+        else {
+            return true;
+        }
     }
     game.showEdge = showEdge;
+    function getEdgeClass(row, col, edge) {
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.VERTEX) {
+            return '';
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return '';
+        }
+        if (mouseTarget === MouseTarget.EDGE) {
+            return targetNum === edge ? 'emphasize-edge' : '';
+        }
+        else {
+            return 'mouse-to-display-edge';
+        }
+    }
+    game.getEdgeClass = getEdgeClass;
+    function showRoad(row, col, edge) {
+        return game.state.board[row][col].edges[edge] >= 0;
+    }
+    game.showRoad = showRoad;
     function showSettlement(row, col, vertex) {
         return game.state.board[row][col].vertices[vertex] === Construction.Settlement;
     }
@@ -317,6 +396,45 @@ var game;
         return game.myIndex >= 0 ? 15 - game.state.players[game.myIndex].construction[Construction.Road] : 0;
     }
     game.getNumRoadCanBuild = getNumRoadCanBuild;
+    function onMouseOverHex(row, col) {
+        mouseTarget = MouseTarget.HEX;
+        mouseRow = row;
+        mouseCol = col;
+    }
+    game.onMouseOverHex = onMouseOverHex;
+    function onClickHex(row, col) {
+        //For touch screen, maybe
+        onMouseOverHex(row, col);
+    }
+    game.onClickHex = onClickHex;
+    function onMouseOverEdge(row, col, edgeNum) {
+        mouseTarget = MouseTarget.EDGE;
+        mouseRow = row;
+        mouseCol = col;
+        targetNum = edgeNum;
+    }
+    game.onMouseOverEdge = onMouseOverEdge;
+    function onMouseClickEdge(row, col, edgeNum) {
+        //TODO
+        console.log('Mouse Click Edge: ' + row + ' : ' + col + ' -> ' + edgeNum);
+    }
+    game.onMouseClickEdge = onMouseClickEdge;
+    function onMouseOverVertex(row, col, vertexNum) {
+        mouseTarget = MouseTarget.VERTEX;
+        mouseRow = row;
+        mouseCol = col;
+        targetNum = vertexNum;
+    }
+    game.onMouseOverVertex = onMouseOverVertex;
+    function onClickVertex(row, col, vertexNum) {
+        //TODO
+        console.log('Mouse Click Vertex: ' + row + ' : ' + col + ' -> ' + vertexNum);
+    }
+    game.onClickVertex = onClickVertex;
+    function onMouseLeaveBoard() {
+        mouseTarget = MouseTarget.NONE;
+    }
+    game.onMouseLeaveBoard = onMouseLeaveBoard;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

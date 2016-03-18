@@ -3,6 +3,13 @@ interface Translations {
   [index: string]: SupportedLanguages;
 }
 
+enum MouseTarget {
+  NONE,
+  HEX,
+  VERTEX,
+  EDGE
+}
+
 module game {
   // I export all variables to make it easy to debug in the browser by
   // simply typing in the console:
@@ -24,7 +31,11 @@ module game {
   export let myIndex: number = -2;
   
   let settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
-                         
+
+  let mouseTarget = MouseTarget.NONE;
+  let mouseRow = 0;
+  let mouseCol = 0;
+  let targetNum = 0;
 
   export function getPlayerInfo(playerIndex:number): Player {
 //    if (state == null)
@@ -83,13 +94,13 @@ module game {
         });
       }, 3000);
     }
-    
+   
     for (let row = 0; row < gameLogic.ROWS; row++) {
       coordinates[row] = [];
       for (let col = 0; col < gameLogic.COLS; col++) {
         let coords = getBoardHex(row, col);
         //To conform data model
-        coordinates[row][col] = coords.slice(2).concat(coords.slice(0, 2));
+        coordinates[row][col] = coords.slice(2, 6).concat(coords.slice(0, 2));
       }
     }
   }
@@ -141,6 +152,13 @@ module game {
     }
 
     myIndex = params.yourPlayerIndex;
+
+    /*
+    //TODO: REMOVE!!
+    state.board[3][3].edges[2] = 1;
+    state.board[3][3].vertices[1] = Construction.Settlement;
+    state.board[3][3].vertexOwner[1] = 1;
+    */
 
     canMakeMove = move.turnIndexAfterMove >= 0 && // game is ongoing
       params.yourPlayerIndex === move.turnIndexAfterMove; // it's my turn
@@ -283,11 +301,77 @@ module game {
   }
 
   export function showVertex(row: number, col: number, vertex: number): boolean {
-    return state.board[row][col].vertices[vertex] === -1;
+    if (state.board[row][col].vertices[vertex] !== -1) {
+      return false;
+    }
+    if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
+      return false;
+    }
+
+    if (mouseRow !== row || mouseCol !== col) {
+      return false;
+    }
+
+    if (mouseTarget === MouseTarget.VERTEX) {
+      return targetNum === vertex;
+    } else {
+      return true;
+    }
+  }
+
+  export function getVertexClass(row: number, col: number, vertex: number): string {
+    if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
+      return '';
+    }
+
+    if (mouseRow !== row || mouseCol !== col) {
+      return '';
+    }
+
+    if (mouseTarget === MouseTarget.VERTEX) {
+      return targetNum === vertex ? 'emphasize-vertex' : '';
+    } else {
+      return 'mouse-to-display-vertex';
+    }
   }
 
   export function showEdge(row: number, col: number, edge: number): boolean {
-    return state.board[row][col].edges[edge] === -1;
+    if (state.board[row][col].edges[edge] !== -1) {
+      return false;
+    }
+    if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.VERTEX) {
+      return false;
+    }
+
+    if (mouseRow !== row || mouseCol !== col) {
+      return false;
+    }
+
+    if (mouseTarget === MouseTarget.EDGE) {
+      return targetNum === edge;
+    } else {
+      return true;
+    }
+  }
+
+  export function getEdgeClass(row: number, col: number, edge: number): string {
+    if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.VERTEX) {
+      return '';
+    }
+
+    if (mouseRow !== row || mouseCol !== col) {
+      return '';
+    }
+
+    if (mouseTarget === MouseTarget.EDGE) {
+      return targetNum === edge ? 'emphasize-edge' : '';
+    } else {
+      return 'mouse-to-display-edge';
+    }
+  }
+
+  export function showRoad(row: number, col: number, edge: number): boolean {
+    return state.board[row][col].edges[edge] >= 0;
   }
 
   export function showSettlement(row: number, col: number, vertex: number): boolean {
@@ -340,7 +424,44 @@ module game {
     return myIndex >= 0 ? 15 - state.players[myIndex].construction[Construction.Road] : 0;
   }
 
-  //TODO: onMouseOverHex & onMouseOutHex
+  export function onMouseOverHex(row: number, col: number) {
+    mouseTarget = MouseTarget.HEX;
+    mouseRow = row;
+    mouseCol = col;
+  }
+
+  export function onClickHex(row: number, col: number) {
+    //For touch screen, maybe
+    onMouseOverHex(row, col);
+  }
+
+  export function onMouseOverEdge(row: number, col: number, edgeNum: number) {
+    mouseTarget = MouseTarget.EDGE;
+    mouseRow = row;
+    mouseCol = col;
+    targetNum = edgeNum;
+  }
+
+  export function onMouseClickEdge(row: number, col: number, edgeNum: number) {
+    //TODO
+    console.log('Mouse Click Edge: ' + row + ' : ' + col + ' -> ' + edgeNum);
+  }
+
+  export function onMouseOverVertex(row: number, col: number, vertexNum: number) {
+    mouseTarget = MouseTarget.VERTEX;
+    mouseRow = row;
+    mouseCol = col;
+    targetNum = vertexNum;
+  }
+
+  export function onClickVertex(row: number, col: number, vertexNum: number) {
+    //TODO
+    console.log('Mouse Click Vertex: ' + row + ' : ' + col + ' -> ' + vertexNum);
+  }
+
+  export function onMouseLeaveBoard() {
+    mouseTarget = MouseTarget.NONE;
+  }
 }
 
 function getArray(length: number): number[] {
