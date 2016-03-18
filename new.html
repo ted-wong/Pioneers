@@ -104,8 +104,37 @@
     <div class="row" id="gameBoardAndPlayersInfoAndBuildingInfo">
       <div class="col-md-4" id="BuildingInfoAndPlayersInfo">
         <div class="panel-default" id="BuildingInfo">
-          <div class="panel-heading">Building Info</div>
-          <div class="panel-body">Content1</div>
+          <div class="panel-heading">Constructions you can make</div>
+          <div class="panel-body">
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="50" viewBox="0 0 200 50">
+              <path d="M30,10 l-15,15 v15 h30 v-15 l-17.5,-17.5"
+                    ng-attr-stroke="{{game.getColor(game.myIndex)}}"
+                    ng-attr-fill="{{game.getColor(game.myIndex)}}"
+                    stroke-width="7"/>
+
+              <text x="30" y="35" text-anchor="middle" font-weight="bold" fill="black">
+                {{game.getNumSettlementCanBuild()}}
+              </text>
+
+              <path d="M85,10 l-15,15 v15 h45 v-15 h-15 l-17.5,-17.5"
+                    ng-attr-stroke="{{game.getColor(game.myIndex)}}"
+                    ng-attr-fill="{{game.getColor(game.myIndex)}}"
+                    stroke-width="7"/>
+
+              <text x="90" y="35" text-anchor="middle" font-weight="bold" fill="black">
+                {{game.getNumCityCanBuild()}}
+              </text>
+
+              <line x1="145" y1="5" x2="145" y2="45"
+                    ng-attr-stroke="{{game.getColor(game.myIndex)}}"
+                    ng-attr-fill="{{game.getColor(game.myIndex)}}"
+                    stroke-width="20"/>
+
+              <text x="145" y="35" text-anchor="middle" font-weight="bold" fill="black">
+                {{game.getNumRoadCanBuild()}}
+              </text>
+            </svg>
+          </div>
         </div>
         <div class="panel-default" id="Player1Info">
           <div class="panel-heading">Player 1</div>

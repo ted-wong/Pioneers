@@ -278,7 +278,7 @@ var game;
     }
     game.showCity = showCity;
     function getColor(idx) {
-        return idx > 0 ? game.playerColor[idx] : 'black';
+        return idx >= 0 ? game.playerColor[idx] : 'black';
     }
     game.getColor = getColor;
     function getSettlement(row, col, vertex) {
@@ -305,6 +305,19 @@ var game;
         return game.state.board[row][col].hasRobber ? 'red' : 'black';
     }
     game.getRollColor = getRollColor;
+    function getNumSettlementCanBuild() {
+        return game.myIndex >= 0 ? 5 - game.state.players[game.myIndex].construction[Construction.Settlement] : 0;
+    }
+    game.getNumSettlementCanBuild = getNumSettlementCanBuild;
+    function getNumCityCanBuild() {
+        return game.myIndex >= 0 ? 4 - game.state.players[game.myIndex].construction[Construction.City] : 0;
+    }
+    game.getNumCityCanBuild = getNumCityCanBuild;
+    function getNumRoadCanBuild() {
+        console.log(game.myIndex >= 0 ? 15 - game.state.players[game.myIndex].construction[Construction.Road] : 0);
+        return game.myIndex >= 0 ? 15 - game.state.players[game.myIndex].construction[Construction.Road] : 0;
+    }
+    game.getNumRoadCanBuild = getNumRoadCanBuild;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

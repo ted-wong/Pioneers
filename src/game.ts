@@ -299,7 +299,7 @@ module game {
   }
 
   export function getColor(idx: number): string {
-    return idx > 0 ? playerColor[idx] : 'black';
+    return idx >= 0 ? playerColor[idx] : 'black';
   }
 
   export function getSettlement(row: number, col: number, vertex: number): string {
@@ -326,6 +326,19 @@ module game {
 
   export function getRollColor(row: number, col: number): string {
     return state.board[row][col].hasRobber ? 'red' : 'black';
+  }
+
+  export function getNumSettlementCanBuild(): number {
+    return myIndex >= 0 ? 5 - state.players[myIndex].construction[Construction.Settlement] : 0;
+  }
+
+  export function getNumCityCanBuild(): number {
+    return myIndex >= 0 ? 4 - state.players[myIndex].construction[Construction.City] : 0;
+  }
+
+  export function getNumRoadCanBuild(): number {
+    console.log(myIndex >= 0 ? 15 - state.players[myIndex].construction[Construction.Road] : 0);
+    return myIndex >= 0 ? 15 - state.players[myIndex].construction[Construction.Road] : 0;
   }
 
   //TODO: onMouseOverHex & onMouseOutHex
