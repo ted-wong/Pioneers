@@ -127,10 +127,6 @@ var game;
             game.state = gameLogic.getInitialState();
         }
         game.myIndex = params.yourPlayerIndex;
-        //TODO: REMOVE!!
-        game.state.board[3][3].edges[2] = 1;
-        game.state.board[3][3].vertices[1] = Construction.Settlement;
-        game.state.board[3][3].vertexOwner[1] = 1;
         game.canMakeMove = game.move.turnIndexAfterMove >= 0 &&
             params.yourPlayerIndex === game.move.turnIndexAfterMove; // it's my turn
         // Is it the computer's turn?
@@ -302,9 +298,13 @@ var game;
     }
     game.getCity = getCity;
     function showRollNum(row, col) {
-        return game.state.board[row][col].rollNum > 0;
+        return game.state.board[row][col].rollNum > 0 || (game.state.robber.row === row && game.state.robber.col === col);
     }
     game.showRollNum = showRollNum;
+    function getRollColor(row, col) {
+        return game.state.board[row][col].hasRobber ? 'red' : 'black';
+    }
+    game.getRollColor = getRollColor;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

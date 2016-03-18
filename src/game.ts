@@ -141,10 +141,6 @@ module game {
     }
 
     myIndex = params.yourPlayerIndex;
-    //TODO: REMOVE!!
-    state.board[3][3].edges[2] = 1;
-    state.board[3][3].vertices[1] = Construction.Settlement;
-    state.board[3][3].vertexOwner[1] = 1;
 
     canMakeMove = move.turnIndexAfterMove >= 0 && // game is ongoing
       params.yourPlayerIndex === move.turnIndexAfterMove; // it's my turn
@@ -325,7 +321,11 @@ module game {
   }
 
   export function showRollNum(row: number, col: number): boolean {
-    return state.board[row][col].rollNum > 0;
+    return state.board[row][col].rollNum > 0 || (state.robber.row === row && state.robber.col === col);
+  }
+
+  export function getRollColor(row: number, col: number): string {
+    return state.board[row][col].hasRobber ? 'red' : 'black';
   }
 
   //TODO: onMouseOverHex & onMouseOutHex

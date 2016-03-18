@@ -160,8 +160,11 @@
                       ng-if="game.showRollNum(row, col)"/>
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
                     ng-attr-y="{{game.getCenter(row, col)[1]}}"
-                    text-anchor="middle" font-weight="bold" fill="black"
-                    ng-if="game.showRollNum(row, col)">{{game.state.board[row][col].rollNum}}</text>
+                    text-anchor="middle" font-weight="bold"
+                    ng-attr-fill="{{game.getRollColor(row, col)}}"
+                    ng-if="game.showRollNum(row, col)">
+                {{game.state.board[row][col].hasRobber ? "R" : game.state.board[row][col].rollNum}}
+              </text>
             </g>
           </g>
 
