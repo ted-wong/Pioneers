@@ -89,6 +89,10 @@ td {
   opacity: 0.9;
 }
 
+.player-info {
+  color: white;
+}
+
 #b {
   width: 100%;
   height: 100%;

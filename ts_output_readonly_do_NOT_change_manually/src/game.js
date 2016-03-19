@@ -23,7 +23,7 @@ var game;
     game.height = 0;
     game.width = 0;
     game.coordinates = [];
-    game.playerColor = ['red', 'blue', 'brown', 'white'];
+    game.playerColor = ['red', 'blue', 'brown', 'green'];
     game.myIndex = -2;
     var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
     var mouseTarget = MouseTarget.NONE;
@@ -143,6 +143,13 @@ var game;
         state.board[3][3].edges[2] = 1;
         state.board[3][3].vertices[1] = Construction.Settlement;
         state.board[3][3].vertexOwner[1] = 1;
+        state.players[0].points = 1;
+        state.players[1].points = 2;
+        state.players[2].points = 3;
+        state.players[3].points = 4;
+        state.players[0].resources[0] = 2;
+        state.players[0].resources[1] = 3;
+        state.players[0].resources[2] = 4;
         */
         game.canMakeMove = game.move.turnIndexAfterMove >= 0 &&
             params.yourPlayerIndex === game.move.turnIndexAfterMove; // it's my turn
@@ -435,6 +442,26 @@ var game;
         mouseTarget = MouseTarget.NONE;
     }
     game.onMouseLeaveBoard = onMouseLeaveBoard;
+    function getPlayerPoints(idx) {
+        return game.state.players[idx].points;
+    }
+    game.getPlayerPoints = getPlayerPoints;
+    function getPlayerKnights(idx) {
+        return game.state.players[idx].knightsPlayed;
+    }
+    game.getPlayerKnights = getPlayerKnights;
+    function getNumResources(idx) {
+        return game.state.players[idx].resources.reduce(function (a, b) {
+            return a + b;
+        });
+    }
+    game.getNumResources = getNumResources;
+    function getNumDevCards(idx) {
+        return game.state.players[idx].devCards.reduce(function (a, b) {
+            return a + b;
+        });
+    }
+    game.getNumDevCards = getNumDevCards;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

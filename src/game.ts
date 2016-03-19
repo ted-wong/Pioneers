@@ -27,7 +27,7 @@ module game {
   export let width: number = 0;
 
   export let coordinates: string[][][] = [];
-  export let playerColor = ['red', 'blue', 'brown', 'white'];
+  export let playerColor = ['red', 'blue', 'brown', 'green'];
   export let myIndex: number = -2;
   
   let settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
@@ -158,6 +158,13 @@ module game {
     state.board[3][3].edges[2] = 1;
     state.board[3][3].vertices[1] = Construction.Settlement;
     state.board[3][3].vertexOwner[1] = 1;
+    state.players[0].points = 1;
+    state.players[1].points = 2;
+    state.players[2].points = 3;
+    state.players[3].points = 4;
+    state.players[0].resources[0] = 2;
+    state.players[0].resources[1] = 3;
+    state.players[0].resources[2] = 4;
     */
 
     canMakeMove = move.turnIndexAfterMove >= 0 && // game is ongoing
@@ -461,6 +468,26 @@ module game {
 
   export function onMouseLeaveBoard() {
     mouseTarget = MouseTarget.NONE;
+  }
+
+  export function getPlayerPoints(idx: number): number {
+    return state.players[idx].points;
+  }
+
+  export function getPlayerKnights(idx: number): number {
+    return state.players[idx].knightsPlayed;
+  }
+
+  export function getNumResources(idx: number): number {
+    return state.players[idx].resources.reduce(function(a, b) {
+      return a + b;
+    });
+  }
+
+  export function getNumDevCards(idx: number): number {
+    return state.players[idx].devCards.reduce(function(a, b) {
+      return a + b;
+    });
   }
 }
 

@@ -103,6 +103,12 @@
   <div class="container-fluid">
     <div class="row" id="gameBoardAndPlayersInfoAndBuildingInfo">
       <div class="col-md-4" id="BuildingInfoAndPlayersInfo">
+        <div class="panel-default" id="AlertInfo">
+          <div class="panel-heading">Info</div>
+          <div class="panel-body">
+
+          </div>
+        </div>
         <div class="panel-default" id="BuildingInfo">
           <div class="panel-heading">You can Build:</div>
           <div class="panel-body">
@@ -144,21 +150,36 @@
             </span>
           </div>
         </div>
-        <div class="panel-default" id="Player1Info">
-          <div class="panel-heading">Player 1</div>
-          <div class="panel-body">Content1</div>
-        </div>
-        <div class="panel-default" id="Player2Info">
-          <div class="panel-heading">Player 2</div>
-          <div class="panel-body">Content1</div>
-        </div>
-        <div class="panel-default" id="Player3Info">
-          <div class="panel-heading">Player 3</div>
-          <div class="panel-body">Content1</div>
-        </div>
-        <div class="panel-default" id="Player4Info">
-          <div class="panel-heading">Player 4</div>
-          <div class="panel-body">Content1</div>
+        <div class="panel-default" id="PlayersInfo">
+          <div class="panel-heading">Players</div>
+          <div class="panel-body">
+            <ul class="list-group player-info">
+              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[0]}}">
+                <strong>Points</strong> x {{game.getPlayerPoints(0)}}
+                <strong>Knights</strong> x {{game.getPlayerKnights(0)}}
+                <strong>Resources</strong> x {{game.getNumResources(0)}}
+                <strong>Dev Cards</strong> x {{game.getNumDevCards(0)}}
+              </li>
+              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[1]}}">
+                <strong>Points</strong> x {{game.getPlayerPoints(1)}}
+                <strong>Knights</strong> x {{game.getPlayerKnights(1)}}
+                <strong>Resources</strong> x {{game.getNumResources(1)}}
+                <strong>Dev Cards</strong> x {{game.getNumDevCards(1)}}
+              </li>
+              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[2]}}">
+                <strong>Points</strong> x {{game.getPlayerPoints(2)}}
+                <strong>Knights</strong> x {{game.getPlayerKnights(2)}}
+                <strong>Resources</strong> x {{game.getNumResources(2)}}
+                <strong>Dev Cards</strong> x {{game.getNumDevCards(2)}}
+              </li>
+              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[3]}}">
+                <strong>Points</strong> x {{game.getPlayerPoints(3)}}
+                <strong>Knights</strong> x {{game.getPlayerKnights(3)}}
+                <strong>Resources</strong> x {{game.getNumResources(3)}}
+                <strong>Dev Cards</strong> x {{game.getNumDevCards(3)}}
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       <div class="col-md-8" id="GameBoard">
