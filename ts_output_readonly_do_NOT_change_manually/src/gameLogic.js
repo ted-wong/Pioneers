@@ -488,11 +488,12 @@ var gameLogic;
         return ret;
     }
     function onGameStart(move, turnIdx) {
+        console.log(move.playerIdx + ' ' + turnIdx);
         if (move.playerIdx !== turnIdx) {
             throw new Error('Not your turn to play!');
         }
         var stateBeforeMove = getStateBeforeMove(move);
-        if (stateBeforeMove.eventIdx !== gameLogic.NUM_PLAYERS) {
+        if (stateBeforeMove.eventIdx !== gameLogic.NUM_PLAYERS - 1) {
             throw new Error('Initial construction not finished!');
         }
         if (stateBeforeMove.moveType !== MoveType.INIT_BUILD) {
@@ -500,6 +501,22 @@ var gameLogic;
         }
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.moveType = MoveType.INIT;
+        //Generate initial resources
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                var resource = stateAfterMove.board[i][j].label;
+                if (resource >= Resource.SIZE) {
+                    continue;
+                }
+                for (var v = 0; v < 6; v++) {
+                    if (stateAfterMove.board[i][j].vertices[v] !== -1) {
+                        var idx = stateAfterMove.board[i][j].vertexOwner[v];
+                        stateAfterMove.players[idx].resources[resource]++;
+                        stateAfterMove.bank.resources[resource]--;
+                    }
+                }
+            }
+        }
         return {
             endMatchScores: null,
             turnIndexAfterMove: 0,

@@ -32,6 +32,7 @@ var game;
     game.infoModalHeader = '';
     game.infoModalMsg = '';
     game.onOkClicked = null;
+    game.canInfoModalTurnOff = true;
     var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
     var mouseTarget = MouseTarget.NONE;
     var mouseRow = 0;
@@ -213,19 +214,41 @@ var game;
         game.mockPlayerIdx = game.state.eventIdx === -1 ? game.move.turnIndexAfterMove : game.state.eventIdx;
         game.canMakeMove = checkCanMakeMove();
         updateAlert();
-        /*
-        //TODO: REMOVE!!
-        state.board[3][3].edges[2] = 1;
-        state.board[3][3].vertices[1] = Construction.Settlement;
-        state.board[3][3].vertexOwner[1] = 1;
-        state.players[0].points = 1;
-        state.players[1].points = 2;
-        state.players[2].points = 3;
-        state.players[3].points = 4;
-        state.players[0].resources[0] = 2;
-        state.players[0].resources[1] = 3;
-        state.players[0].resources[2] = 4;
-        */
+        onCloseModal();
+        //Special check to start the game
+        if (game.state.moveType === MoveType.INIT_BUILD) {
+            if (game.state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+                var allDoneInitBuild = true;
+                for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+                    if (game.state.players[i].construction.reduce(function (a, b) { return a + b; }) !== 3) {
+                        allDoneInitBuild = false;
+                        break;
+                    }
+                }
+                if (allDoneInitBuild) {
+                    game.showInfoModal = true;
+                    game.infoModalHeader = 'Start Game';
+                    game.infoModalMsg = "Everyone is ready, it's time to start the game!";
+                    game.canInfoModalTurnOff = false;
+                    var turnMove = {
+                        moveType: MoveType.INIT,
+                        playerIdx: game.myIndex,
+                        currState: game.state
+                    };
+                    game.onOkClicked = function () {
+                        try {
+                            var nextMove = gameLogic.onGameStart(turnMove, 0);
+                            moveService.makeMove(nextMove);
+                            onCloseModal();
+                        }
+                        catch (e) {
+                            game.alertStyle = 'danger';
+                            game.alertMsg = e.message;
+                        }
+                    };
+                }
+            }
+        }
         /*
         // Is it the computer's turn?
         isComputerTurn = canMakeMove &&
@@ -266,6 +289,9 @@ var game;
     }
     game.clickedOnModal = clickedOnModal;
     function clickedOnInfoModal(evt) {
+        if (!game.canInfoModalTurnOff) {
+            return;
+        }
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
             evt.stopPropagation();
@@ -543,7 +569,7 @@ var game;
         if (!game.state || playerIdx < 0) {
             return 0;
         }
-        if (!resource) {
+        if (resource === undefined || resource === null) {
             return game.state.players[playerIdx].resources.reduce(function (a, b) {
                 return a + b;
             });
@@ -574,10 +600,6 @@ var game;
         return game.state.bank.devCardsOrder.length;
     }
     game.getBankDevCards = getBankDevCards;
-    function test(i) {
-        console.log('TEST: ' + i);
-    }
-    game.test = test;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

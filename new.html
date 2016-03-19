@@ -189,13 +189,18 @@
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <button type="button" class="close" ng-click="game.showInfoModal = false" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" ng-click="game.onCloseModal()"
+                        aria-label="Close"
+                        ng-if="game.canInfoModalTurnOff">
+                  <span aria-hidden="true">&times;</span>
+                </button>
                 <h4 class="modal-title">{{game.infoModalHeader}}</h4>
               </div>
               <div class="modal-body">
                 {{game.infoModalMsg}}
                 <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
-                <button type="button" class="btn btn-danger" ng-click="game.showInfoModal = false">Cancel</button>
+                <button type="button" class="btn btn-danger" ng-if="game.canInfoModalTurnOff"
+                        ng-click="game.onCloseModal()">Cancel</button>
               </div>
             </div>
           </div>

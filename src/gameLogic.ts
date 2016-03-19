@@ -559,12 +559,13 @@ module gameLogic {
   }
 
   export function onGameStart(move: TurnMove, turnIdx: number): IMove {
+    console.log(move.playerIdx + ' ' + turnIdx);
     if (move.playerIdx !== turnIdx) {
       throw new Error('Not your turn to play!');
     }
     let stateBeforeMove = getStateBeforeMove(move);
 
-    if (stateBeforeMove.eventIdx !== NUM_PLAYERS) {
+    if (stateBeforeMove.eventIdx !== NUM_PLAYERS - 1) {
       throw new Error('Initial construction not finished!');
     }
     if (stateBeforeMove.moveType !== MoveType.INIT_BUILD) {
@@ -574,6 +575,22 @@ module gameLogic {
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
 
     stateAfterMove.moveType = MoveType.INIT;
+    //Generate initial resources
+    for (let i = 0; i < ROWS; i++) {
+      for (let j = 0; j < COLS; j++) {
+        let resource = stateAfterMove.board[i][j].label;
+        if (resource >= Resource.SIZE) {
+          continue;
+        }
+        for (let v = 0; v < 6; v++) {
+          if (stateAfterMove.board[i][j].vertices[v] !== -1) {
+            let idx = stateAfterMove.board[i][j].vertexOwner[v];
+            stateAfterMove.players[idx].resources[resource]++;
+            stateAfterMove.bank.resources[resource]--;
+          }
+        }
+      }
+    }
 
     return {
       endMatchScores: null,

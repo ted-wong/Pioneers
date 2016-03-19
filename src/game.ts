@@ -38,6 +38,7 @@ module game {
   export let infoModalHeader = '';
   export let infoModalMsg = '';
   export let onOkClicked : {(): void} = null;
+  export let canInfoModalTurnOff = true;
 
   let settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
 
@@ -231,20 +232,42 @@ module game {
     canMakeMove = checkCanMakeMove();
 
     updateAlert();
+    onCloseModal();
+    //Special check to start the game
+    if (state.moveType === MoveType.INIT_BUILD) {
+      if (state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+        let allDoneInitBuild = true;
+        for (let i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+          if (state.players[i].construction.reduce(function(a, b) {return a+b;}) !== 3) {
+            allDoneInitBuild = false;
+            break;
+          }
+        }
+        if (allDoneInitBuild) {
+          showInfoModal = true;
+          infoModalHeader = 'Start Game';
+          infoModalMsg = "Everyone is ready, it's time to start the game!";
+          canInfoModalTurnOff = false;
 
-    /*
-    //TODO: REMOVE!!
-    state.board[3][3].edges[2] = 1;
-    state.board[3][3].vertices[1] = Construction.Settlement;
-    state.board[3][3].vertexOwner[1] = 1;
-    state.players[0].points = 1;
-    state.players[1].points = 2;
-    state.players[2].points = 3;
-    state.players[3].points = 4;
-    state.players[0].resources[0] = 2;
-    state.players[0].resources[1] = 3;
-    state.players[0].resources[2] = 4;
-    */
+          let turnMove: TurnMove = {
+            moveType: MoveType.INIT,
+            playerIdx: myIndex,
+            currState: state
+          };
+
+          onOkClicked = function() {
+            try {
+              let nextMove = gameLogic.onGameStart(turnMove, 0);
+              moveService.makeMove(nextMove);
+              onCloseModal();
+            } catch (e) {
+              alertStyle = 'danger';
+              alertMsg = e.message;
+            }
+          };
+        }
+      }
+    }
 
     /*
     // Is it the computer's turn?
@@ -287,6 +310,9 @@ module game {
   }
 
   export function clickedOnInfoModal(evt: Event) {
+    if (!canInfoModalTurnOff) {
+      return;
+    }
     if (evt.target === evt.currentTarget) {
       evt.preventDefault();
       evt.stopPropagation();
@@ -577,7 +603,7 @@ module game {
     if (!state || playerIdx < 0) {
       return 0;
     }
-    if (!resource) {
+    if (resource === undefined || resource === null) {
       return state.players[playerIdx].resources.reduce(function(a, b) {
         return a + b;
       });
@@ -609,10 +635,6 @@ module game {
 
   export function getBankDevCards(): number {
     return state.bank.devCardsOrder.length;
-  }
-
-  export function test(i: number) {
-    console.log('TEST: ' + i);
   }
 }
 
