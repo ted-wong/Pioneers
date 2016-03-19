@@ -392,6 +392,8 @@ function canUpgradeSettlement(player: Player, board: Board, row: number, col: nu
 
 function hasAdjacentRoad(player: Player, board: Board, row: number, col: number, vertex: number): boolean {
 
+  console.log('Main: (' + row + ', ' + col + ', ' + vertex + ')');
+
   if (board[row][col].edges[vertex] === player.id) return true;
   if (board[row][col].edges[(vertex+1) % 6] === player.id) return true;
 
@@ -399,8 +401,8 @@ function hasAdjacentRoad(player: Player, board: Board, row: number, col: number,
 //  console.log(hexes);
   for (var i=0; i < hexes.length; i++) {
     if (hexes[i].length === 0) continue;
-    if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] === player.id) return true;
-    if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3]+1) % 6] === player.id) return true;
+    if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][2]] === player.id) return true;
+    if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][2]+1) % 6] === player.id) return true;
   }
   return false;
 }

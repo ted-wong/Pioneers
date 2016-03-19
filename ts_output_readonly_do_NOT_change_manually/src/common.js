@@ -235,6 +235,7 @@ function canUpgradeSettlement(player, board, row, col, vertex) {
 // Helper functions for player-based functions
 // *****************
 function hasAdjacentRoad(player, board, row, col, vertex) {
+    console.log('Main: (' + row + ', ' + col + ', ' + vertex + ')');
     if (board[row][col].edges[vertex] === player.id)
         return true;
     if (board[row][col].edges[(vertex + 1) % 6] === player.id)
@@ -244,9 +245,9 @@ function hasAdjacentRoad(player, board, row, col, vertex) {
     for (var i = 0; i < hexes.length; i++) {
         if (hexes[i].length === 0)
             continue;
-        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] === player.id)
+        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][2]] === player.id)
             return true;
-        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3] + 1) % 6] === player.id)
+        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][2] + 1) % 6] === player.id)
             return true;
     }
     return false;
