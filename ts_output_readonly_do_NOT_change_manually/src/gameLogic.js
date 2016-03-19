@@ -604,11 +604,13 @@ var gameLogic;
         //Advance eventIdx
         var player = stateAfterMove.players[playerIdx];
         if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
-            stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
+            stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + (gameLogic.NUM_PLAYERS - 1)) % gameLogic.NUM_PLAYERS;
         }
         else {
             stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
         }
+        stateAfterMove.players[playerIdx].points = countScores(stateAfterMove)[playerIdx];
+        stateAfterMove.players[playerIdx].points -= stateAfterMove.players[playerIdx].devCards[DevCard.VictoryPoint];
         return {
             endMatchScores: null,
             turnIndexAfterMove: turnIdx,
@@ -647,6 +649,13 @@ var gameLogic;
                 stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
                 stateAfterMove.bank.resources[Resource.Brick]++;
                 stateAfterMove.bank.resources[Resource.Lumber]++;
+                //State transition to longest road awards
+                if (stateAfterMove.players[playerIdx].construction[Construction.Road] > stateBeforeMove.awards.longestRoad.length) {
+                    stateAfterMove.awards.longestRoad = {
+                        player: playerIdx,
+                        length: stateAfterMove.players[playerIdx].construction[Construction.Road]
+                    };
+                }
                 break;
             case Construction.Settlement:
                 stateAfterMove.moveType = MoveType.BUILD_SETTLEMENT;
@@ -687,6 +696,8 @@ var gameLogic;
             default:
                 throw new Error('Invalid command!');
         }
+        stateAfterMove.players[playerIdx].points = countScores(stateAfterMove)[playerIdx];
+        stateAfterMove.players[playerIdx].points -= stateAfterMove.players[playerIdx].devCards[DevCard.VictoryPoint];
         return {
             endMatchScores: null,
             turnIndexAfterMove: turnIdx,
@@ -717,6 +728,8 @@ var gameLogic;
                 num: stateAfterMove.players[move.playerIdx].knightsPlayed
             };
         }
+        stateAfterMove.players[move.playerIdx].points = countScores(stateAfterMove)[move.playerIdx];
+        stateAfterMove.players[move.playerIdx].points -= stateAfterMove.players[move.playerIdx].devCards[DevCard.VictoryPoint];
         return {
             endMatchScores: null,
             turnIndexAfterMove: turnIdx,
