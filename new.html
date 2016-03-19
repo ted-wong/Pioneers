@@ -104,13 +104,13 @@
     <div class="row" id="gameBoardAndPlayersInfoAndBuildingInfo">
       <div class="col-md-4" id="BuildingInfoAndPlayersInfo">
         <div class="panel-default" id="AlertInfo">
-          <div class="panel-heading">Info</div>
+          <div class="panel-heading"><strong>Info</strong></div>
           <div class="panel-body">
 
           </div>
         </div>
         <div class="panel-default" id="BuildingInfo">
-          <div class="panel-heading">You can Build:</div>
+          <div class="panel-heading"><strong>You can Build:</strong></div>
           <div class="panel-body">
             <span id="num-settlement" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="30" height="30" viewBox="0 0 30 30">
@@ -151,7 +151,7 @@
           </div>
         </div>
         <div class="panel-default" id="PlayersInfo">
-          <div class="panel-heading">Players</div>
+          <div class="panel-heading"><strong>Players</strong></div>
           <div class="panel-body">
             <ul class="list-group player-info">
               <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[0]}}">
@@ -274,16 +274,36 @@
       </div>
     </div>
     <div class="row" id="MyResourcesInfoAndBankInfo">
-      <div class="col-md-5" id="MyResourcesInfo">
-        <div class="panel-default">
-          <div class="panel-heading">My Resource Details</div>
-          <div class="panel-body">Content3</div>
+      <div class="col-md-6" id="MyResourcesInfo">
+        <div class="panel-default my-detail">
+          <div class="panel-heading"><strong>My Cards</strong></div>
+          <div class="panel-body">
+            <span ng-repeat="idx in resourceSize">
+              <img ng-attr-src="imgs/resource{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic">
+                x {{game.getNumResources(game.myIndex, idx)}}
+              </img>
+            </span>
+            <span ng-repeat="idx in devCardsSize">
+              <img ng-attr-src="imgs/devcards{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic">
+                x {{game.getNumDevCards(game.myIndex, idx)}}
+              </img>
+            </span>
+          </div>
         </div>
       </div>
-      <div class="col-md-7" id="BankInfo">
+      <div class="col-md-6" id="BankInfo">
         <div class="panel-default">
-          <div class="panel-heading">Bank Info</div>
-          <div class="panel-body">Content4</div>
+          <div class="panel-heading"><strong>Bank Info</strong></div>
+          <div class="panel-body">
+            <span ng-repeat="idx in resourceSize">
+              <img ng-attr-src="imgs/resource{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic">
+                x {{game.getBankResources(idx)}}
+              </img>
+            </span>
+            <img src="imgs/develop.svg" class="resource-pic">
+              x {{game.getBankDevCards()}}
+            </img>
+          </div>
         </div>
       </div>
     </div>

@@ -478,16 +478,46 @@ module game {
     return state.players[idx].knightsPlayed;
   }
 
-  export function getNumResources(idx: number): number {
-    return state.players[idx].resources.reduce(function(a, b) {
-      return a + b;
-    });
+  export function getNumResources(playerIdx: number, resource: Resource): number {
+    if (!state || playerIdx < 0) {
+      return 0;
+    }
+    if (!resource) {
+      return state.players[playerIdx].resources.reduce(function(a, b) {
+        return a + b;
+      });
+    }
+
+    return state.players[playerIdx].resources[resource];
   }
 
-  export function getNumDevCards(idx: number): number {
-    return state.players[idx].devCards.reduce(function(a, b) {
-      return a + b;
-    });
+  export function getNumDevCards(playerIdx: number, dev: DevCard): number {
+    if (!state || playerIdx < 0) {
+      return 0;
+    }
+    if (!dev) {
+      return state.players[playerIdx].devCards.reduce(function(a, b) {
+        return a + b;
+      });
+    }
+
+    return state.players[playerIdx].devCards[dev];
+  }
+
+  export function getBankResources(resource: number): number {
+    if (!state || resource < 0) {
+      return 0;
+    }
+
+    return state.bank.resources[resource];
+  }
+
+  export function getBankDevCards(): number {
+    return state.bank.devCardsOrder.length;
+  }
+
+  export function test(i: number) {
+    console.log('TEST: ' + i);
   }
 }
 
@@ -508,5 +538,7 @@ angular.module('myApp', ['ngTouch', 'ui.bootstrap', 'gameServices'])
     $rootScope['cols'] = getArray(gameLogic.COLS);
     $rootScope['vertices'] = getArray(6);
     $rootScope['edges'] = getArray(6);
+    $rootScope['resourceSize'] = getArray(Resource.SIZE);
+    $rootScope['devCardsSize'] = getArray(DevCard.SIZE);
     game.init();
   });

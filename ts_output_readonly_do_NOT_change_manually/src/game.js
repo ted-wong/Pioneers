@@ -450,18 +450,45 @@ var game;
         return game.state.players[idx].knightsPlayed;
     }
     game.getPlayerKnights = getPlayerKnights;
-    function getNumResources(idx) {
-        return game.state.players[idx].resources.reduce(function (a, b) {
-            return a + b;
-        });
+    function getNumResources(playerIdx, resource) {
+        if (!game.state || playerIdx < 0) {
+            return 0;
+        }
+        if (!resource) {
+            return game.state.players[playerIdx].resources.reduce(function (a, b) {
+                return a + b;
+            });
+        }
+        return game.state.players[playerIdx].resources[resource];
     }
     game.getNumResources = getNumResources;
-    function getNumDevCards(idx) {
-        return game.state.players[idx].devCards.reduce(function (a, b) {
-            return a + b;
-        });
+    function getNumDevCards(playerIdx, dev) {
+        if (!game.state || playerIdx < 0) {
+            return 0;
+        }
+        if (!dev) {
+            return game.state.players[playerIdx].devCards.reduce(function (a, b) {
+                return a + b;
+            });
+        }
+        return game.state.players[playerIdx].devCards[dev];
     }
     game.getNumDevCards = getNumDevCards;
+    function getBankResources(resource) {
+        if (!game.state || resource < 0) {
+            return 0;
+        }
+        return game.state.bank.resources[resource];
+    }
+    game.getBankResources = getBankResources;
+    function getBankDevCards() {
+        return game.state.bank.devCardsOrder.length;
+    }
+    game.getBankDevCards = getBankDevCards;
+    function test(i) {
+        console.log('TEST: ' + i);
+    }
+    game.test = test;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];
@@ -477,6 +504,8 @@ angular.module('myApp', ['ngTouch', 'ui.bootstrap', 'gameServices'])
     $rootScope['cols'] = getArray(gameLogic.COLS);
     $rootScope['vertices'] = getArray(6);
     $rootScope['edges'] = getArray(6);
+    $rootScope['resourceSize'] = getArray(Resource.SIZE);
+    $rootScope['devCardsSize'] = getArray(DevCard.SIZE);
     game.init();
 });
 //# sourceMappingURL=game.js.map
