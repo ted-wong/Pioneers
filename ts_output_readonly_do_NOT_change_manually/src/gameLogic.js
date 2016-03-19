@@ -545,7 +545,7 @@ var gameLogic;
             for (var i = 0; i < gameLogic.ROWS; i++) {
                 for (var j = 0; j < gameLogic.COLS; j++) {
                     if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
-                        stateBeforeMove.board[i][j].hasRobber) {
+                        stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
                         continue;
                     }
                     for (var v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {

@@ -622,7 +622,7 @@ module gameLogic {
       for (let i = 0; i < ROWS; i++) {
         for (let j = 0; j < COLS; j++) {
           if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
-              stateBeforeMove.board[i][j].hasRobber) {
+              stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
             continue;
           }
 
