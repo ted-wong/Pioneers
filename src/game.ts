@@ -29,6 +29,12 @@ module game {
   export let coordinates: string[][][] = [];
   export let playerColor = ['red', 'blue', 'brown', 'green'];
   export let myIndex: number = -2;
+  export let mockPlayerIdx: number = -2;
+
+  export let alertStyle = 'success';
+  export let alertMsg = 'Welcome to Pioneers Game!';
+  export let showBuildingModal = false;
+  export let buildingModalTarget = '';
   
   let settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
 
@@ -36,6 +42,11 @@ module game {
   let mouseRow = 0;
   let mouseCol = 0;
   let targetNum = 0;
+
+  let buildTarget = 0;
+  let buildRow = 0;
+  let buildCol = 0;
+  let buildNum = 0;
 
   export function getPlayerInfo(playerIndex:number): Player {
 //    if (state == null)
@@ -142,6 +153,67 @@ module game {
     moveService.makeMove(aiService.findComputerMove(move));
   }
 
+  function checkCanMakeMove(): boolean {
+    /*
+    if (state.eventIdx === -1) {
+      return myIndex === move.turnIndexAfterMove;
+    } else {
+      return myIndex === state.eventIdx;
+    }
+    */
+    return true;
+  }
+
+  function updateAlert() {
+    switch (state.moveType) {
+      case MoveType.INIT:
+        break;
+      case MoveType.INIT_BUILD:
+        alertStyle = 'success';
+        if (state.eventIdx === myIndex) {
+          if (state.players[myIndex].construction[Construction.Settlement] === 1 && state.players[myIndex].construction[Construction.Road] === 2) {
+            alertMsg = 'Initial buildings done, time to start the game!';
+          } else {
+            alertMsg = 'Please place your initial buildings...';
+          }
+        } else {
+          alertMsg = 'Player' + (state.eventIdx + 1) + ' placing initial buildings...'
+        }
+        break;
+      case MoveType.ROLL_DICE:
+        break;
+      case MoveType.BUILD_ROAD:
+        break;
+      case MoveType.BUILD_SETTLEMENT:
+        break;
+      case MoveType.BUILD_CITY:
+        break;
+      case MoveType.BUILD_DEVCARD:
+        break;
+      case MoveType.KNIGHT:
+        break;
+      case MoveType.MONOPOLY:
+        break;
+      case MoveType.YEAR_OF_PLENTY:
+        break;
+      case MoveType.TRADE:
+        break;
+      case MoveType.ROBBER_EVENT:
+        break;
+      case MoveType.ROBBER_MOVE:
+        break;
+      case MoveType.ROB_PLAYER:
+        break;
+      case MoveType.TRANSACTION_WITH_BANK:
+        break;
+      case MoveType.WIN:
+        break;
+      default:
+        alertStyle = 'danger';
+        alertMsg = 'Unknown Move!';
+    }
+  }
+
   function updateUI(params: IUpdateUI): void {
     log.info("Game got updateUI:", params);
     animationEnded = false;
@@ -152,6 +224,10 @@ module game {
     }
 
     myIndex = params.yourPlayerIndex;
+    mockPlayerIdx = state.eventIdx === -1 ? move.turnIndexAfterMove : state.eventIdx;
+    canMakeMove = checkCanMakeMove();
+
+    updateAlert();
 
     /*
     //TODO: REMOVE!!
@@ -167,12 +243,11 @@ module game {
     state.players[0].resources[2] = 4;
     */
 
-    canMakeMove = move.turnIndexAfterMove >= 0 && // game is ongoing
-      params.yourPlayerIndex === move.turnIndexAfterMove; // it's my turn
-
+    /*
     // Is it the computer's turn?
     isComputerTurn = canMakeMove &&
         params.playersInfo[params.yourPlayerIndex].playerId === '';
+    */
     if (isComputerTurn) {
       // To make sure the player won't click something and send a move instead of the computer sending a move.
       canMakeMove = false;
@@ -186,45 +261,6 @@ module game {
         sendComputerMove();
       }
     }
-  }
-
-  export function cellClicked(row: number, col: number): void {
-    /*
-    log.info("Clicked on cell:", row, col);
-    if (window.location.search === '?throwException') { // to test encoding a stack trace with sourcemap
-      throw new Error("Throwing the error because URL has '?throwException'");
-    }
-    if (!canMakeMove) {
-      return;
-    }
-    try {
-      let nextMove = gameLogic.createMove(
-          state, row, col, move.turnIndexAfterMove);
-      canMakeMove = false; // to prevent making another move
-      moveService.makeMove(nextMove);
-    } catch (e) {
-      log.info(["Cell is already full in position:", row, col]);
-      return;
-    }
-    */
-  }
-
-  export function shouldEdgeSlowlyAppear(row: number, col: number, edge:number): boolean {
-    /*
-    return !animationEnded &&
-        state.delta &&
-        state.delta.row === row && state.delta.col === col;
-    */
-    return false;
-  }
-
-  export function shouldVertexSlowlyAppear(row: number, col: number, vertex:number): boolean {
-    /*
-    return !animationEnded &&
-        state.delta &&
-        state.delta.row === row && state.delta.col === col;
-    */
-    return false;
   }
 
   export function clickedOnHexModal(evt: Event) {
@@ -245,6 +281,14 @@ module game {
       isHelpModalShown = false;
     }
     return true;
+  }
+
+  export function clickedOnBuildingModal(evt: Event) {
+    if (evt.target === evt.currentTarget) {
+      evt.preventDefault();
+      evt.stopPropagation();
+      showBuildingModal = false;
+    }
   }
 
   function getOffset(row: number, radius: number): number {
@@ -462,8 +506,39 @@ module game {
   }
 
   export function onClickVertex(row: number, col: number, vertexNum: number) {
-    //TODO
-    console.log('Mouse Click Vertex: ' + row + ' : ' + col + ' -> ' + vertexNum);
+    buildTarget = Construction.Settlement;
+    buildRow = mouseRow;
+    buildCol = mouseCol;
+    buildNum = targetNum;
+
+    showBuildingModal = true;
+    buildingModalTarget = 'Settlement';
+  }
+
+  export function onBuild() {
+    showBuildingModal = false;
+    if (!canMakeMove) {
+      return;
+    }
+
+    let buildMove: BuildMove = {
+      moveType: state.moveType,
+      playerIdx: mockPlayerIdx,
+      currState: angular.copy(state),
+      consType: buildTarget,
+      hexRow: buildRow,
+      hexCol: buildCol,
+      vertexOrEdge: buildNum
+    };
+
+    try {
+      let nextMove = state.moveType === MoveType.INIT_BUILD ? gameLogic.onInitBuilding(buildMove, move.turnIndexAfterMove) :
+          gameLogic.onBuilding(buildMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
+    }
   }
 
   export function onMouseLeaveBoard() {

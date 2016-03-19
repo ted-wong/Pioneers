@@ -209,7 +209,7 @@ var gameLogic;
             devCardsPlayed: false,
             delta: null,
             moveType: MoveType.INIT_BUILD,
-            eventIdx: -1,
+            eventIdx: gameLogic.NUM_PLAYERS - 1,
             building: null
         };
     }
@@ -256,24 +256,28 @@ var gameLogic;
     }
     function checkResourcesToBuild(player, consType, bank) {
         if (!canAffordConstruction(player, consType)) {
-            throw new Error('Insufficient resources to build ' + consType);
+            throw new Error('Insufficient resources to build ' + Construction[consType]);
         }
         if (!hasSufficientConstructsToBuild(player, consType, bank)) {
             throw new Error('Has no enough constructions to build ' + consType);
         }
     }
     function checkBuildRoad(prevState, nextState, idx) {
-        checkResourcesToBuild(prevState.players[idx], Construction.Road, prevState.bank);
         var building = nextState.building;
         var player = nextState.players[idx];
+        if (!building.init) {
+            checkResourcesToBuild(prevState.players[idx], Construction.Road, prevState.bank);
+        }
         if (!canBuildRoadLegally(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge, building.init)) {
             throw new Error('Cannot build road legally!');
         }
     }
     function checkBuildSettlement(prevState, nextState, idx) {
-        checkResourcesToBuild(prevState.players[idx], Construction.Settlement, prevState.bank);
         var building = nextState.building;
         var player = nextState.players[idx];
+        if (!building.init) {
+            checkResourcesToBuild(prevState.players[idx], Construction.Settlement, prevState.bank);
+        }
         if (!canBuildSettlementLegally(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge, building.init)) {
             throw new Error('Cannot build settlement legally!');
         }
@@ -430,7 +434,7 @@ var gameLogic;
         }
     }
     function checkMoveOk(stateTransition) {
-        var prevState = stateTransition.stateBeforeMove;
+        var prevState = stateTransition.stateBeforeMove ? stateTransition.stateBeforeMove : getInitialState();
         var nextState = stateTransition.move.stateAfterMove;
         var prevIdx = prevState.eventIdx === -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
         //TODO: What are these for, exactly?
@@ -497,7 +501,7 @@ var gameLogic;
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.moveType = MoveType.INIT;
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: 0,
             stateAfterMove: stateAfterMove
         };
@@ -552,7 +556,7 @@ var gameLogic;
             stateAfterMove.eventIdx = turnIdx;
         }
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -607,7 +611,7 @@ var gameLogic;
             stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
         }
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -685,7 +689,7 @@ var gameLogic;
                 throw new Error('Invalid command!');
         }
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -715,7 +719,7 @@ var gameLogic;
             };
         }
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -751,7 +755,7 @@ var gameLogic;
         }
         stateAfterMove.players[turnIdx].resources[monopolyMove.target] += numCards;
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -786,7 +790,7 @@ var gameLogic;
             }
         });
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -813,7 +817,7 @@ var gameLogic;
         }
         stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -840,7 +844,7 @@ var gameLogic;
         stateAfterMove.robber.row = robberMove.row;
         stateAfterMove.robber.col = robberMove.col;
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -871,7 +875,7 @@ var gameLogic;
         stateAfterMove.players[robPlayerMove.stealingIdx].resources[resourcesOnHand[idx]]++;
         stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -900,7 +904,7 @@ var gameLogic;
             throw new Error('Bank has insufficient resources to trade!');
         }
         return {
-            endMatchScores: countScores(stateAfterMove),
+            endMatchScores: null,
             turnIndexAfterMove: turnIdx,
             stateAfterMove: stateAfterMove
         };
@@ -927,7 +931,7 @@ var gameLogic;
         stateAfterMove.devCardsPlayed = false;
         stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
         return {
-            endMatchScores: scores,
+            endMatchScores: hasWinner ? scores : null,
             turnIndexAfterMove: (turnIdx + 1) % gameLogic.NUM_PLAYERS,
             stateAfterMove: stateAfterMove
         };

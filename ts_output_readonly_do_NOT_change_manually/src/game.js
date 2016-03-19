@@ -25,11 +25,20 @@ var game;
     game.coordinates = [];
     game.playerColor = ['red', 'blue', 'brown', 'green'];
     game.myIndex = -2;
+    game.mockPlayerIdx = -2;
+    game.alertStyle = 'success';
+    game.alertMsg = 'Welcome to Pioneers Game!';
+    game.showBuildingModal = false;
+    game.buildingModalTarget = '';
     var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
     var mouseTarget = MouseTarget.NONE;
     var mouseRow = 0;
     var mouseCol = 0;
     var targetNum = 0;
+    var buildTarget = 0;
+    var buildRow = 0;
+    var buildCol = 0;
+    var buildNum = 0;
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -129,6 +138,67 @@ var game;
         game.isComputerTurn = false; // to make sure the computer can only move once.
         moveService.makeMove(aiService.findComputerMove(game.move));
     }
+    function checkCanMakeMove() {
+        /*
+        if (state.eventIdx === -1) {
+          return myIndex === move.turnIndexAfterMove;
+        } else {
+          return myIndex === state.eventIdx;
+        }
+        */
+        return true;
+    }
+    function updateAlert() {
+        switch (game.state.moveType) {
+            case MoveType.INIT:
+                break;
+            case MoveType.INIT_BUILD:
+                game.alertStyle = 'success';
+                if (game.state.eventIdx === game.myIndex) {
+                    if (game.state.players[game.myIndex].construction[Construction.Settlement] === 1 && game.state.players[game.myIndex].construction[Construction.Road] === 2) {
+                        game.alertMsg = 'Initial buildings done, time to start the game!';
+                    }
+                    else {
+                        game.alertMsg = 'Please place your initial buildings...';
+                    }
+                }
+                else {
+                    game.alertMsg = 'Player' + (game.state.eventIdx + 1) + ' placing initial buildings...';
+                }
+                break;
+            case MoveType.ROLL_DICE:
+                break;
+            case MoveType.BUILD_ROAD:
+                break;
+            case MoveType.BUILD_SETTLEMENT:
+                break;
+            case MoveType.BUILD_CITY:
+                break;
+            case MoveType.BUILD_DEVCARD:
+                break;
+            case MoveType.KNIGHT:
+                break;
+            case MoveType.MONOPOLY:
+                break;
+            case MoveType.YEAR_OF_PLENTY:
+                break;
+            case MoveType.TRADE:
+                break;
+            case MoveType.ROBBER_EVENT:
+                break;
+            case MoveType.ROBBER_MOVE:
+                break;
+            case MoveType.ROB_PLAYER:
+                break;
+            case MoveType.TRANSACTION_WITH_BANK:
+                break;
+            case MoveType.WIN:
+                break;
+            default:
+                game.alertStyle = 'danger';
+                game.alertMsg = 'Unknown Move!';
+        }
+    }
     function updateUI(params) {
         log.info("Game got updateUI:", params);
         game.animationEnded = false;
@@ -138,6 +208,9 @@ var game;
             game.state = gameLogic.getInitialState();
         }
         game.myIndex = params.yourPlayerIndex;
+        game.mockPlayerIdx = game.state.eventIdx === -1 ? game.move.turnIndexAfterMove : game.state.eventIdx;
+        game.canMakeMove = checkCanMakeMove();
+        updateAlert();
         /*
         //TODO: REMOVE!!
         state.board[3][3].edges[2] = 1;
@@ -151,11 +224,11 @@ var game;
         state.players[0].resources[1] = 3;
         state.players[0].resources[2] = 4;
         */
-        game.canMakeMove = game.move.turnIndexAfterMove >= 0 &&
-            params.yourPlayerIndex === game.move.turnIndexAfterMove; // it's my turn
+        /*
         // Is it the computer's turn?
-        game.isComputerTurn = game.canMakeMove &&
+        isComputerTurn = canMakeMove &&
             params.playersInfo[params.yourPlayerIndex].playerId === '';
+        */
         if (game.isComputerTurn) {
             // To make sure the player won't click something and send a move instead of the computer sending a move.
             game.canMakeMove = false;
@@ -170,45 +243,6 @@ var game;
             }
         }
     }
-    function cellClicked(row, col) {
-        /*
-        log.info("Clicked on cell:", row, col);
-        if (window.location.search === '?throwException') { // to test encoding a stack trace with sourcemap
-          throw new Error("Throwing the error because URL has '?throwException'");
-        }
-        if (!canMakeMove) {
-          return;
-        }
-        try {
-          let nextMove = gameLogic.createMove(
-              state, row, col, move.turnIndexAfterMove);
-          canMakeMove = false; // to prevent making another move
-          moveService.makeMove(nextMove);
-        } catch (e) {
-          log.info(["Cell is already full in position:", row, col]);
-          return;
-        }
-        */
-    }
-    game.cellClicked = cellClicked;
-    function shouldEdgeSlowlyAppear(row, col, edge) {
-        /*
-        return !animationEnded &&
-            state.delta &&
-            state.delta.row === row && state.delta.col === col;
-        */
-        return false;
-    }
-    game.shouldEdgeSlowlyAppear = shouldEdgeSlowlyAppear;
-    function shouldVertexSlowlyAppear(row, col, vertex) {
-        /*
-        return !animationEnded &&
-            state.delta &&
-            state.delta.row === row && state.delta.col === col;
-        */
-        return false;
-    }
-    game.shouldVertexSlowlyAppear = shouldVertexSlowlyAppear;
     function clickedOnHexModal(evt) {
         console.log("test");
         if (evt.target === evt.currentTarget) {
@@ -229,6 +263,14 @@ var game;
         return true;
     }
     game.clickedOnModal = clickedOnModal;
+    function clickedOnBuildingModal(evt) {
+        if (evt.target === evt.currentTarget) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            game.showBuildingModal = false;
+        }
+    }
+    game.clickedOnBuildingModal = clickedOnBuildingModal;
     function getOffset(row, radius) {
         return (Math.sqrt(3) * radius) / 2;
     }
@@ -434,10 +476,39 @@ var game;
     }
     game.onMouseOverVertex = onMouseOverVertex;
     function onClickVertex(row, col, vertexNum) {
-        //TODO
-        console.log('Mouse Click Vertex: ' + row + ' : ' + col + ' -> ' + vertexNum);
+        buildTarget = Construction.Settlement;
+        buildRow = mouseRow;
+        buildCol = mouseCol;
+        buildNum = targetNum;
+        game.showBuildingModal = true;
+        game.buildingModalTarget = 'Settlement';
     }
     game.onClickVertex = onClickVertex;
+    function onBuild() {
+        game.showBuildingModal = false;
+        if (!game.canMakeMove) {
+            return;
+        }
+        var buildMove = {
+            moveType: game.state.moveType,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state),
+            consType: buildTarget,
+            hexRow: buildRow,
+            hexCol: buildCol,
+            vertexOrEdge: buildNum
+        };
+        try {
+            var nextMove = game.state.moveType === MoveType.INIT_BUILD ? gameLogic.onInitBuilding(buildMove, game.move.turnIndexAfterMove) :
+                gameLogic.onBuilding(buildMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+    }
+    game.onBuild = onBuild;
     function onMouseLeaveBoard() {
         mouseTarget = MouseTarget.NONE;
     }

@@ -104,9 +104,10 @@
     <div class="row" id="gameBoardAndPlayersInfoAndBuildingInfo">
       <div class="col-md-4" id="BuildingInfoAndPlayersInfo">
         <div class="panel-default" id="AlertInfo">
-          <div class="panel-heading"><strong>Info</strong></div>
           <div class="panel-body">
-
+            <div ng-attr-class="alert alert-{{game.alertStyle}}" role="alert">
+              {{game.alertMsg}}
+            </div>
           </div>
         </div>
         <div class="panel-default" id="BuildingInfo">
@@ -183,6 +184,18 @@
         </div>
       </div>
       <div class="col-md-8" id="GameBoard">
+        <div class="overlayModal" ng-click="game.clickedOnBuildingModal($event)"
+             ng-class="{zeroOpacity: !game.showBuildingModal, oneOpacity: game.showBuildingModal}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-body">
+                Are you sure to build a {{game.buildingModalTarget}}?
+                <button type="button" class="btn btn-primary" ng-click="game.onBuild()">OK</button>
+                <button type="button" class="btn btn-danger" ng-click="game.showBuildingModal = false">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 600 600"
              ng-mouseleave="game.onMouseLeaveBoard()">
           <defs>
@@ -300,7 +313,7 @@
                 x {{game.getBankResources(idx)}}
               </img>
             </span>
-            <img src="imgs/develop.svg" class="resource-pic">
+            <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic">
               x {{game.getBankDevCards()}}
             </img>
           </div>

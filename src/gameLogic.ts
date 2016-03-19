@@ -237,7 +237,7 @@ module gameLogic {
       devCardsPlayed: false,
       delta: null,
       moveType: MoveType.INIT_BUILD,
-      eventIdx: -1,
+      eventIdx: NUM_PLAYERS - 1,
       building: null
     };
   }
@@ -288,7 +288,7 @@ module gameLogic {
 
   function checkResourcesToBuild(player: Player, consType: Construction, bank: Bank): void {
     if (!canAffordConstruction(player, consType)) {
-      throw new Error('Insufficient resources to build ' + consType);
+      throw new Error('Insufficient resources to build ' + Construction[consType]);
     }
     if (!hasSufficientConstructsToBuild(player, consType, bank)) {
       throw new Error('Has no enough constructions to build ' + consType);
@@ -296,9 +296,12 @@ module gameLogic {
   }
 
   function checkBuildRoad(prevState: IState, nextState: IState, idx: number): void {
-    checkResourcesToBuild(prevState.players[idx], Construction.Road, prevState.bank);
     let building: BuildInstruction = nextState.building;
     let player: Player = nextState.players[idx];
+
+    if (!building.init) {
+      checkResourcesToBuild(prevState.players[idx], Construction.Road, prevState.bank);
+    }
 
     if (!canBuildRoadLegally(player, prevState.board, building.hexRow, building.hexCol,
         building.vertexOrEdge, building.init)) {
@@ -307,9 +310,12 @@ module gameLogic {
   }
 
   function checkBuildSettlement(prevState: IState, nextState: IState, idx: number): void {
-    checkResourcesToBuild(prevState.players[idx], Construction.Settlement, prevState.bank);
     let building: BuildInstruction = nextState.building;
     let player: Player = nextState.players[idx];
+
+    if (!building.init) {
+      checkResourcesToBuild(prevState.players[idx], Construction.Settlement, prevState.bank);
+    }
 
     if (!canBuildSettlementLegally(player, prevState.board, building.hexRow, building.hexCol,
         building.vertexOrEdge, building.init)) {
@@ -492,7 +498,7 @@ module gameLogic {
   }
 
   export function checkMoveOk(stateTransition: IStateTransition): void {
-    let prevState: IState = stateTransition.stateBeforeMove;
+    let prevState: IState = stateTransition.stateBeforeMove ? stateTransition.stateBeforeMove : getInitialState();
     let nextState: IState = stateTransition.move.stateAfterMove;
     let prevIdx: number = prevState.eventIdx === -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
     //TODO: What are these for, exactly?
@@ -570,7 +576,7 @@ module gameLogic {
     stateAfterMove.moveType = MoveType.INIT;
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: 0,
       stateAfterMove: stateAfterMove
     };
@@ -630,7 +636,7 @@ module gameLogic {
     }
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -688,7 +694,7 @@ module gameLogic {
     }
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -775,7 +781,7 @@ module gameLogic {
     }
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -808,7 +814,7 @@ module gameLogic {
     }
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -848,7 +854,7 @@ module gameLogic {
     stateAfterMove.players[turnIdx].resources[monopolyMove.target] += numCards;
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -886,7 +892,7 @@ module gameLogic {
     });
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -917,7 +923,7 @@ module gameLogic {
     stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % NUM_PLAYERS;
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -947,7 +953,7 @@ module gameLogic {
     stateAfterMove.robber.col = robberMove.col;
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -981,7 +987,7 @@ module gameLogic {
     stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -1013,7 +1019,7 @@ module gameLogic {
     }
 
     return {
-      endMatchScores: countScores(stateAfterMove),
+      endMatchScores: null,
       turnIndexAfterMove: turnIdx,
       stateAfterMove: stateAfterMove
     };
@@ -1043,7 +1049,7 @@ module gameLogic {
     stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
 
     return {
-      endMatchScores: scores,
+      endMatchScores: hasWinner ? scores : null,
       turnIndexAfterMove: (turnIdx + 1) % NUM_PLAYERS,
       stateAfterMove: stateAfterMove
     };
