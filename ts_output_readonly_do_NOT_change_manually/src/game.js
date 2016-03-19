@@ -28,8 +28,10 @@ var game;
     game.mockPlayerIdx = -2;
     game.alertStyle = 'success';
     game.alertMsg = 'Welcome to Pioneers Game!';
-    game.showBuildingModal = false;
-    game.buildingModalTarget = '';
+    game.showInfoModal = false;
+    game.infoModalHeader = '';
+    game.infoModalMsg = '';
+    game.onOkClicked = null;
     var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
     var mouseTarget = MouseTarget.NONE;
     var mouseRow = 0;
@@ -263,14 +265,14 @@ var game;
         return true;
     }
     game.clickedOnModal = clickedOnModal;
-    function clickedOnBuildingModal(evt) {
+    function clickedOnInfoModal(evt) {
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
             evt.stopPropagation();
-            game.showBuildingModal = false;
+            onCloseModal();
         }
     }
-    game.clickedOnBuildingModal = clickedOnBuildingModal;
+    game.clickedOnInfoModal = clickedOnInfoModal;
     function getOffset(row, radius) {
         return (Math.sqrt(3) * radius) / 2;
     }
@@ -468,8 +470,10 @@ var game;
         buildRow = row;
         buildCol = col;
         buildNum = edgeNum;
-        game.showBuildingModal = true;
-        game.buildingModalTarget = 'Road';
+        game.showInfoModal = true;
+        game.onOkClicked = onBuild;
+        game.infoModalHeader = 'Building';
+        game.infoModalMsg = 'Are you sure to build a road?';
     }
     game.onClickEdge = onClickEdge;
     function onMouseOverVertex(row, col, vertexNum) {
@@ -484,12 +488,15 @@ var game;
         buildRow = row;
         buildCol = col;
         buildNum = vertexNum;
-        game.showBuildingModal = true;
-        game.buildingModalTarget = 'Settlement';
+        game.showInfoModal = true;
+        game.onOkClicked = onBuild;
+        game.infoModalHeader = 'Building';
+        game.infoModalMsg = 'Are you sure to build a settlement?';
     }
     game.onClickVertex = onClickVertex;
     function onBuild() {
-        game.showBuildingModal = false;
+        game.showInfoModal = false;
+        game.onOkClicked = null;
         if (!game.canMakeMove) {
             return;
         }
@@ -517,6 +524,13 @@ var game;
         mouseTarget = MouseTarget.NONE;
     }
     game.onMouseLeaveBoard = onMouseLeaveBoard;
+    function onCloseModal() {
+        game.showInfoModal = false;
+        game.infoModalHeader = '';
+        game.infoModalMsg = '';
+        game.onOkClicked = null;
+    }
+    game.onCloseModal = onCloseModal;
     function getPlayerPoints(idx) {
         return game.state.players[idx].points;
     }

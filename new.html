@@ -184,14 +184,18 @@
         </div>
       </div>
       <div class="col-md-8" id="GameBoard">
-        <div class="overlayModal" ng-click="game.clickedOnBuildingModal($event)"
-             ng-class="{zeroOpacity: !game.showBuildingModal, oneOpacity: game.showBuildingModal}" aria-hidden="true">
+        <div class="overlayModal" ng-click="game.clickedOnInfoModal($event)"
+             ng-class="{zeroOpacity: !game.showInfoModal, oneOpacity: game.showInfoModal}" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" ng-click="game.showInfoModal = false" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">{{game.infoModalHeader}}</h4>
+              </div>
               <div class="modal-body">
-                Are you sure to build a {{game.buildingModalTarget}}?
-                <button type="button" class="btn btn-primary" ng-click="game.onBuild()">OK</button>
-                <button type="button" class="btn btn-danger" ng-click="game.showBuildingModal = false">Cancel</button>
+                {{game.infoModalMsg}}
+                <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
+                <button type="button" class="btn btn-danger" ng-click="game.showInfoModal = false">Cancel</button>
               </div>
             </div>
           </div>

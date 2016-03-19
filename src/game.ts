@@ -33,9 +33,12 @@ module game {
 
   export let alertStyle = 'success';
   export let alertMsg = 'Welcome to Pioneers Game!';
-  export let showBuildingModal = false;
-  export let buildingModalTarget = '';
-  
+
+  export let showInfoModal = false;
+  export let infoModalHeader = '';
+  export let infoModalMsg = '';
+  export let onOkClicked : {(): void} = null;
+
   let settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
 
   let mouseTarget = MouseTarget.NONE;
@@ -283,11 +286,11 @@ module game {
     return true;
   }
 
-  export function clickedOnBuildingModal(evt: Event) {
+  export function clickedOnInfoModal(evt: Event) {
     if (evt.target === evt.currentTarget) {
       evt.preventDefault();
       evt.stopPropagation();
-      showBuildingModal = false;
+      onCloseModal();
     }
   }
 
@@ -499,8 +502,10 @@ module game {
     buildCol = col;
     buildNum = edgeNum;
 
-    showBuildingModal = true;
-    buildingModalTarget = 'Road';
+    showInfoModal = true;
+    onOkClicked = onBuild;
+    infoModalHeader = 'Building';
+    infoModalMsg = 'Are you sure to build a road?';
   }
 
   export function onMouseOverVertex(row: number, col: number, vertexNum: number) {
@@ -516,12 +521,15 @@ module game {
     buildCol = col;
     buildNum = vertexNum;
 
-    showBuildingModal = true;
-    buildingModalTarget = 'Settlement';
+    showInfoModal = true;
+    onOkClicked = onBuild;
+    infoModalHeader = 'Building';
+    infoModalMsg = 'Are you sure to build a settlement?';
   }
 
   export function onBuild() {
-    showBuildingModal = false;
+    showInfoModal = false;
+    onOkClicked = null;
     if (!canMakeMove) {
       return;
     }
@@ -548,6 +556,13 @@ module game {
 
   export function onMouseLeaveBoard() {
     mouseTarget = MouseTarget.NONE;
+  }
+
+  export function onCloseModal() {
+    showInfoModal = false;
+    infoModalHeader = '';
+    infoModalMsg = '';
+    onOkClicked = null;
   }
 
   export function getPlayerPoints(idx: number): number {
