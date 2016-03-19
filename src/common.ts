@@ -355,7 +355,7 @@ function canBuildSettlementLegally(player: Player, board: Board, row: number, co
     if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
       has_land = true;
   }
-  if (has_land === false)
+  if (has_land === false && gameLogic.isSea(row, col))
     return false;
 
   // new settlement has to be 2+ vertices away from another settlement/city

@@ -23,7 +23,7 @@ module gameLogic {
     return ret;
   }
 
-  function isSea(row: number, col: number): boolean {
+  export function isSea(row: number, col: number): boolean {
     if (row === 0 || col === 0 || row === ROWS-1 || col === COLS-1) {
       return true;
     } else if (row === 1 || row === 5) {

@@ -33,6 +33,7 @@ var gameLogic;
         }
         return false;
     }
+    gameLogic.isSea = isSea;
     function assignRollNum(board) {
         var visited = [];
         for (var i = 0; i < gameLogic.ROWS; i++) {
