@@ -276,6 +276,11 @@ function canBuildRoadLegally(player: Player, board: Board, row: number, col: num
     return false;
   }
 
+  //If it's first build instruction during INIT_BUILD, just build it
+  if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 0) {
+    return true;
+  }
+
   // player owns adjacent road in current hex or adjacent road in adjacent hex
   if (board[row][col].edges[((edge+1) % 6 + 6) % 6] === player.id ||
     board[row][col].edges[((edge-1) % 6 + 6) % 6] === player.id || 
@@ -599,7 +604,42 @@ function findRoadSubLength(player: Player, board: Board, row: number, col: numbe
   }
 }
 
+/**
+ * Helper functions for making next state
+ */
 
+function getNextStateToBuildRoad(board: Board, row: number, col: number, e: number, idx: number): Board {
+  let [adjRow, adjCol] = getHexAdjcentToEdge(row, col, e);
+  let adjEdge = (e + 3) % 6;
+
+  board[row][col].edges[e] = idx;
+  board[adjRow][adjCol].edges[adjEdge] = idx;
+
+  return board;
+}
+
+function getNextStateToBuild(board: Board, buildingMove: BuildMove): Board {
+  let row = buildingMove.hexRow;
+  let col = buildingMove.hexCol;
+  let num = buildingMove.vertexOrEdge;
+  let idx = buildingMove.playerIdx;
+
+  if (buildingMove.consType === Construction.Road) {
+    return getNextStateToBuildRoad(board, row, col, num, idx);
+  }
+
+  let hexes = getHexesAdjacentToVertex(row, col, num);
+  for (let i = 0; i < hexes.length; i++) {
+    let [r, c, v] = hexes[i];
+    board[r][c].vertexOwner[v] = idx;
+    board[r][c].vertices[v] = buildingMove.consType;
+  }
+
+  board[row][col].vertexOwner[num] = idx;
+  board[row][col].vertices[num] = buildingMove.consType;
+
+  return board;
+}
 
 /**
  * Constants definitions

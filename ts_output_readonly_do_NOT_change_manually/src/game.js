@@ -463,11 +463,15 @@ var game;
         targetNum = edgeNum;
     }
     game.onMouseOverEdge = onMouseOverEdge;
-    function onMouseClickEdge(row, col, edgeNum) {
-        //TODO
-        console.log('Mouse Click Edge: ' + row + ' : ' + col + ' -> ' + edgeNum);
+    function onClickEdge(row, col, edgeNum) {
+        buildTarget = Construction.Road;
+        buildRow = row;
+        buildCol = col;
+        buildNum = edgeNum;
+        game.showBuildingModal = true;
+        game.buildingModalTarget = 'Road';
     }
-    game.onMouseClickEdge = onMouseClickEdge;
+    game.onClickEdge = onClickEdge;
     function onMouseOverVertex(row, col, vertexNum) {
         mouseTarget = MouseTarget.VERTEX;
         mouseRow = row;
@@ -477,9 +481,9 @@ var game;
     game.onMouseOverVertex = onMouseOverVertex;
     function onClickVertex(row, col, vertexNum) {
         buildTarget = Construction.Settlement;
-        buildRow = mouseRow;
-        buildCol = mouseCol;
-        buildNum = targetNum;
+        buildRow = row;
+        buildCol = col;
+        buildNum = vertexNum;
         game.showBuildingModal = true;
         game.buildingModalTarget = 'Settlement';
     }

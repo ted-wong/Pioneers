@@ -669,16 +669,16 @@ module gameLogic {
           throw new Error('Road already built on this place!');
         }
         stateAfterMove.building.consType = Construction.Road;
-        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
         stateAfterMove.players[playerIdx].construction[Construction.Road]++;
         break;
       case Construction.Settlement:
         if (move.currState.players[playerIdx].construction[Construction.Settlement] >= 1) {
           throw new Error('Can only build 1 settlement during initialization!');
         }
+
         stateAfterMove.building.consType = Construction.Settlement;
-        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.Settlement;
-        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] = playerIdx;
+        stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
         stateAfterMove.players[playerIdx].construction[Construction.Settlement]++;
         break;
       default:
@@ -727,6 +727,7 @@ module gameLogic {
         if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
           throw new Error('Invalid building instruction!');
         }
+        stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
         stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
 
         stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
@@ -740,8 +741,7 @@ module gameLogic {
         if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== -1) {
           throw new Error('Invalid building instruction!');
         }
-        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] = playerIdx;
-        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.Settlement;
+        stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
 
         stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
         stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
@@ -759,7 +759,7 @@ module gameLogic {
             move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] !== Construction.Settlement) {
           throw new Error('Invalid building instruction!');
         }
-        stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] = Construction.City;
+        stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
 
         stateAfterMove.players[playerIdx].resources[Resource.Ore] -= 3;
         stateAfterMove.players[playerIdx].resources[Resource.Grain] -= 2;

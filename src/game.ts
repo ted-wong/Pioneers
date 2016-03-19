@@ -493,9 +493,14 @@ module game {
     targetNum = edgeNum;
   }
 
-  export function onMouseClickEdge(row: number, col: number, edgeNum: number) {
-    //TODO
-    console.log('Mouse Click Edge: ' + row + ' : ' + col + ' -> ' + edgeNum);
+  export function onClickEdge(row: number, col: number, edgeNum: number) {
+    buildTarget = Construction.Road;
+    buildRow = row;
+    buildCol = col;
+    buildNum = edgeNum;
+
+    showBuildingModal = true;
+    buildingModalTarget = 'Road';
   }
 
   export function onMouseOverVertex(row: number, col: number, vertexNum: number) {
@@ -507,9 +512,9 @@ module game {
 
   export function onClickVertex(row: number, col: number, vertexNum: number) {
     buildTarget = Construction.Settlement;
-    buildRow = mouseRow;
-    buildCol = mouseCol;
-    buildNum = targetNum;
+    buildRow = row;
+    buildCol = col;
+    buildNum = vertexNum;
 
     showBuildingModal = true;
     buildingModalTarget = 'Settlement';
