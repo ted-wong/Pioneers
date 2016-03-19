@@ -600,6 +600,28 @@ var game;
         return game.state.bank.devCardsOrder.length;
     }
     game.getBankDevCards = getBankDevCards;
+    function showDice() {
+        return game.state.moveType !== MoveType.INIT_BUILD && !game.state.diceRolled;
+    }
+    game.showDice = showDice;
+    function showEndTurn() {
+        return game.state.moveType !== MoveType.INIT_BUILD && game.state.diceRolled;
+    }
+    game.showEndTurn = showEndTurn;
+    function getDicesNum() {
+        return game.state.dices.reduce(function (a, b) { return a + b; });
+    }
+    game.getDicesNum = getDicesNum;
+    function onRollDice() {
+        var turnMove = {
+            playerIdx: game.mockPlayerIdx,
+            moveType: MoveType.ROLL_DICE,
+            currState: game.state
+        };
+        var nextMove = gameLogic.onRollDice(turnMove, game.move.turnIndexAfterMove);
+        moveService.makeMove(nextMove);
+    }
+    game.onRollDice = onRollDice;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

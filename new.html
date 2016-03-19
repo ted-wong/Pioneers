@@ -180,6 +180,9 @@
                 <strong>Dev Cards</strong> x {{game.getNumDevCards(3)}}
               </li>
             </ul>
+            <button class="btn btn-danger dice-and-end" ng-if="game.showEndTurn()">End Turn</button>
+            <img src="imgs/dice1.png" alt="imgs/dice2.png" class="dice-and-end dice"
+                 ng-if="game.showDice()" ng-click="game.onRollDice()"/>
           </div>
         </div>
       </div>
@@ -228,6 +231,9 @@
             </pattern>
             <pattern id="r7" patternUnits="userSpaceOnUse" width="251" height="201">
               <image xlink:href="imgs/terrain7.jpg" x="0" y="0" width="251" height="201" />
+            </pattern>
+            <pattern id="dice" patternUnits="userSpaceOnUse" width="70" height="70">
+              <image xlink:href="imgs/dice2.png" x="0" y="0" width="70" height="70" />
             </pattern>
           </defs>
           <g ng-repeat="row in rows">
@@ -291,6 +297,13 @@
                       ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"/>
               </g>
             </g>
+          </g>
+
+          <g>
+            <rect x="10" y="10" width="60" height="70" stroke="none" fill="url(#dice)"
+                  ng-if="game.state.diceRolled"/>
+            <text x="80" y="45" font-weight="bold" fill="yellow" font-size="30"
+                  ng-if="game.state.diceRolled">= {{game.getDicesNum()}}</text>
           </g>
         </svg>
       </div>

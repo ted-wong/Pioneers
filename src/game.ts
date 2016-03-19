@@ -636,6 +636,29 @@ module game {
   export function getBankDevCards(): number {
     return state.bank.devCardsOrder.length;
   }
+
+  export function showDice(): boolean {
+    return state.moveType !== MoveType.INIT_BUILD && !state.diceRolled;
+  }
+
+  export function showEndTurn(): boolean {
+    return state.moveType !== MoveType.INIT_BUILD && state.diceRolled;
+  }
+
+  export function getDicesNum(): number {
+    return state.dices.reduce(function(a, b) {return a+b;});
+  }
+
+  export function onRollDice() {
+    let turnMove: TurnMove = {
+      playerIdx: mockPlayerIdx,
+      moveType: MoveType.ROLL_DICE,
+      currState: state
+    };
+
+    let nextMove = gameLogic.onRollDice(turnMove, move.turnIndexAfterMove);
+    moveService.makeMove(nextMove);
+  }
 }
 
 function getArray(length: number): number[] {
