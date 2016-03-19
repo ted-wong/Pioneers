@@ -436,7 +436,7 @@ var gameLogic;
     function checkMoveOk(stateTransition) {
         var prevState = stateTransition.stateBeforeMove ? stateTransition.stateBeforeMove : getInitialState();
         var nextState = stateTransition.move.stateAfterMove;
-        var prevIdx = prevState.eventIdx === -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+        var prevIdx = prevState.eventIdx !== -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
         //TODO: What are these for, exactly?
         var nextIdx = stateTransition.move.turnIndexAfterMove;
         var delta = stateTransition.move.stateAfterMove.delta;

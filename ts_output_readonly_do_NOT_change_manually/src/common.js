@@ -138,7 +138,7 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
         return false;
     }
     //If it's first build instruction during INIT_BUILD, just build it
-    if (initial && player.construction.reduce(function (a, b) { return a + b; }) === 0) {
+    if (initial && player.construction.reduce(function (a, b) { return a + b; }) === 1) {
         return true;
     }
     // player owns adjacent road in current hex or adjacent road in adjacent hex
@@ -178,11 +178,16 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
         }
         return true;
     }
+    /*
     if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) ||
-        (board[row][col].vertices[(edge + 1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] === player.id) ||
-        (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
-        (board[row][col].vertices[(edge + 1) % 6] === Construction.City && board[row][col].vertexOwner[(edge + 1) % 6] === player.id))
+      (board[row][col].vertices[(edge+1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge+1) % 6] === player.id) ||
+      (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
+      (board[row][col].vertices[(edge+1) % 6] === Construction.City && board[row][col].vertexOwner[(edge+1) % 6] === player.id))
+      return true;
+    */
+    if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
         return true;
+    }
     return false;
 }
 function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
@@ -202,12 +207,17 @@ function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
     }
     if (has_land === false)
         return false;
-    // needs adjacent road to build on if not initial settlements
-    if (!initial && !hasAdjacentRoad(player, board, row, col, vertex))
-        return false;
     // new settlement has to be 2+ vertices away from another settlement/city
     if (hasNearbyConstruct(board, row, col, vertex))
         return false;
+    //If it's during init build and it's first building, just do it
+    if (initial && player.construction.reduce(function (a, b) { return a + b; }) === 1) {
+        return true;
+    }
+    // needs adjacent road to build
+    if (!hasAdjacentRoad(player, board, row, col, vertex)) {
+        return false;
+    }
     return true;
 }
 function canUpgradeSettlement(player, board, row, col, vertex) {

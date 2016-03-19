@@ -500,7 +500,7 @@ module gameLogic {
   export function checkMoveOk(stateTransition: IStateTransition): void {
     let prevState: IState = stateTransition.stateBeforeMove ? stateTransition.stateBeforeMove : getInitialState();
     let nextState: IState = stateTransition.move.stateAfterMove;
-    let prevIdx: number = prevState.eventIdx === -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+    let prevIdx: number = prevState.eventIdx !== -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
     //TODO: What are these for, exactly?
     let nextIdx: number = stateTransition.move.turnIndexAfterMove;
     let delta: StateDelta = stateTransition.move.stateAfterMove.delta;
