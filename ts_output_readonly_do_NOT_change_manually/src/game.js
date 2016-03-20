@@ -32,13 +32,15 @@ var game;
     game.infoModalHeader = '';
     game.infoModalMsg = '';
     game.onOkClicked = null;
+    game.onCloseModal = cleanupInfoModal;
     game.canInfoModalTurnOff = true;
     game.showResourcePicker = false;
-    var resourceMonopoly = -1;
+    var targetOneResource = -1;
     game.devRoads = [];
     game.playingDevRoadBuild = false;
     game.showResourcePickerMultiple = false;
     game.resourcesPicked = [];
+    game.onClickHex = onMouseOverHex;
     var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
     var mouseTarget = MouseTarget.NONE;
     var mouseRow = 0;
@@ -49,6 +51,10 @@ var game;
     var buildCol = 0;
     var buildNum = 0;
     var makeMove = null;
+    var robberMovedRow = -1;
+    var robberMovedCol = -1;
+    game.showRobberPanel = false;
+    var robberVictomIdx = -1;
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -222,40 +228,63 @@ var game;
         game.mockPlayerIdx = game.state.eventIdx === -1 ? game.move.turnIndexAfterMove : game.state.eventIdx;
         game.canMakeMove = checkCanMakeMove();
         updateAlert();
-        onCloseModal();
-        //Special check to start the game
-        if (game.state.moveType === MoveType.INIT_BUILD) {
-            if (game.state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
-                var allDoneInitBuild = true;
-                for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
-                    if (game.state.players[i].construction.reduce(function (a, b) { return a + b; }) !== 3) {
-                        allDoneInitBuild = false;
-                        break;
+        cleanupInfoModal();
+        switch (game.state.moveType) {
+            case MoveType.INIT_BUILD:
+                if (game.state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+                    var allDoneInitBuild = true;
+                    for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+                        if (game.state.players[i].construction.reduce(function (a, b) { return a + b; }) !== 3) {
+                            allDoneInitBuild = false;
+                            break;
+                        }
+                    }
+                    if (allDoneInitBuild) {
+                        game.showInfoModal = true;
+                        game.infoModalHeader = 'Start Game';
+                        game.infoModalMsg = "Everyone is ready, it's time to start the game!";
+                        game.canInfoModalTurnOff = false;
+                        var turnMove = {
+                            moveType: MoveType.INIT,
+                            playerIdx: game.myIndex,
+                            currState: game.state
+                        };
+                        game.onOkClicked = function () {
+                            try {
+                                var nextMove = gameLogic.onGameStart(turnMove, 0);
+                                moveService.makeMove(nextMove);
+                                cleanupInfoModal();
+                            }
+                            catch (e) {
+                                game.alertStyle = 'danger';
+                                game.alertMsg = e.message;
+                            }
+                        };
                     }
                 }
-                if (allDoneInitBuild) {
-                    game.showInfoModal = true;
-                    game.infoModalHeader = 'Start Game';
-                    game.infoModalMsg = "Everyone is ready, it's time to start the game!";
-                    game.canInfoModalTurnOff = false;
-                    var turnMove = {
-                        moveType: MoveType.INIT,
-                        playerIdx: game.myIndex,
-                        currState: game.state
-                    };
-                    game.onOkClicked = function () {
-                        try {
-                            var nextMove = gameLogic.onGameStart(turnMove, 0);
-                            moveService.makeMove(nextMove);
-                            onCloseModal();
-                        }
-                        catch (e) {
-                            game.alertStyle = 'danger';
-                            game.alertMsg = e.message;
-                        }
-                    };
+                break;
+            case MoveType.ROLL_DICE:
+                if (game.state.dices[0] + game.state.dices[1] === 7 && game.move.turnIndexAfterMove === game.mockPlayerIdx) {
+                    whenRobberEvent();
                 }
-            }
+                break;
+            case MoveType.ROBBER_EVENT:
+                if (game.state.eventIdx === game.move.turnIndexAfterMove) {
+                    game.alertStyle = 'warning';
+                    game.alertMsg = 'Moving robber...';
+                    whenMoveRobberStart();
+                }
+                else {
+                    if (game.state.eventIdx === game.mockPlayerIdx) {
+                        whenRobberEvent();
+                    }
+                }
+                break;
+            case MoveType.ROBBER_MOVE:
+                if (game.mockPlayerIdx === game.move.turnIndexAfterMove) {
+                    whenRobPlayerStart();
+                }
+                break;
         }
         /*
         // Is it the computer's turn?
@@ -303,7 +332,7 @@ var game;
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
             evt.stopPropagation();
-            onCloseModal();
+            game.onCloseModal();
         }
     }
     game.clickedOnInfoModal = clickedOnInfoModal;
@@ -373,6 +402,9 @@ var game;
         if (mouseRow !== row || mouseCol !== col) {
             return false;
         }
+        if (robberMovedRow !== -1 && robberMovedCol !== -1) {
+            return false;
+        }
         if (mouseTarget === MouseTarget.VERTEX) {
             return targetNum === vertex;
         }
@@ -404,6 +436,9 @@ var game;
             return false;
         }
         if (mouseRow !== row || mouseCol !== col) {
+            return false;
+        }
+        if (robberMovedRow !== -1 && robberMovedCol !== -1) {
             return false;
         }
         if (mouseTarget === MouseTarget.EDGE) {
@@ -499,17 +534,19 @@ var game;
         return game.myIndex >= 0 ? 15 - game.state.players[game.myIndex].construction[Construction.Road] : 0;
     }
     game.getNumRoadCanBuild = getNumRoadCanBuild;
+    function getHexFill(row, col) {
+        if (row === robberMovedRow && col === robberMovedCol) {
+            return getColor(game.mockPlayerIdx);
+        }
+        return 'url(#r' + game.state.board[row][col].label + ')';
+    }
+    game.getHexFill = getHexFill;
     function onMouseOverHex(row, col) {
         mouseTarget = MouseTarget.HEX;
         mouseRow = row;
         mouseCol = col;
     }
     game.onMouseOverHex = onMouseOverHex;
-    function onClickHex(row, col) {
-        //For touch screen, maybe
-        onMouseOverHex(row, col);
-    }
-    game.onClickHex = onClickHex;
     function onMouseOverEdge(row, col, edgeNum) {
         mouseTarget = MouseTarget.EDGE;
         mouseRow = row;
@@ -595,18 +632,25 @@ var game;
         mouseTarget = MouseTarget.NONE;
     }
     game.onMouseLeaveBoard = onMouseLeaveBoard;
-    function onCloseModal() {
+    function cleanupInfoModal() {
         game.showInfoModal = false;
         game.infoModalHeader = '';
         game.infoModalMsg = '';
         game.onOkClicked = null;
+        game.onCloseModal = cleanupInfoModal;
+        game.canInfoModalTurnOff = true;
         makeMove = null;
         game.showResourcePicker = false;
-        resourceMonopoly = -1;
+        targetOneResource = -1;
         game.resourcesPicked = getZerosArray(Resource.SIZE);
         game.showResourcePickerMultiple = false;
+        game.onClickHex = onMouseOverHex;
+        robberMovedRow = -1;
+        robberMovedCol = -1;
+        game.showRobberPanel = false;
+        robberVictomIdx = -1;
     }
-    game.onCloseModal = onCloseModal;
+    game.cleanupInfoModal = cleanupInfoModal;
     function getPlayerPoints(idx) {
         return game.state.players[idx].points;
     }
@@ -726,7 +770,7 @@ var game;
             game.alertMsg = e.message;
         }
         finally {
-            onCloseModal();
+            cleanupInfoModal();
         }
     }
     function whenPlayMonopoly() {
@@ -735,20 +779,20 @@ var game;
         game.infoModalMsg = '';
         game.onOkClicked = onPlayMonopoly;
     }
-    function onMonopolyPicked(resource) {
-        resourceMonopoly = resource;
+    function onOneTargetResourcePicked(resource) {
+        targetOneResource = resource;
     }
-    game.onMonopolyPicked = onMonopolyPicked;
-    function monopolyClass(resource) {
-        return 'resource-pic' + (resourceMonopoly === resource ? ' on-highlighted' : '');
+    game.onOneTargetResourcePicked = onOneTargetResourcePicked;
+    function oneTargetResourceClass(resource) {
+        return 'resource-pic' + (targetOneResource === resource ? ' on-highlighted' : '');
     }
-    game.monopolyClass = monopolyClass;
+    game.oneTargetResourceClass = oneTargetResourceClass;
     function onPlayMonopoly() {
         var turnMove = {
             moveType: makeMove.moveType,
             playerIdx: makeMove.moveType,
             currState: game.state,
-            target: resourceMonopoly
+            target: targetOneResource
         };
         try {
             var nextMove = gameLogic.onMonopoly(turnMove, game.move.turnIndexAfterMove);
@@ -759,7 +803,7 @@ var game;
             game.alertMsg = e.message;
         }
         finally {
-            onCloseModal();
+            cleanupInfoModal();
         }
     }
     function whenPlayRoadBuilding() {
@@ -767,7 +811,7 @@ var game;
         game.alertMsg = 'Please select two roads';
         cleanupDevRoadBuild();
         game.playingDevRoadBuild = true;
-        onCloseModal();
+        cleanupInfoModal();
     }
     function onRoadBuildingDone() {
         var turnMove = {
@@ -787,7 +831,7 @@ var game;
         }
         finally {
             cleanupDevRoadBuild();
-            onCloseModal();
+            cleanupInfoModal();
         }
     }
     game.onRoadBuildingDone = onRoadBuildingDone;
@@ -807,10 +851,10 @@ var game;
         game.infoModalMsg = '';
         game.onOkClicked = onPlayYearOfPlenty;
     }
-    function onYearOfPlentyPicked(resource, add) {
+    function onMultipleResourcesPicked(resource, add) {
         game.resourcesPicked[resource] += add ? 1 : -1;
     }
-    game.onYearOfPlentyPicked = onYearOfPlentyPicked;
+    game.onMultipleResourcesPicked = onMultipleResourcesPicked;
     function onPlayYearOfPlenty() {
         var turnMove = {
             moveType: makeMove.moveType,
@@ -827,9 +871,139 @@ var game;
             game.alertMsg = e.message;
         }
         finally {
-            onCloseModal();
+            cleanupInfoModal();
         }
     }
+    function whenRobberEvent() {
+        if (game.state.players[game.mockPlayerIdx].resources.reduce(function (a, b) { return a + b; }) > 7) {
+            game.showResourcePickerMultiple = true;
+            game.infoModalHeader = 'Please dump half of resources on hand';
+            game.infoModalMsg = '';
+        }
+        else {
+            game.infoModalHeader = 'Robber Event!';
+            game.infoModalMsg = 'Luckily you do not have to dump resources!';
+        }
+        game.onOkClicked = onRobberEventDone;
+        game.showInfoModal = true;
+        game.canInfoModalTurnOff = false;
+    }
+    function onRobberEventDone() {
+        var turnMove = {
+            moveType: MoveType.ROBBER_EVENT,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state),
+            tossed: angular.copy(game.resourcesPicked)
+        };
+        try {
+            var nextMove = gameLogic.onRobberEvent(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal(); //Can only turn off info modal after a valid move
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+            whenRobberEvent(); //Do it again if it's an invalid move
+        }
+    }
+    function whenMoveRobberStart() {
+        if (game.mockPlayerIdx !== game.move.turnIndexAfterMove) {
+            return;
+        }
+        game.onClickHex = whenMoveRobber;
+        game.onOkClicked = onMoveRobberDone;
+        game.onCloseModal = function () {
+            game.showInfoModal = false;
+        };
+        robberMovedRow = game.state.robber.row;
+        robberMovedCol = game.state.robber.col;
+    }
+    function whenMoveRobber(row, col) {
+        robberMovedRow = row;
+        robberMovedCol = col;
+        game.showInfoModal = true;
+        game.infoModalHeader = 'Move Robber';
+        game.infoModalMsg = 'Are you sure to move robber to here?';
+    }
+    function onMoveRobberDone() {
+        var turnMove = {
+            moveType: MoveType.ROBBER_MOVE,
+            playerIdx: game.mockPlayerIdx,
+            currState: game.state,
+            row: robberMovedRow,
+            col: robberMovedCol
+        };
+        try {
+            var nextMove = gameLogic.onRobberMove(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+            game.onCloseModal();
+            whenMoveRobberStart();
+        }
+    }
+    function whenRobPlayerStart() {
+        //Check if there has player(s) to rob.  If none, move on
+        var noOneCanSteal = true, r = game.state.robber.row, c = game.state.robber.col;
+        for (var v = 0; v < game.state.board[r][c].vertexOwner.length; v++) {
+            if (game.state.board[r][c].vertexOwner[v] === -1) {
+                continue;
+            }
+            var p = game.state.board[r][c].vertexOwner[v];
+            if (game.state.players[p].resources.reduce(function (a, b) { return a + b; }) > 0) {
+                noOneCanSteal = false;
+                break;
+            }
+        }
+        if (noOneCanSteal) {
+            game.alertStyle = 'warning';
+            game.alertMsg = 'No one can rob...';
+            cleanupInfoModal();
+            return;
+        }
+        game.showInfoModal = true;
+        game.canInfoModalTurnOff = false;
+        game.infoModalHeader = 'Select a player to rob';
+        game.infoModalMsg = '';
+        game.onOkClicked = onRobPlayerDone;
+        game.showRobberPanel = true;
+    }
+    function onVictomSelected(idx) {
+        robberVictomIdx = idx;
+    }
+    game.onVictomSelected = onVictomSelected;
+    function onRobPlayerDone() {
+        var turnMove = {
+            moveType: MoveType.ROB_PLAYER,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state),
+            stealingIdx: game.mockPlayerIdx,
+            stolenIdx: robberVictomIdx
+        };
+        try {
+            var nextMove = gameLogic.onRobPlayer(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+            whenRobPlayerStart();
+        }
+    }
+    function possibleRobberVictom(idx) {
+        var r = game.state.robber.row, c = game.state.robber.col;
+        for (var i = 0; i < game.state.board[r][c].vertexOwner.length; i++) {
+            if (game.state.board[r][c].vertexOwner[i] === idx) {
+                return idx !== game.mockPlayerIdx && game.state.players[idx].resources.reduce(function (a, b) { return a + b; }) > 0;
+            }
+        }
+        return false;
+    }
+    game.possibleRobberVictom = possibleRobberVictom;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];
@@ -852,6 +1026,7 @@ angular.module('myApp', ['ngTouch', 'ui.bootstrap', 'gameServices'])
     $rootScope['cols'] = getArray(gameLogic.COLS);
     $rootScope['vertices'] = getArray(6);
     $rootScope['edges'] = getArray(6);
+    $rootScope['players'] = getArray(gameLogic.NUM_PLAYERS);
     $rootScope['resourceSize'] = getArray(Resource.SIZE);
     $rootScope['devCardsSize'] = getArray(DevCard.SIZE);
     game.init();

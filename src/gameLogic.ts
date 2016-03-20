@@ -413,24 +413,24 @@ module gameLogic {
 
     for (let p = 0; p < NUM_PLAYERS; p++) {
       for (let r = 0; r < Resource.SIZE; r++) {
-        if (nextState.players[p].resources[r] < prevState.players[p].resources[r]) {
+        let diff = nextState.players[p].resources[r] - prevState.players[p].resources[r];
+
+        if (diff < 0) {
           //Stolen scenario
           if (stolen.player !== -1 || stolen.item !== Resource.Dust) {
             throw new Error('Cannot steal multiple players!');
           }
 
-          stolen = {player: p, item: r,
-              num: prevState.players[0].resources[r] - nextState.players[p].resources[r]};
+          stolen = {player: p, item: r, num: -diff};
         }
 
-        if (nextState.players[p].resources[r] > prevState.players[p].resources[r]) {
+        if (diff > 0) {
           //Stealing scenario
-          if (stealing.player !== -1 || stolen.item !== Resource.Dust) {
+          if (stealing.player !== -1 || stealing.item !== Resource.Dust) {
             throw new Error('Cannot have multiple stealings!');
           }
 
-          stealing = {player: p, item: r,
-              num: nextState.players[p].resources[r] - prevState.players[p].resources[r]};
+          stealing = {player: p, item: r, num: diff};
         }
       }
     }
@@ -448,7 +448,7 @@ module gameLogic {
       throw new Error('Must designate what to steal!');
     }
     if (stealing.num !== stolen.num) {
-      throw new Error('Error! Stealing number is not matching stolen number!');
+      throw new Error('Error! Stealing number is not matching stolen number! ' + stealing.num + ' : ' + stolen.num);
     }
     if (stealing.num !== 1) {
       throw new Error('Must steal one resource at a time!');
@@ -613,8 +613,10 @@ module gameLogic {
 
     //State transition
     stateAfterMove.diceRolled = true;
-    stateAfterMove.dices[0] = getRandomInt(1, 7);
-    stateAfterMove.dices[1] = getRandomInt(1, 7);
+    //stateAfterMove.dices[0] = getRandomInt(1, 7);
+    //stateAfterMove.dices[1] = getRandomInt(1, 7);
+    stateAfterMove.dices[0] = 3;
+    stateAfterMove.dices[1] = 4;
     let rollNum = stateAfterMove.dices[0] + stateAfterMove.dices[1];
 
     if (rollNum !== 7) {
@@ -1023,6 +1025,9 @@ module gameLogic {
     if (prevSum > 7) {
       //State transition to toss resource cards
       for (let i = 0; i < Resource.SIZE; i++) {
+        if (robberEventMove.tossed[i] < 0) {
+          throw new Error('Cannot dump negative resources');
+        }
         stateAfterMove.players[playerIdx].resources[i] -= robberEventMove.tossed[i];
         if (stateAfterMove.players[playerIdx].resources[i] < 0) {
           throw new Error('Insufficient resource: ' + Resource[i]);

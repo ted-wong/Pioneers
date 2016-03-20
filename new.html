@@ -204,17 +204,21 @@
                 <div ng-repeat="r in resourceSize" ng-if="game.showResourcePicker">
                   <img ng-attr-src="imgs/resource{{r}}.jpg"
                        alt="imgs/resources{{r}}.jpg"
-                       ng-click="game.onMonopolyPicked(r)"
-                       ng-attr-class="{{game.monopolyClass(r)}}"/>
+                       ng-click="game.onOneTargetResourcePicked(r)"
+                       ng-attr-class="{{game.oneTargetResourceClass(r)}}"/>
                 </div>
                 <div ng-repeat="r in resourceSize" ng-if="game.showResourcePickerMultiple">
                   <img ng-attr-src="imgs/resource{{r}}.jpg"
                        alt="imgs/resources{{r}}.jpg"
-                       ng-attr-class="{{game.monopolyClass(r)}}">
+                       ng-attr-class="{{game.oneTargetResourceClass(r)}}">
                     x {{game.resourcesPicked[r]}}
-                    <button type="button" class="btn btn-success btn-xs" ng-click="game.onYearOfPlentyPicked(r, true)">+</button>
-                    <button type="button" class="btn btn-warning btn-xs" ng-click="game.onYearOfPlentyPicked(r, false)">-</button>
+                    <button type="button" class="btn btn-success btn-xs" ng-click="game.onMultipleResourcesPicked(r, true)">+</button>
+                    <button type="button" class="btn btn-warning btn-xs" ng-click="game.onMultipleResourcesPicked(r, false)">-</button>
                   </img>
+                </div>
+                <div ng-repeat="p in players" ng-if="game.showRobberPanel">
+                  <span ng-if="game.possibleRobberVictom(p)"
+                        ng-click="game.onVictomSelected(p)">Player {{p}}</span>
                 </div>
                 <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
                 <button type="button" class="btn btn-danger" ng-if="game.canInfoModalTurnOff"
@@ -252,12 +256,12 @@
             </pattern>
           </defs>
           <g ng-repeat="row in rows">
-            <g ng-repeat="col in cols">
+            <g ng-repeat="col in cols"
+               ng-click="game.onClickHex(row, col)">
               <polygon class="default-hex" ng-attr-points="{{game.getHexVertices(row, col)}}"
                        ng-if="game.showHex(row, col)"
                        ng-mouseover="game.onMouseOverHex(row, col)"
-                       ng-click="game.onClickHex(row, col)"
-                       ng-attr-fill="url(#r{{game.state.board[row][col].label}})"/>
+                       ng-attr-fill="{{game.getHexFill(row, col)}}"/>
               <circle ng-attr-cx="{{game.getCenter(row, col)[0]}}"
                       ng-attr-cy="{{game.getCenter(row, col)[1]}}"
                       r="15" fill="white"
