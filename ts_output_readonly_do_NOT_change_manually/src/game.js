@@ -33,6 +33,12 @@ var game;
     game.infoModalMsg = '';
     game.onOkClicked = null;
     game.canInfoModalTurnOff = true;
+    game.showResourcePicker = false;
+    var resourceMonopoly = -1;
+    game.devRoads = [];
+    game.playingDevRoadBuild = false;
+    game.showResourcePickerMultiple = false;
+    game.resourcesPicked = [];
     var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
     var mouseTarget = MouseTarget.NONE;
     var mouseRow = 0;
@@ -42,6 +48,7 @@ var game;
     var buildRow = 0;
     var buildCol = 0;
     var buildNum = 0;
+    var makeMove = null;
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -105,6 +112,7 @@ var game;
                 game.coordinates[row][col] = coords.slice(2, 6).concat(coords.slice(0, 2));
             }
         }
+        game.resourcesPicked = getZerosArray(Resource.SIZE);
     }
     game.init = init;
     function getTranslations() {
@@ -356,7 +364,7 @@ var game;
     }
     game.getEdgeCoordinates = getEdgeCoordinates;
     function showVertex(row, col, vertex) {
-        if (game.state.board[row][col].vertices[vertex] !== -1) {
+        if (game.state.board[row][col].vertices[vertex] !== -1 || game.playingDevRoadBuild) {
             return false;
         }
         if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
@@ -422,7 +430,15 @@ var game;
     }
     game.getEdgeClass = getEdgeClass;
     function showRoad(row, col, edge) {
-        return game.state.board[row][col].edges[edge] >= 0;
+        if (game.state.board[row][col].edges[edge] >= 0) {
+            return true;
+        }
+        for (var i = 0; i < game.devRoads.length; i++) {
+            if (game.devRoads[i].hexRow === row && game.devRoads[i].hexCol === col && game.devRoads[i].vertexOrEdge === edge) {
+                return true;
+            }
+        }
+        return false;
     }
     game.showRoad = showRoad;
     function showSettlement(row, col, vertex) {
@@ -437,6 +453,16 @@ var game;
         return idx >= 0 ? game.playerColor[idx] : 'black';
     }
     game.getColor = getColor;
+    function getRoadColor(row, col, edge) {
+        if (game.state.board[row][col].edges[edge] >= 0) {
+            return getColor(game.state.board[row][col].edges[edge]);
+        }
+        if (game.devRoads.length > 0 && showRoad(row, col, edge)) {
+            return getColor(game.myIndex);
+        }
+        return getColor(-1);
+    }
+    game.getRoadColor = getRoadColor;
     function getSettlement(row, col, vertex) {
         var v = game.coordinates[row][col][vertex].split(',');
         var x = parseFloat(v[0]);
@@ -492,6 +518,25 @@ var game;
     }
     game.onMouseOverEdge = onMouseOverEdge;
     function onClickEdge(row, col, edgeNum) {
+        if (game.playingDevRoadBuild) {
+            var devRoad = {
+                moveType: MoveType.BUILD_ROAD,
+                playerIdx: game.mockPlayerIdx,
+                currState: game.state,
+                consType: Construction.Road,
+                hexRow: row,
+                hexCol: col,
+                vertexOrEdge: edgeNum
+            };
+            game.devRoads.push(devRoad);
+            if (game.devRoads.length === 2) {
+                game.showInfoModal = true;
+                game.infoModalHeader = 'Playing Development Cards';
+                game.infoModalMsg = 'Are you sure to build both roads?';
+                game.onOkClicked = onRoadBuildingDone;
+            }
+            return;
+        }
         buildTarget = Construction.Road;
         buildRow = row;
         buildCol = col;
@@ -555,6 +600,11 @@ var game;
         game.infoModalHeader = '';
         game.infoModalMsg = '';
         game.onOkClicked = null;
+        makeMove = null;
+        game.showResourcePicker = false;
+        resourceMonopoly = -1;
+        game.resourcesPicked = getZerosArray(Resource.SIZE);
+        game.showResourcePickerMultiple = false;
     }
     game.onCloseModal = onCloseModal;
     function getPlayerPoints(idx) {
@@ -618,15 +668,180 @@ var game;
             moveType: MoveType.ROLL_DICE,
             currState: game.state
         };
-        var nextMove = gameLogic.onRollDice(turnMove, game.move.turnIndexAfterMove);
-        moveService.makeMove(nextMove);
+        try {
+            var nextMove = gameLogic.onRollDice(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
     }
     game.onRollDice = onRollDice;
+    var devCardEventHandlers = [
+        whenPlayKnight,
+        whenPlayMonopoly,
+        whenPlayRoadBuilding,
+        whenPlayYearOfPlenty
+    ];
+    function onDevCardClicked(cardIdx) {
+        makeMove = {
+            moveType: null,
+            playerIdx: game.mockPlayerIdx,
+            currState: game.state
+        };
+        switch (cardIdx) {
+            case DevCard.Knight:
+                makeMove.moveType = MoveType.KNIGHT;
+                break;
+            case DevCard.Monopoly:
+                makeMove.moveType = MoveType.MONOPOLY;
+                break;
+            case DevCard.RoadBuilding:
+                makeMove.moveType = MoveType.ROAD_BUILDING;
+                break;
+            case DevCard.YearOfPlenty:
+                makeMove.moveType = MoveType.YEAR_OF_PLENTY;
+                break;
+            default:
+                makeMove = null;
+                return;
+        }
+        game.showInfoModal = true;
+        game.onOkClicked = devCardEventHandlers[cardIdx];
+        game.infoModalHeader = 'Playing Development Cards';
+        game.infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx];
+    }
+    game.onDevCardClicked = onDevCardClicked;
+    /**
+     * Playing DevCards handlers
+     */
+    function whenPlayKnight() {
+        try {
+            var nextMove = gameLogic.onKnight(makeMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            onCloseModal();
+        }
+    }
+    function whenPlayMonopoly() {
+        game.showResourcePicker = true;
+        game.infoModalHeader = 'Please pick a resource';
+        game.infoModalMsg = '';
+        game.onOkClicked = onPlayMonopoly;
+    }
+    function onMonopolyPicked(resource) {
+        resourceMonopoly = resource;
+    }
+    game.onMonopolyPicked = onMonopolyPicked;
+    function monopolyClass(resource) {
+        return 'resource-pic' + (resourceMonopoly === resource ? ' on-highlighted' : '');
+    }
+    game.monopolyClass = monopolyClass;
+    function onPlayMonopoly() {
+        var turnMove = {
+            moveType: makeMove.moveType,
+            playerIdx: makeMove.moveType,
+            currState: game.state,
+            target: resourceMonopoly
+        };
+        try {
+            var nextMove = gameLogic.onMonopoly(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            onCloseModal();
+        }
+    }
+    function whenPlayRoadBuilding() {
+        game.alertStyle = 'warning';
+        game.alertMsg = 'Please select two roads';
+        cleanupDevRoadBuild();
+        game.playingDevRoadBuild = true;
+        onCloseModal();
+    }
+    function onRoadBuildingDone() {
+        var turnMove = {
+            moveType: MoveType.ROAD_BUILDING,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state),
+            road1: game.devRoads[0],
+            road2: game.devRoads[1]
+        };
+        try {
+            var nextMove = gameLogic.onRoadBuilding(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            cleanupDevRoadBuild();
+            onCloseModal();
+        }
+    }
+    game.onRoadBuildingDone = onRoadBuildingDone;
+    function onRoadBuildingCanceled() {
+        game.alertStyle = 'success';
+        game.alertMsg = 'Road Building Canceled';
+        cleanupDevRoadBuild();
+    }
+    game.onRoadBuildingCanceled = onRoadBuildingCanceled;
+    function cleanupDevRoadBuild() {
+        game.devRoads = [];
+        game.playingDevRoadBuild = false;
+    }
+    function whenPlayYearOfPlenty() {
+        game.showResourcePickerMultiple = true;
+        game.infoModalHeader = 'Please pick two resources';
+        game.infoModalMsg = '';
+        game.onOkClicked = onPlayYearOfPlenty;
+    }
+    function onYearOfPlentyPicked(resource, add) {
+        game.resourcesPicked[resource] += add ? 1 : -1;
+    }
+    game.onYearOfPlentyPicked = onYearOfPlentyPicked;
+    function onPlayYearOfPlenty() {
+        var turnMove = {
+            moveType: makeMove.moveType,
+            playerIdx: makeMove.playerIdx,
+            currState: game.state,
+            target: game.resourcesPicked
+        };
+        try {
+            var nextMove = gameLogic.onYearOfPlenty(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            onCloseModal();
+        }
+    }
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];
     for (var i = 0; i < length; i++) {
         ret[i] = i;
+    }
+    return ret;
+}
+function getZerosArray(length) {
+    var ret = [];
+    for (var i = 0; i < length; i++) {
+        ret[i] = 0;
     }
     return ret;
 }

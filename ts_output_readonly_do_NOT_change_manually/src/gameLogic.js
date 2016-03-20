@@ -232,6 +232,7 @@ var gameLogic;
         checkPlayDevCard,
         checkPlayDevCard,
         checkPlayDevCard,
+        checkPlayDevCard,
         null,
         checkRobberEvent,
         checkRobberMove,
@@ -791,6 +792,62 @@ var gameLogic;
         };
     }
     gameLogic.onMonopoly = onMonopoly;
+    function onRoadBuilding(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (move.currState.devCardsPlayed) {
+            throw new Error('Already played development cards in this turn!');
+        }
+        if (move.currState.players[turnIdx].devCards[DevCard.RoadBuilding] <= 0) {
+            throw new Error('No Road Building cards on hand!');
+        }
+        var roadBuildMove = move;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROAD_BUILDING;
+        stateAfterMove.devCardsPlayed = true;
+        //State transition to dev cards
+        stateAfterMove.players[turnIdx].devCards[DevCard.RoadBuilding]--;
+        stateAfterMove.bank.devCards[DevCard.RoadBuilding]++;
+        stateAfterMove.bank.devCardsOrder.push(DevCard.RoadBuilding);
+        //State transition to roads and check if road can be legally built
+        if (!canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road1.hexRow, roadBuildMove.road1.hexCol, roadBuildMove.road1.vertexOrEdge, true) &&
+            !canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road2.hexRow, roadBuildMove.road2.hexCol, roadBuildMove.road2.vertexOrEdge, true)) {
+            throw new Error('Cannot legally build roads!');
+        }
+        var road1Legal = canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road1.hexRow, roadBuildMove.road1.hexCol, roadBuildMove.road1.vertexOrEdge, true);
+        var tempBoard = road1Legal ? getNextStateToBuild(stateAfterMove.board, roadBuildMove.road1) :
+            getNextStateToBuild(stateAfterMove.board, roadBuildMove.road2);
+        if (road1Legal) {
+            if (!canBuildRoadLegally(stateAfterMove.players[turnIdx], tempBoard, roadBuildMove.road2.hexRow, roadBuildMove.road2.hexCol, roadBuildMove.road2.vertexOrEdge, true)) {
+                throw new Error('Cannot build road legally!');
+            }
+            stateAfterMove.board = getNextStateToBuild(tempBoard, roadBuildMove.road2);
+        }
+        else {
+            if (!canBuildRoadLegally(stateAfterMove.players[turnIdx], tempBoard, roadBuildMove.road1.hexRow, roadBuildMove.road1.hexCol, roadBuildMove.road1.vertexOrEdge, true)) {
+                throw new Error('Cannot build road legally!');
+            }
+            stateAfterMove.board = getNextStateToBuild(tempBoard, roadBuildMove.road1);
+        }
+        //State transition to players and possibly awards
+        stateAfterMove.players[turnIdx].construction[Construction.Road] += 2;
+        if (stateAfterMove.players[turnIdx].construction[Construction.Road] > stateBeforeMove.awards.longestRoad.length) {
+            stateAfterMove.awards.longestRoad = {
+                player: turnIdx,
+                length: stateAfterMove.players[turnIdx].construction[Construction.Road]
+            };
+        }
+        stateAfterMove.players[turnIdx].points = countScores(stateAfterMove)[turnIdx];
+        stateAfterMove.players[turnIdx].points -= stateAfterMove.players[turnIdx].devCards[DevCard.VictoryPoint];
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onRoadBuilding = onRoadBuilding;
     function onYearOfPlenty(move, turnIdx) {
         if (move.playerIdx !== turnIdx) {
             throw new Error('Not your turn to play!');
@@ -802,6 +859,14 @@ var gameLogic;
             throw new Error('No Year of Plenty card on hand!');
         }
         var yearOfPlentyMove = move;
+        if (yearOfPlentyMove.target.reduce(function (a, b) { return a + b; }) !== 2) {
+            throw new Error('Must choose two resources (can be of same type)');
+        }
+        angular.forEach(yearOfPlentyMove.target, function (r) {
+            if (r < 0) {
+                throw new Error('Cannot dump resources!');
+            }
+        });
         var stateBeforeMove = getStateBeforeMove(move);
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.moveType = MoveType.YEAR_OF_PLENTY;
@@ -810,15 +875,13 @@ var gameLogic;
         stateAfterMove.bank.devCards[DevCard.YearOfPlenty]++;
         stateAfterMove.bank.devCardsOrder.push(DevCard.YearOfPlenty);
         //State transition to resources
-        angular.forEach([yearOfPlentyMove.target1, yearOfPlentyMove.target2], function (tar) {
-            if (stateAfterMove.bank.resources[tar] > 0) {
-                stateAfterMove.players[turnIdx].resources[tar]++;
-                stateAfterMove.bank.resources[tar]--;
+        for (var i = 0; i < Resource.SIZE; i++) {
+            stateAfterMove.players[turnIdx].resources[i] += yearOfPlentyMove.target[i];
+            stateAfterMove.bank.resources[i] -= yearOfPlentyMove.target[i];
+            if (stateAfterMove.bank.resources[i] < 0) {
+                throw new Error('Insufficient resources in bank: ' + Resource[i]);
             }
-            else {
-                throw new Error('Insufficient resources in bank: ' + Resource[tar]);
-            }
-        });
+        }
         return {
             endMatchScores: null,
             turnIndexAfterMove: turnIdx,

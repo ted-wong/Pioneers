@@ -40,6 +40,7 @@ enum MoveType {
   BUILD_DEVCARD,
   KNIGHT,
   MONOPOLY,
+  ROAD_BUILDING,
   YEAR_OF_PLENTY,
   TRADE,
   ROBBER_EVENT,
@@ -152,9 +153,13 @@ interface MonopolyMove extends TurnMove {
   target: Resource;
 }
 
+interface RoadBuildMove extends TurnMove {
+  road1: BuildMove;
+  road2: BuildMove;
+}
+
 interface YearOfPlentyMove extends TurnMove {
-  target1: Resource;
-  target2: Resource;
+  target: Resources;
 }
 
 interface RobberEventMove extends TurnMove {

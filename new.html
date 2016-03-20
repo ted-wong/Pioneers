@@ -201,6 +201,21 @@
               </div>
               <div class="modal-body">
                 {{game.infoModalMsg}}
+                <div ng-repeat="r in resourceSize" ng-if="game.showResourcePicker">
+                  <img ng-attr-src="imgs/resource{{r}}.jpg"
+                       alt="imgs/resources{{r}}.jpg"
+                       ng-click="game.onMonopolyPicked(r)"
+                       ng-attr-class="{{game.monopolyClass(r)}}"/>
+                </div>
+                <div ng-repeat="r in resourceSize" ng-if="game.showResourcePickerMultiple">
+                  <img ng-attr-src="imgs/resource{{r}}.jpg"
+                       alt="imgs/resources{{r}}.jpg"
+                       ng-attr-class="{{game.monopolyClass(r)}}">
+                    x {{game.resourcesPicked[r]}}
+                    <button type="button" class="btn btn-success btn-xs" ng-click="game.onYearOfPlentyPicked(r, true)">+</button>
+                    <button type="button" class="btn btn-warning btn-xs" ng-click="game.onYearOfPlentyPicked(r, false)">-</button>
+                  </img>
+                </div>
                 <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
                 <button type="button" class="btn btn-danger" ng-if="game.canInfoModalTurnOff"
                         ng-click="game.onCloseModal()">Cancel</button>
@@ -264,7 +279,7 @@
                       ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
                       ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
                       ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
-                      ng-attr-stroke="{{game.getColor(game.state.board[row][col].edges[edge])}}"
+                      ng-attr-stroke="{{game.getRoadColor(row, col, edge)}}"
                       stroke-width="7"
                       ng-if="game.showRoad(row, col, edge)"/>
  
@@ -305,6 +320,14 @@
             <text x="80" y="45" font-weight="bold" fill="yellow" font-size="30"
                   ng-if="game.state.diceRolled">= {{game.getDicesNum()}}</text>
           </g>
+
+          <g>
+            <rect x="10" y="500" width="70" height="30" stroke="none" fill="red"
+                  ng-if="game.playingDevRoadBuild" ng-click="game.onRoadBuildingCanceled()"/>
+            <text x="45" y="520" text-anchor="middle" font-weight="bold" fill="white" font-size="15"
+                  ng-if="game.playingDevRoadBuild"
+                  ng-click="game.onRoadBuildingCanceled()">CANCEL</text>
+          </g>
         </svg>
       </div>
     </div>
@@ -319,7 +342,8 @@
               </img>
             </span>
             <span ng-repeat="idx in devCardsSize">
-              <img ng-attr-src="imgs/devcards{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic">
+              <img ng-attr-src="imgs/devcards{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic"
+                   ng-click="game.onDevCardClicked(idx)">
                 x {{game.getNumDevCards(game.myIndex, idx)}}
               </img>
             </span>

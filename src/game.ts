@@ -40,6 +40,15 @@ module game {
   export let onOkClicked : {(): void} = null;
   export let canInfoModalTurnOff = true;
 
+  export let showResourcePicker = false;
+  let resourceMonopoly = -1;
+
+  export let devRoads: BuildMove[] = [];
+  export let playingDevRoadBuild = false;
+
+  export let showResourcePickerMultiple = false;
+  export let resourcesPicked: number[] = [];
+
   let settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
 
   let mouseTarget = MouseTarget.NONE;
@@ -51,6 +60,8 @@ module game {
   let buildRow = 0;
   let buildCol = 0;
   let buildNum = 0;
+
+  let makeMove: TurnMove = null;
 
   export function getPlayerInfo(playerIndex:number): Player {
 //    if (state == null)
@@ -118,6 +129,8 @@ module game {
         coordinates[row][col] = coords.slice(2, 6).concat(coords.slice(0, 2));
       }
     }
+
+    resourcesPicked = getZerosArray(Resource.SIZE);
   }
 
   function getTranslations(): Translations {
@@ -381,7 +394,7 @@ module game {
   }
 
   export function showVertex(row: number, col: number, vertex: number): boolean {
-    if (state.board[row][col].vertices[vertex] !== -1) {
+    if (state.board[row][col].vertices[vertex] !== -1 || playingDevRoadBuild) {
       return false;
     }
     if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
@@ -451,7 +464,17 @@ module game {
   }
 
   export function showRoad(row: number, col: number, edge: number): boolean {
-    return state.board[row][col].edges[edge] >= 0;
+    if (state.board[row][col].edges[edge] >= 0) {
+      return true;
+    }
+
+    for (let i = 0; i < devRoads.length; i++) {
+      if (devRoads[i].hexRow === row && devRoads[i].hexCol === col && devRoads[i].vertexOrEdge === edge) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   export function showSettlement(row: number, col: number, vertex: number): boolean {
@@ -464,6 +487,18 @@ module game {
 
   export function getColor(idx: number): string {
     return idx >= 0 ? playerColor[idx] : 'black';
+  }
+
+  export function getRoadColor(row: number, col: number, edge: number): string {
+    if (state.board[row][col].edges[edge] >= 0) {
+      return getColor(state.board[row][col].edges[edge]);
+    }
+
+    if (devRoads.length > 0 && showRoad(row, col, edge)) {
+      return getColor(myIndex);
+    }
+
+    return getColor(-1);
   }
 
   export function getSettlement(row: number, col: number, vertex: number): string {
@@ -523,6 +558,28 @@ module game {
   }
 
   export function onClickEdge(row: number, col: number, edgeNum: number) {
+    if (playingDevRoadBuild) {
+      let devRoad: BuildMove = {
+        moveType: MoveType.BUILD_ROAD,
+        playerIdx: mockPlayerIdx,
+        currState: state,
+        consType: Construction.Road,
+        hexRow: row,
+        hexCol: col,
+        vertexOrEdge: edgeNum
+      };
+      devRoads.push(devRoad);
+
+      if (devRoads.length === 2) {
+        showInfoModal = true;
+        infoModalHeader = 'Playing Development Cards';
+        infoModalMsg = 'Are you sure to build both roads?';
+        onOkClicked = onRoadBuildingDone;
+      }
+
+      return;
+    }
+
     buildTarget = Construction.Road;
     buildRow = row;
     buildCol = col;
@@ -589,6 +646,12 @@ module game {
     infoModalHeader = '';
     infoModalMsg = '';
     onOkClicked = null;
+
+    makeMove = null;
+    showResourcePicker = false;
+    resourceMonopoly = -1;
+    resourcesPicked = getZerosArray(Resource.SIZE);
+    showResourcePickerMultiple = false;
   }
 
   export function getPlayerPoints(idx: number): number {
@@ -656,8 +719,170 @@ module game {
       currState: state
     };
 
-    let nextMove = gameLogic.onRollDice(turnMove, move.turnIndexAfterMove);
-    moveService.makeMove(nextMove);
+    try {
+      let nextMove = gameLogic.onRollDice(turnMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
+    }
+  }
+
+  let devCardEventHandlers: {(): void}[] = [
+    whenPlayKnight,
+    whenPlayMonopoly,
+    whenPlayRoadBuilding,
+    whenPlayYearOfPlenty
+  ];
+
+  export function onDevCardClicked(cardIdx: DevCard) {
+    makeMove = {
+      moveType: null,
+      playerIdx: mockPlayerIdx,
+      currState: state
+    };
+    switch (cardIdx) {
+      case DevCard.Knight:
+        makeMove.moveType = MoveType.KNIGHT;
+        break;
+      case DevCard.Monopoly:
+        makeMove.moveType = MoveType.MONOPOLY;
+        break;
+      case DevCard.RoadBuilding:
+        makeMove.moveType = MoveType.ROAD_BUILDING;
+        break;
+      case DevCard.YearOfPlenty:
+        makeMove.moveType = MoveType.YEAR_OF_PLENTY;
+        break;
+      default:
+        makeMove = null;
+        return;
+    }
+
+    showInfoModal = true;
+    onOkClicked = devCardEventHandlers[cardIdx];
+    infoModalHeader = 'Playing Development Cards';
+    infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx];
+  }
+
+  /**
+   * Playing DevCards handlers
+   */
+  function whenPlayKnight() {
+    try {
+      let nextMove = gameLogic.onKnight(makeMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
+    } finally {
+      onCloseModal();
+    }
+  }
+
+  function whenPlayMonopoly() {
+    showResourcePicker = true;
+    infoModalHeader = 'Please pick a resource';
+    infoModalMsg = '';
+    onOkClicked = onPlayMonopoly;
+  }
+
+  export function onMonopolyPicked(resource: Resource) {
+    resourceMonopoly = resource;
+  }
+
+  export function monopolyClass(resource: Resource): string {
+    return 'resource-pic' + (resourceMonopoly === resource ? ' on-highlighted' : '');
+  }
+
+  function onPlayMonopoly() {
+    let turnMove: MonopolyMove = {
+      moveType: makeMove.moveType,
+      playerIdx: makeMove.moveType,
+      currState: state,
+      target: resourceMonopoly
+    };
+
+    try {
+      let nextMove = gameLogic.onMonopoly(turnMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
+    } finally {
+      onCloseModal();
+    }
+  }
+
+  function whenPlayRoadBuilding() {
+    alertStyle = 'warning';
+    alertMsg = 'Please select two roads';
+
+    cleanupDevRoadBuild();
+    playingDevRoadBuild = true;
+    onCloseModal();
+  }
+
+  export function onRoadBuildingDone() {
+    let turnMove: RoadBuildMove = {
+      moveType: MoveType.ROAD_BUILDING,
+      playerIdx: mockPlayerIdx,
+      currState: angular.copy(state),
+      road1: devRoads[0],
+      road2: devRoads[1]
+    };
+
+    try {
+      let nextMove = gameLogic.onRoadBuilding(turnMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
+    } finally {
+      cleanupDevRoadBuild();
+      onCloseModal()
+    }
+  }
+
+  export function onRoadBuildingCanceled() {
+    alertStyle = 'success';
+    alertMsg = 'Road Building Canceled';
+    cleanupDevRoadBuild();
+  }
+
+  function cleanupDevRoadBuild() {
+    devRoads = [];
+    playingDevRoadBuild = false;
+  }
+
+  function whenPlayYearOfPlenty() {
+    showResourcePickerMultiple = true;
+    infoModalHeader = 'Please pick two resources';
+    infoModalMsg = '';
+    onOkClicked = onPlayYearOfPlenty;
+  }
+
+  export function onYearOfPlentyPicked(resource: Resource, add: boolean) {
+    resourcesPicked[resource] += add ? 1 : -1;
+  }
+
+  function onPlayYearOfPlenty() {
+    let turnMove: YearOfPlentyMove = {
+      moveType: makeMove.moveType,
+      playerIdx: makeMove.playerIdx,
+      currState: state,
+      target: resourcesPicked
+    };
+
+    try {
+      let nextMove = gameLogic.onYearOfPlenty(turnMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
+    } finally {
+      onCloseModal();
+    }
   }
 }
 
@@ -666,6 +891,16 @@ function getArray(length: number): number[] {
 
   for (let i = 0; i < length; i++) {
     ret[i] = i;
+  }
+
+  return ret;
+}
+
+function getZerosArray(length: number): number[] {
+  let ret : number[] = [];
+
+  for (let i = 0; i < length; i++) {
+    ret[i] = 0;
   }
 
   return ret;

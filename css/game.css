@@ -118,6 +118,11 @@ td {
   height: 30%;
 }
 
+.on-highlighted {
+  border:#CCCCCC thin solid;
+  padding: 4px;
+}
+
 #b {
   width: 100%;
   height: 100%;
