@@ -71,6 +71,13 @@ module game {
   export let showRobberPanel = false;
   let robberVictomIdx = -1;
 
+  export let showTradingPanel = false;
+  let tradingResource: Resource = -1;
+  export let tradingNum: number = 0;
+  let wantedResource: Resource = -1;
+  export let wantedNum: number = 0;
+  let tradeWithBank: boolean = false;
+
   export function getPlayerInfo(playerIndex:number): Player {
 //    if (state == null)
 //      state = gameLogic.getInitialState();
@@ -701,6 +708,13 @@ module game {
     robberMovedCol = -1;
     showRobberPanel = false;
     robberVictomIdx = -1;
+
+    showTradingPanel = false;
+    tradingResource = -1;
+    tradingNum = 0;
+    wantedResource = -1;
+    wantedNum = 0;
+    tradeWithBank = false;
   }
 
   export function getPlayerPoints(idx: number): number {
@@ -1076,6 +1090,73 @@ module game {
     }
 
     return false;
+  }
+
+  export function onTradeWithBankStart() {
+    tradeWithBank = true;
+    whenTradingStarted();
+  }
+
+  function whenTradingStarted() {
+    showInfoModal = true;
+    infoModalHeader = 'Trade';
+    infoModalMsg = '';
+    onOkClicked = tradeWithBank ? onTradingWithBankDone : null; //TODO: Trade with players
+    showTradingPanel = true;
+  }
+
+  function onTradingWithBankDone() {
+    let turnMove: TradeWithBankMove = {
+      moveType: MoveType.TRANSACTION_WITH_BANK,
+      playerIdx: mockPlayerIdx,
+      currState: angular.copy(state),
+      sellingItem: tradingResource,
+      sellingNum: tradingNum,
+      buyingItem: wantedResource,
+      buyingNum: wantedNum
+    };
+
+    try {
+      let nextMove = gameLogic.onTradingWithBank(turnMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+      cleanupInfoModal();
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
+    }
+  }
+
+  export function onTradingSelected(resource: Resource) {
+    tradingResource = resource;
+  }
+
+  export function onWantedSelected(resource: Resource) {
+    wantedResource = resource;
+  }
+
+  export function tradingResourceClass(resource: Resource, trading: boolean): string {
+    let comp = wantedResource;
+    if (trading) {
+      comp = tradingResource;
+    }
+
+    return 'resource-pic' + (comp >= 0 && comp === resource ? ' on-highlighted' : '');
+  }
+
+  export function changeTradingNum(add: boolean) {
+    if (add) {
+      tradingNum++;
+    } else {
+      tradingNum -= tradingNum <= 0 ? 0 : 1;
+    }
+  }
+
+  export function changeWantedNum(add: boolean) {
+    if (add) {
+      wantedNum++;
+    } else {
+      wantedNum -= wantedNum <= 0 ? 0 : 1;
+    }
   }
 }
 

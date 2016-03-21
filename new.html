@@ -203,13 +203,13 @@
                 {{game.infoModalMsg}}
                 <div ng-repeat="r in resourceSize" ng-if="game.showResourcePicker">
                   <img ng-attr-src="imgs/resource{{r}}.jpg"
-                       alt="imgs/resources{{r}}.jpg"
+                       alt="imgs/resource{{r}}.jpg"
                        ng-click="game.onOneTargetResourcePicked(r)"
                        ng-attr-class="{{game.oneTargetResourceClass(r)}}"/>
                 </div>
                 <div ng-repeat="r in resourceSize" ng-if="game.showResourcePickerMultiple">
                   <img ng-attr-src="imgs/resource{{r}}.jpg"
-                       alt="imgs/resources{{r}}.jpg"
+                       alt="imgs/resource{{r}}.jpg"
                        ng-attr-class="{{game.oneTargetResourceClass(r)}}">
                     x {{game.resourcesPicked[r]}}
                     <button type="button" class="btn btn-success btn-xs" ng-click="game.onMultipleResourcesPicked(r, true)">+</button>
@@ -220,9 +220,37 @@
                   <span ng-if="game.possibleRobberVictom(p)"
                         ng-click="game.onVictomSelected(p)">Player {{p}}</span>
                 </div>
-                <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
-                <button type="button" class="btn btn-danger" ng-if="game.canInfoModalTurnOff"
-                        ng-click="game.onCloseModal()">Cancel</button>
+                <div id="tradingPanel" ng-if="game.showTradingPanel">
+                  <div class="row">
+                    <div class="col-md-6 col-xs-12">
+                      Trading: {{game.tradingNum}}<br>
+                      <div ng-repeat="r in resourceSize">
+                        <img ng-attr-src="imgs/resource{{r}}.jpg"
+                             ng-attr-alt="imgs/resource{{r}}.jpg"
+                             ng-click="game.onTradingSelected(r)"
+                             ng-attr-class="{{game.tradingResourceClass(r, true)}}"/>
+                      </div>
+                      <button type="button" class="btn btn-success btn-xs" ng-click="game.changeTradingNum(true)">+</button>
+                      <button type="button" class="btn btn-warning btn-xs" ng-click="game.changeTradingNum(false)">-</button>
+                    </div>
+                    <div class="col-md-6 col-xs-12">
+                      For: {{game.wantedNum}}<br>
+                      <div ng-repeat="r in resourceSize">
+                        <img ng-attr-src="imgs/resource{{r}}.jpg"
+                             ng-attr-alt="imgs/resource{{r}}.jpg"
+                             ng-click="game.onWantedSelected(r)"
+                             ng-attr-class="{{game.tradingResourceClass(r, false)}}"/>
+                      </div>
+                      <button type="button" class="btn btn-success btn-xs" ng-click="game.changeWantedNum(true)">+</button>
+                      <button type="button" class="btn btn-warning btn-xs" ng-click="game.changeWantedNum(false)">-</button>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
+                    <button type="button" class="btn btn-danger" ng-if="game.canInfoModalTurnOff"
+                            ng-click="game.onCloseModal()">Cancel</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -356,7 +384,14 @@
       </div>
       <div class="col-md-6" id="BankInfo">
         <div class="panel-default">
-          <div class="panel-heading"><strong>Bank Info</strong></div>
+          <div class="panel-heading">
+            <strong>Bank Info</strong>
+            <button class="btn btn-success btn-xs"
+                    ng-click="game.onTradeWithBankStart()"
+                    ng-if="true">
+              Trade With Bank
+            </button>
+          </div>
           <div class="panel-body">
             <span ng-repeat="idx in resourceSize">
               <img ng-attr-src="imgs/resource{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic">

@@ -55,6 +55,12 @@ var game;
     var robberMovedCol = -1;
     game.showRobberPanel = false;
     var robberVictomIdx = -1;
+    game.showTradingPanel = false;
+    var tradingResource = -1;
+    game.tradingNum = 0;
+    var wantedResource = -1;
+    game.wantedNum = 0;
+    var tradeWithBank = false;
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -649,6 +655,12 @@ var game;
         robberMovedCol = -1;
         game.showRobberPanel = false;
         robberVictomIdx = -1;
+        game.showTradingPanel = false;
+        tradingResource = -1;
+        game.tradingNum = 0;
+        wantedResource = -1;
+        game.wantedNum = 0;
+        tradeWithBank = false;
     }
     game.cleanupInfoModal = cleanupInfoModal;
     function getPlayerPoints(idx) {
@@ -1004,6 +1016,72 @@ var game;
         return false;
     }
     game.possibleRobberVictom = possibleRobberVictom;
+    function onTradeWithBankStart() {
+        tradeWithBank = true;
+        whenTradingStarted();
+    }
+    game.onTradeWithBankStart = onTradeWithBankStart;
+    function whenTradingStarted() {
+        game.showInfoModal = true;
+        game.infoModalHeader = 'Trade';
+        game.infoModalMsg = '';
+        game.onOkClicked = tradeWithBank ? onTradingWithBankDone : null; //TODO: Trade with players
+        game.showTradingPanel = true;
+    }
+    function onTradingWithBankDone() {
+        var turnMove = {
+            moveType: MoveType.TRANSACTION_WITH_BANK,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state),
+            sellingItem: tradingResource,
+            sellingNum: game.tradingNum,
+            buyingItem: wantedResource,
+            buyingNum: game.wantedNum
+        };
+        try {
+            var nextMove = gameLogic.onTradingWithBank(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+    }
+    function onTradingSelected(resource) {
+        tradingResource = resource;
+    }
+    game.onTradingSelected = onTradingSelected;
+    function onWantedSelected(resource) {
+        wantedResource = resource;
+    }
+    game.onWantedSelected = onWantedSelected;
+    function tradingResourceClass(resource, trading) {
+        var comp = wantedResource;
+        if (trading) {
+            comp = tradingResource;
+        }
+        return 'resource-pic' + (comp >= 0 && comp === resource ? ' on-highlighted' : '');
+    }
+    game.tradingResourceClass = tradingResourceClass;
+    function changeTradingNum(add) {
+        if (add) {
+            game.tradingNum++;
+        }
+        else {
+            game.tradingNum -= game.tradingNum <= 0 ? 0 : 1;
+        }
+    }
+    game.changeTradingNum = changeTradingNum;
+    function changeWantedNum(add) {
+        if (add) {
+            game.wantedNum++;
+        }
+        else {
+            game.wantedNum -= game.wantedNum <= 0 ? 0 : 1;
+        }
+    }
+    game.changeWantedNum = changeWantedNum;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];
