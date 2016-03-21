@@ -1120,6 +1120,18 @@ module game {
   }
 
   function onTradingWithBankDone() {
+    if (tradingResource < 0 || tradingResource >= Resource.SIZE ||
+        wantedResource < 0 || wantedResource >= Resource.SIZE) {
+      alertStyle = 'danger';
+      alertMsg = 'Must select items to trade!';
+      return;
+    }
+    if (tradingNum <= 0 || wantedNum <= 0) {
+      alertStyle = 'danger';
+      alertMsg = 'Must identify number of items to trade!';
+      return;
+    }
+
     let turnMove: TradeWithBankMove = {
       moveType: MoveType.TRANSACTION_WITH_BANK,
       playerIdx: mockPlayerIdx,

@@ -1043,6 +1043,17 @@ var game;
         game.showTradingPanel = true;
     }
     function onTradingWithBankDone() {
+        if (tradingResource < 0 || tradingResource >= Resource.SIZE ||
+            wantedResource < 0 || wantedResource >= Resource.SIZE) {
+            game.alertStyle = 'danger';
+            game.alertMsg = 'Must select items to trade!';
+            return;
+        }
+        if (game.tradingNum <= 0 || game.wantedNum <= 0) {
+            game.alertStyle = 'danger';
+            game.alertMsg = 'Must identify number of items to trade!';
+            return;
+        }
         var turnMove = {
             moveType: MoveType.TRANSACTION_WITH_BANK,
             playerIdx: game.mockPlayerIdx,
