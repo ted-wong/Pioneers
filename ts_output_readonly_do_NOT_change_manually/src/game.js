@@ -276,9 +276,11 @@ var game;
                 break;
             case MoveType.ROBBER_EVENT:
                 if (game.state.eventIdx === game.move.turnIndexAfterMove) {
-                    game.alertStyle = 'warning';
-                    game.alertMsg = 'Moving robber...';
-                    whenMoveRobberStart();
+                    if (game.mockPlayerIdx === game.move.turnIndexAfterMove) {
+                        game.alertStyle = 'warning';
+                        game.alertMsg = 'Moving robber...';
+                        whenMoveRobberStart();
+                    }
                 }
                 else {
                     if (game.state.eventIdx === game.mockPlayerIdx) {
@@ -289,6 +291,13 @@ var game;
             case MoveType.ROBBER_MOVE:
                 if (game.mockPlayerIdx === game.move.turnIndexAfterMove) {
                     whenRobPlayerStart();
+                }
+                break;
+            case MoveType.KNIGHT:
+                if (game.mockPlayerIdx === game.move.turnIndexAfterMove) {
+                    game.alertStyle = 'warning';
+                    game.alertMsg = 'Knight!  Moving robber...';
+                    whenMoveRobberStart();
                 }
                 break;
         }
@@ -687,7 +696,7 @@ var game;
         if (!game.state || playerIdx < 0) {
             return 0;
         }
-        if (!dev) {
+        if (dev === undefined || dev === null) {
             return game.state.players[playerIdx].devCards.reduce(function (a, b) {
                 return a + b;
             });
@@ -744,7 +753,7 @@ var game;
         makeMove = {
             moveType: null,
             playerIdx: game.mockPlayerIdx,
-            currState: game.state
+            currState: angular.copy(game.state)
         };
         switch (cardIdx) {
             case DevCard.Knight:
@@ -766,13 +775,14 @@ var game;
         game.showInfoModal = true;
         game.onOkClicked = devCardEventHandlers[cardIdx];
         game.infoModalHeader = 'Playing Development Cards';
-        game.infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx];
+        game.infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx] + '?';
     }
     game.onDevCardClicked = onDevCardClicked;
     /**
      * Playing DevCards handlers
      */
     function whenPlayKnight() {
+        console.log(makeMove);
         try {
             var nextMove = gameLogic.onKnight(makeMove, game.move.turnIndexAfterMove);
             moveService.makeMove(nextMove);
@@ -1016,6 +1026,10 @@ var game;
         return false;
     }
     game.possibleRobberVictom = possibleRobberVictom;
+    function showTradeButton() {
+        return game.state.diceRolled && game.mockPlayerIdx === game.move.turnIndexAfterMove;
+    }
+    game.showTradeButton = showTradeButton;
     function onTradeWithBankStart() {
         tradeWithBank = true;
         whenTradingStarted();
@@ -1082,6 +1096,37 @@ var game;
         }
     }
     game.changeWantedNum = changeWantedNum;
+    function showBuyDevCardButton() {
+        return game.state.diceRolled && game.mockPlayerIdx === game.move.turnIndexAfterMove;
+    }
+    game.showBuyDevCardButton = showBuyDevCardButton;
+    function whenBuyDevCard() {
+        game.infoModalHeader = 'Trade';
+        game.infoModalMsg = 'Are you sure to buy a development card?';
+        game.showInfoModal = true;
+        game.onOkClicked = confirmBuyDevCard;
+    }
+    game.whenBuyDevCard = whenBuyDevCard;
+    function confirmBuyDevCard() {
+        var turnMove = {
+            moveType: MoveType.BUILD_DEVCARD,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state),
+            consType: Construction.DevCard,
+            hexRow: -1,
+            hexCol: -1,
+            vertexOrEdge: -1
+        };
+        try {
+            var nextMove = gameLogic.onBuilding(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+    }
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

@@ -537,10 +537,8 @@ var gameLogic;
         stateAfterMove.moveType = MoveType.ROLL_DICE;
         //State transition
         stateAfterMove.diceRolled = true;
-        //stateAfterMove.dices[0] = getRandomInt(1, 7);
-        //stateAfterMove.dices[1] = getRandomInt(1, 7);
-        stateAfterMove.dices[0] = 3;
-        stateAfterMove.dices[1] = 4;
+        stateAfterMove.dices[0] = getRandomInt(1, 7);
+        stateAfterMove.dices[1] = getRandomInt(1, 7);
         var rollNum = stateAfterMove.dices[0] + stateAfterMove.dices[1];
         if (rollNum !== 7) {
             //State transition to resources production
@@ -657,6 +655,7 @@ var gameLogic;
             vertexOrEdge: buildingMove.vertexOrEdge,
             init: false
         };
+        var player = null;
         switch (buildingMove.consType) {
             case Construction.Road:
                 stateAfterMove.moveType = MoveType.BUILD_ROAD;
@@ -682,6 +681,11 @@ var gameLogic;
                 if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== -1) {
                     throw new Error('Invalid building instruction!');
                 }
+                player = stateAfterMove.players[playerIdx];
+                if (player.resources[Resource.Brick] <= 0 || player.resources[Resource.Lumber] <= 0 ||
+                    player.resources[Resource.Wool] <= 0 || player.resources[Resource.Grain] <= 0) {
+                    throw new Error('Insufficient resources to build a settlement!');
+                }
                 stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
                 stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
                 stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
@@ -698,20 +702,37 @@ var gameLogic;
                     move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] !== Construction.Settlement) {
                     throw new Error('Invalid building instruction!');
                 }
+                player = stateAfterMove.players[playerIdx];
+                if (player.resources[Resource.Ore] <= 3 || player.resources[Resource.Grain] <= 2) {
+                    throw new Error('Insufficient resources to build a city!');
+                }
                 stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
                 stateAfterMove.players[playerIdx].resources[Resource.Ore] -= 3;
                 stateAfterMove.players[playerIdx].resources[Resource.Grain] -= 2;
-                stateAfterMove.players[playerIdx].resources[Resource.Ore] += 3;
-                stateAfterMove.players[playerIdx].resources[Resource.Grain] += 2;
+                stateAfterMove.bank.resources[Resource.Ore] += 3;
+                stateAfterMove.bank.resources[Resource.Grain] += 2;
                 break;
             case Construction.DevCard:
                 if (move.currState.bank.devCardsOrder.length <= 0) {
                     throw new Error('No development cards in bank right now!');
                 }
+                player = stateAfterMove.players[playerIdx];
+                if (player.resources[Resource.Ore] <= 0 || player.resources[Resource.Wool] <= 0 ||
+                    player.resources[Resource.Grain] <= 0) {
+                    throw new Error('Insufficient resources to build a development card!');
+                }
+                //State transition to devCards
                 stateAfterMove.moveType = MoveType.BUILD_DEVCARD;
                 stateAfterMove.players[playerIdx].devCards[move.currState.bank.devCardsOrder[0]]++;
                 stateAfterMove.bank.devCards[move.currState.bank.devCardsOrder[0]]--;
-                stateAfterMove.bank.devCardsOrder = stateBeforeMove.bank.devCardsOrder.splice(0, 1);
+                stateAfterMove.bank.devCardsOrder.splice(0, 1);
+                //State transition to resources
+                stateAfterMove.players[playerIdx].resources[Resource.Ore]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Wool]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Grain]--;
+                stateAfterMove.bank.resources[Resource.Ore]++;
+                stateAfterMove.bank.resources[Resource.Wool]++;
+                stateAfterMove.bank.resources[Resource.Grain]++;
                 break;
             default:
                 throw new Error('Invalid command!');
@@ -774,8 +795,6 @@ var gameLogic;
         stateAfterMove.devCardsPlayed = true;
         //State transition to dev cards
         stateAfterMove.players[turnIdx].devCards[DevCard.Monopoly]--;
-        stateAfterMove.bank.devCards[DevCard.Monopoly]++;
-        stateAfterMove.bank.devCardsOrder.push(DevCard.Monopoly);
         //State transition to resource cards
         var numCards = 0;
         for (var p = 0; p < gameLogic.NUM_PLAYERS; p++) {
@@ -810,8 +829,6 @@ var gameLogic;
         stateAfterMove.devCardsPlayed = true;
         //State transition to dev cards
         stateAfterMove.players[turnIdx].devCards[DevCard.RoadBuilding]--;
-        stateAfterMove.bank.devCards[DevCard.RoadBuilding]++;
-        stateAfterMove.bank.devCardsOrder.push(DevCard.RoadBuilding);
         //State transition to roads and check if road can be legally built
         if (!canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road1.hexRow, roadBuildMove.road1.hexCol, roadBuildMove.road1.vertexOrEdge, true) &&
             !canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road2.hexRow, roadBuildMove.road2.hexCol, roadBuildMove.road2.vertexOrEdge, true)) {
@@ -873,8 +890,6 @@ var gameLogic;
         stateAfterMove.moveType = MoveType.YEAR_OF_PLENTY;
         //State transition to dev cards
         stateAfterMove.players[turnIdx].devCards[DevCard.YearOfPlenty]--;
-        stateAfterMove.bank.devCards[DevCard.YearOfPlenty]++;
-        stateAfterMove.bank.devCardsOrder.push(DevCard.YearOfPlenty);
         //State transition to resources
         for (var i = 0; i < Resource.SIZE; i++) {
             stateAfterMove.players[turnIdx].resources[i] += yearOfPlentyMove.target[i];

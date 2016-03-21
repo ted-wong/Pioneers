@@ -201,27 +201,27 @@
               </div>
               <div class="modal-body">
                 {{game.infoModalMsg}}
-                <div ng-repeat="r in resourceSize" ng-if="game.showResourcePicker">
-                  <img ng-attr-src="imgs/resource{{r}}.jpg"
-                       alt="imgs/resource{{r}}.jpg"
-                       ng-click="game.onOneTargetResourcePicked(r)"
-                       ng-attr-class="{{game.oneTargetResourceClass(r)}}"/>
-                </div>
-                <div ng-repeat="r in resourceSize" ng-if="game.showResourcePickerMultiple">
-                  <img ng-attr-src="imgs/resource{{r}}.jpg"
-                       alt="imgs/resource{{r}}.jpg"
-                       ng-attr-class="{{game.oneTargetResourceClass(r)}}">
-                    x {{game.resourcesPicked[r]}}
-                    <button type="button" class="btn btn-success btn-xs" ng-click="game.onMultipleResourcesPicked(r, true)">+</button>
-                    <button type="button" class="btn btn-warning btn-xs" ng-click="game.onMultipleResourcesPicked(r, false)">-</button>
-                  </img>
-                </div>
-                <div ng-repeat="p in players" ng-if="game.showRobberPanel">
-                  <span ng-if="game.possibleRobberVictom(p)"
-                        ng-click="game.onVictomSelected(p)">Player {{p}}</span>
-                </div>
-                <div id="tradingPanel" ng-if="game.showTradingPanel">
-                  <div class="row">
+                <div class="row">
+                  <div ng-repeat="r in resourceSize" ng-if="game.showResourcePicker">
+                    <img ng-attr-src="imgs/resource{{r}}.jpg"
+                         alt="imgs/resource{{r}}.jpg"
+                         ng-click="game.onOneTargetResourcePicked(r)"
+                         ng-attr-class="{{game.oneTargetResourceClass(r)}}"/>
+                  </div>
+                  <div ng-repeat="r in resourceSize" ng-if="game.showResourcePickerMultiple">
+                    <img ng-attr-src="imgs/resource{{r}}.jpg"
+                         alt="imgs/resource{{r}}.jpg"
+                         ng-attr-class="{{game.oneTargetResourceClass(r)}}">
+                      x {{game.resourcesPicked[r]}}
+                      <button type="button" class="btn btn-success btn-xs" ng-click="game.onMultipleResourcesPicked(r, true)">+</button>
+                      <button type="button" class="btn btn-warning btn-xs" ng-click="game.onMultipleResourcesPicked(r, false)">-</button>
+                    </img>
+                  </div>
+                  <div ng-repeat="p in players" ng-if="game.showRobberPanel">
+                    <span ng-if="game.possibleRobberVictom(p)"
+                          ng-click="game.onVictomSelected(p)">Player {{p}}</span>
+                  </div>
+                  <div id="tradingPanel" ng-if="game.showTradingPanel">
                     <div class="col-md-6 col-xs-12">
                       Trading: {{game.tradingNum}}<br>
                       <div ng-repeat="r in resourceSize">
@@ -245,11 +245,11 @@
                       <button type="button" class="btn btn-warning btn-xs" ng-click="game.changeWantedNum(false)">-</button>
                     </div>
                   </div>
-                  <div class="row">
-                    <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
-                    <button type="button" class="btn btn-danger" ng-if="game.canInfoModalTurnOff"
-                            ng-click="game.onCloseModal()">Cancel</button>
-                  </div>
+                </div>
+                <div class="row">
+                  <button type="button" class="btn btn-primary" ng-click="game.onOkClicked()">OK</button>
+                  <button type="button" class="btn btn-danger" ng-if="game.canInfoModalTurnOff"
+                          ng-click="game.onCloseModal()">Cancel</button>
                 </div>
               </div>
             </div>
@@ -388,8 +388,13 @@
             <strong>Bank Info</strong>
             <button class="btn btn-success btn-xs"
                     ng-click="game.onTradeWithBankStart()"
-                    ng-if="true">
+                    ng-if="game.showTradeButton()">
               Trade With Bank
+            </button>
+            <button class="btn btn-success btn-xs"
+                    ng-click="game.whenBuyDevCard()"
+                    ng-if="game.showBuyDevCardButton()">
+              Buy a Dev. Card
             </button>
           </div>
           <div class="panel-body">

@@ -303,9 +303,11 @@ module game {
         break;
       case MoveType.ROBBER_EVENT:
         if (state.eventIdx === move.turnIndexAfterMove) {
-          alertStyle = 'warning';
-          alertMsg = 'Moving robber...';
-          whenMoveRobberStart();
+          if (mockPlayerIdx === move.turnIndexAfterMove) {
+            alertStyle = 'warning';
+            alertMsg = 'Moving robber...';
+            whenMoveRobberStart();
+          }
         } else {
           if (state.eventIdx === mockPlayerIdx) {
             whenRobberEvent();
@@ -315,6 +317,13 @@ module game {
       case MoveType.ROBBER_MOVE:
         if (mockPlayerIdx === move.turnIndexAfterMove) {
           whenRobPlayerStart();
+        }
+        break;
+      case MoveType.KNIGHT:
+        if (mockPlayerIdx === move.turnIndexAfterMove) {
+          alertStyle = 'warning';
+          alertMsg = 'Knight!  Moving robber...';
+          whenMoveRobberStart();
         }
         break;
     }
@@ -742,7 +751,7 @@ module game {
     if (!state || playerIdx < 0) {
       return 0;
     }
-    if (!dev) {
+    if (dev === undefined || dev === null) {
       return state.players[playerIdx].devCards.reduce(function(a, b) {
         return a + b;
       });
@@ -802,7 +811,7 @@ module game {
     makeMove = {
       moveType: null,
       playerIdx: mockPlayerIdx,
-      currState: state
+      currState: angular.copy(state)
     };
     switch (cardIdx) {
       case DevCard.Knight:
@@ -825,13 +834,14 @@ module game {
     showInfoModal = true;
     onOkClicked = devCardEventHandlers[cardIdx];
     infoModalHeader = 'Playing Development Cards';
-    infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx];
+    infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx] + '?';
   }
 
   /**
    * Playing DevCards handlers
    */
   function whenPlayKnight() {
+    console.log(makeMove);
     try {
       let nextMove = gameLogic.onKnight(makeMove, move.turnIndexAfterMove);
       moveService.makeMove(nextMove);
@@ -1092,6 +1102,10 @@ module game {
     return false;
   }
 
+  export function showTradeButton(): boolean {
+    return state.diceRolled && mockPlayerIdx === move.turnIndexAfterMove;
+  }
+
   export function onTradeWithBankStart() {
     tradeWithBank = true;
     whenTradingStarted();
@@ -1156,6 +1170,38 @@ module game {
       wantedNum++;
     } else {
       wantedNum -= wantedNum <= 0 ? 0 : 1;
+    }
+  }
+
+  export function showBuyDevCardButton(): boolean {
+    return state.diceRolled && mockPlayerIdx === move.turnIndexAfterMove;
+  }
+
+  export function whenBuyDevCard() {
+    infoModalHeader = 'Trade';
+    infoModalMsg = 'Are you sure to buy a development card?';
+    showInfoModal = true;
+    onOkClicked = confirmBuyDevCard;
+  }
+
+  function confirmBuyDevCard() {
+    let turnMove: BuildMove = {
+      moveType: MoveType.BUILD_DEVCARD,
+      playerIdx: mockPlayerIdx,
+      currState: angular.copy(state),
+      consType: Construction.DevCard,
+      hexRow: -1,
+      hexCol: -1,
+      vertexOrEdge: -1
+    };
+
+    try {
+      let nextMove = gameLogic.onBuilding(turnMove, move.turnIndexAfterMove);
+      moveService.makeMove(nextMove);
+      cleanupInfoModal();
+    } catch (e) {
+      alertStyle = 'danger';
+      alertMsg = e.message;
     }
   }
 }
