@@ -47,9 +47,84 @@ td {
   position: relative;
 }
 
+#GameBoard {
+  background-image: url(../imgs/water1.jpg);
+}
+
+#gameArea {
+  overflow: scroll;
+}
+
+.default-hex {
+  stroke: #E8D0A9;
+  stroke-width: 3px;
+}
+
+.building-info {
+  display: inline-block;
+  margin: 5px;
+}
+
+.mouse-to-display-vertex {
+  fill: #9900ff;
+  stroke: #9900ff;
+  opacity: 0.7;
+  r: 7;
+}
+
+.mouse-to-display-edge {
+  fill: #00ff00;
+  stroke: #00ff00;
+  stroke-width: 5;
+  opacity: 0.7;
+}
+
+.emphasize-vertex {
+  fill: #9900cc;
+  stroke: #9900cc;
+  r: 9;
+  opacity: 0.9;
+}
+
+.emphasize-edge {
+  fill: #00cc00;
+  stroke: #00cc00;
+  stroke-width: 7;
+  opacity: 0.9;
+}
+
+.player-info {
+  color: white;
+}
+
+.my-detail {
+  width: 100%;
+  height: 100%;
+}
+
+.resource-pic {
+  display: inline-block;
+  width: 10%;
+  height: 10%;
+}
+
+.dice-and-end {
+  float: right;
+  margin: 3px;
+}
+
+.dice {
+  width: 30%;
+  height: 30%;
+}
+
+.on-highlighted {
+  border:#CCCCCC thin solid;
+  padding: 4px;
+}
+
 #b {
   width: 100%;
   height: 100%;
   position: absolute;
 }
-

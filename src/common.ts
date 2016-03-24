@@ -40,6 +40,7 @@ enum MoveType {
   BUILD_DEVCARD,
   KNIGHT,
   MONOPOLY,
+  ROAD_BUILDING,
   YEAR_OF_PLENTY,
   TRADE,
   ROBBER_EVENT,
@@ -152,9 +153,13 @@ interface MonopolyMove extends TurnMove {
   target: Resource;
 }
 
+interface RoadBuildMove extends TurnMove {
+  road1: BuildMove;
+  road2: BuildMove;
+}
+
 interface YearOfPlentyMove extends TurnMove {
-  target1: Resource;
-  target2: Resource;
+  target: Resources;
 }
 
 interface RobberEventMove extends TurnMove {
@@ -276,6 +281,11 @@ function canBuildRoadLegally(player: Player, board: Board, row: number, col: num
     return false;
   }
 
+  //If it's first build instruction during INIT_BUILD, just build it
+  if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 1) {
+    return true;
+  }
+
   // player owns adjacent road in current hex or adjacent road in adjacent hex
   if (board[row][col].edges[((edge+1) % 6 + 6) % 6] === player.id ||
     board[row][col].edges[((edge-1) % 6 + 6) % 6] === player.id || 
@@ -321,11 +331,16 @@ function canBuildRoadLegally(player: Player, board: Board, row: number, col: num
     return true;
   }
 
+  /*
   if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) || 
     (board[row][col].vertices[(edge+1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge+1) % 6] === player.id) ||
     (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) || 
     (board[row][col].vertices[(edge+1) % 6] === Construction.City && board[row][col].vertexOwner[(edge+1) % 6] === player.id))
     return true;
+  */
+  if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
+    return true;
+  }
 
   return false;
 }
@@ -345,14 +360,21 @@ function canBuildSettlementLegally(player: Player, board: Board, row: number, co
     if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
       has_land = true;
   }
-  if (has_land === false)
+  if (has_land === false && gameLogic.isSea(row, col))
     return false;
-
-  // needs adjacent road to build on if not initial settlements
-  if (!initial && !hasAdjacentRoad(player, board, row, col, vertex)) return false;
 
   // new settlement has to be 2+ vertices away from another settlement/city
   if (hasNearbyConstruct(board, row, col, vertex)) return false;
+
+  //If it's during init build and it's first building, just do it
+  if (initial && player.construction.reduce(function(a, b) {return a+b;}) === 1) {
+    return true;
+  }
+
+  // needs adjacent road to build
+  if (!hasAdjacentRoad(player, board, row, col, vertex)) {
+    return false;
+  }
 
   return true;
 }
@@ -382,8 +404,8 @@ function hasAdjacentRoad(player: Player, board: Board, row: number, col: number,
 //  console.log(hexes);
   for (var i=0; i < hexes.length; i++) {
     if (hexes[i].length === 0) continue;
-    if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] === player.id) return true;
-    if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3]+1) % 6] === player.id) return true;
+    if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][2]] === player.id) return true;
+    if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][2]+1) % 6] === player.id) return true;
   }
   return false;
 }
@@ -599,7 +621,42 @@ function findRoadSubLength(player: Player, board: Board, row: number, col: numbe
   }
 }
 
+/**
+ * Helper functions for making next state
+ */
 
+function getNextStateToBuildRoad(board: Board, row: number, col: number, e: number, idx: number): Board {
+  let [adjRow, adjCol] = getHexAdjcentToEdge(row, col, e);
+  let adjEdge = (e + 3) % 6;
+
+  board[row][col].edges[e] = idx;
+  board[adjRow][adjCol].edges[adjEdge] = idx;
+
+  return board;
+}
+
+function getNextStateToBuild(board: Board, buildingMove: BuildMove): Board {
+  let row = buildingMove.hexRow;
+  let col = buildingMove.hexCol;
+  let num = buildingMove.vertexOrEdge;
+  let idx = buildingMove.playerIdx;
+
+  if (buildingMove.consType === Construction.Road) {
+    return getNextStateToBuildRoad(board, row, col, num, idx);
+  }
+
+  let hexes = getHexesAdjacentToVertex(row, col, num);
+  for (let i = 0; i < hexes.length; i++) {
+    let [r, c, v] = hexes[i];
+    board[r][c].vertexOwner[v] = idx;
+    board[r][c].vertices[v] = buildingMove.consType;
+  }
+
+  board[row][col].vertexOwner[num] = idx;
+  board[row][col].vertices[num] = buildingMove.consType;
+
+  return board;
+}
 
 /**
  * Constants definitions

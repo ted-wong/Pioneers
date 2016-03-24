@@ -38,14 +38,15 @@ var MoveType;
     MoveType[MoveType["BUILD_DEVCARD"] = 6] = "BUILD_DEVCARD";
     MoveType[MoveType["KNIGHT"] = 7] = "KNIGHT";
     MoveType[MoveType["MONOPOLY"] = 8] = "MONOPOLY";
-    MoveType[MoveType["YEAR_OF_PLENTY"] = 9] = "YEAR_OF_PLENTY";
-    MoveType[MoveType["TRADE"] = 10] = "TRADE";
-    MoveType[MoveType["ROBBER_EVENT"] = 11] = "ROBBER_EVENT";
-    MoveType[MoveType["ROBBER_MOVE"] = 12] = "ROBBER_MOVE";
-    MoveType[MoveType["ROB_PLAYER"] = 13] = "ROB_PLAYER";
-    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 14] = "TRANSACTION_WITH_BANK";
-    MoveType[MoveType["WIN"] = 15] = "WIN";
-    MoveType[MoveType["SIZE"] = 16] = "SIZE";
+    MoveType[MoveType["ROAD_BUILDING"] = 9] = "ROAD_BUILDING";
+    MoveType[MoveType["YEAR_OF_PLENTY"] = 10] = "YEAR_OF_PLENTY";
+    MoveType[MoveType["TRADE"] = 11] = "TRADE";
+    MoveType[MoveType["ROBBER_EVENT"] = 12] = "ROBBER_EVENT";
+    MoveType[MoveType["ROBBER_MOVE"] = 13] = "ROBBER_MOVE";
+    MoveType[MoveType["ROB_PLAYER"] = 14] = "ROB_PLAYER";
+    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 15] = "TRANSACTION_WITH_BANK";
+    MoveType[MoveType["WIN"] = 16] = "WIN";
+    MoveType[MoveType["SIZE"] = 17] = "SIZE";
 })(MoveType || (MoveType = {}));
 function numberResourceCards(player) {
     var total = 0;
@@ -137,6 +138,10 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
     if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
         return false;
     }
+    //If it's first build instruction during INIT_BUILD, just build it
+    if (initial && player.construction.reduce(function (a, b) { return a + b; }) === 1) {
+        return true;
+    }
     // player owns adjacent road in current hex or adjacent road in adjacent hex
     if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id ||
         board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id ||
@@ -174,11 +179,16 @@ function canBuildRoadLegally(player, board, row, col, edge, initial) {
         }
         return true;
     }
+    /*
     if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) ||
-        (board[row][col].vertices[(edge + 1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge + 1) % 6] === player.id) ||
-        (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
-        (board[row][col].vertices[(edge + 1) % 6] === Construction.City && board[row][col].vertexOwner[(edge + 1) % 6] === player.id))
+      (board[row][col].vertices[(edge+1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge+1) % 6] === player.id) ||
+      (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
+      (board[row][col].vertices[(edge+1) % 6] === Construction.City && board[row][col].vertexOwner[(edge+1) % 6] === player.id))
+      return true;
+    */
+    if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
         return true;
+    }
     return false;
 }
 function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
@@ -196,14 +206,19 @@ function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
         if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
             has_land = true;
     }
-    if (has_land === false)
-        return false;
-    // needs adjacent road to build on if not initial settlements
-    if (!initial && !hasAdjacentRoad(player, board, row, col, vertex))
+    if (has_land === false && gameLogic.isSea(row, col))
         return false;
     // new settlement has to be 2+ vertices away from another settlement/city
     if (hasNearbyConstruct(board, row, col, vertex))
         return false;
+    //If it's during init build and it's first building, just do it
+    if (initial && player.construction.reduce(function (a, b) { return a + b; }) === 1) {
+        return true;
+    }
+    // needs adjacent road to build
+    if (!hasAdjacentRoad(player, board, row, col, vertex)) {
+        return false;
+    }
     return true;
 }
 function canUpgradeSettlement(player, board, row, col, vertex) {
@@ -230,9 +245,9 @@ function hasAdjacentRoad(player, board, row, col, vertex) {
     for (var i = 0; i < hexes.length; i++) {
         if (hexes[i].length === 0)
             continue;
-        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][3]] === player.id)
+        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][2]] === player.id)
             return true;
-        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][3] + 1) % 6] === player.id)
+        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][2] + 1) % 6] === player.id)
             return true;
     }
     return false;
@@ -406,6 +421,34 @@ function findRoadSubLength(player, board, row, col, vertex, traversed) {
         }
     }
     var _c, _d;
+}
+/**
+ * Helper functions for making next state
+ */
+function getNextStateToBuildRoad(board, row, col, e, idx) {
+    var _a = getHexAdjcentToEdge(row, col, e), adjRow = _a[0], adjCol = _a[1];
+    var adjEdge = (e + 3) % 6;
+    board[row][col].edges[e] = idx;
+    board[adjRow][adjCol].edges[adjEdge] = idx;
+    return board;
+}
+function getNextStateToBuild(board, buildingMove) {
+    var row = buildingMove.hexRow;
+    var col = buildingMove.hexCol;
+    var num = buildingMove.vertexOrEdge;
+    var idx = buildingMove.playerIdx;
+    if (buildingMove.consType === Construction.Road) {
+        return getNextStateToBuildRoad(board, row, col, num, idx);
+    }
+    var hexes = getHexesAdjacentToVertex(row, col, num);
+    for (var i = 0; i < hexes.length; i++) {
+        var _a = hexes[i], r = _a[0], c = _a[1], v = _a[2];
+        board[r][c].vertexOwner[v] = idx;
+        board[r][c].vertices[v] = buildingMove.consType;
+    }
+    board[row][col].vertexOwner[num] = idx;
+    board[row][col].vertices[num] = buildingMove.consType;
+    return board;
 }
 /**
  * Constants definitions
