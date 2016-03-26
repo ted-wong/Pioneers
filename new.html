@@ -180,7 +180,7 @@
                 <strong>Dev Cards</strong> x {{game.getNumDevCards(3)}}
               </li>
             </ul>
-            <button class="btn btn-danger dice-and-end" ng-if="game.showEndTurn()">End Turn</button>
+            <button class="btn btn-danger dice-and-end" ng-if="game.showEndTurn()" ng-click="game.endTurn()">End Turn</button>
             <img src="imgs/dice1.png" alt="imgs/dice2.png" class="dice-and-end dice"
                  ng-if="game.showDice()" ng-click="game.onRollDice()"/>
           </div>
@@ -389,12 +389,12 @@
             <button class="btn btn-success btn-xs"
                     ng-click="game.onTradeWithBankStart()"
                     ng-if="game.showTradeButton()">
-              Trade With Bank
+              Trade with Bank
             </button>
             <button class="btn btn-success btn-xs"
                     ng-click="game.whenBuyDevCard()"
                     ng-if="game.showBuyDevCardButton()">
-              Buy a Dev. Card
+              Buy a Development Card
             </button>
           </div>
           <div class="panel-body">

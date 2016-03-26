@@ -123,115 +123,6 @@ function hasSufficientConstructsToBuild(player, construct, bank) {
     }
     return false;
 }
-function canBuildRoadLegally(player, board, row, col, edge, initial) {
-    if (edge < 0 || edge > 5)
-        return false;
-    if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS)
-        return false;
-    // edge must be empty - no other roads
-    if (board[row][col].edges[edge] !== -1)
-        return false;
-    var adjHex = getHexAdjcentToEdge(row, col, edge);
-    if (adjHex.length === 0)
-        return false;
-    // both hexes cannot be water
-    if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
-        return false;
-    }
-    //If it's first build instruction during INIT_BUILD, just build it
-    if (initial && player.construction.reduce(function (a, b) { return a + b; }) === 1) {
-        return true;
-    }
-    // player owns adjacent road in current hex or adjacent road in adjacent hex
-    if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id ||
-        board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id ||
-        board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id ||
-        board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id) {
-        // check if other player's settlement/city is inbetween existing road and proposed road
-        // cannot build through player's settlement/city, even with connecting road
-        // building CC on same hex
-        if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[edge] === Construction.Settlement ||
-                board[row][col].vertices[edge] === Construction.City) &&
-                board[row][col].vertexOwner[edge] !== player.id)) {
-            return false;
-        }
-        // building CW on same hex
-        if (board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
-                board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
-                board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
-            return false;
-        }
-        // building CC on adj. hex
-        if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[edge] === Construction.Settlement ||
-                board[row][col].vertices[edge] === Construction.City) &&
-                board[row][col].vertexOwner[edge] !== player.id)) {
-            return false;
-        }
-        // building CW on adj. hex
-        if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id &&
-            ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
-                board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
-                board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
-            return false;
-        }
-        return true;
-    }
-    /*
-    if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) ||
-      (board[row][col].vertices[(edge+1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge+1) % 6] === player.id) ||
-      (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
-      (board[row][col].vertices[(edge+1) % 6] === Construction.City && board[row][col].vertexOwner[(edge+1) % 6] === player.id))
-      return true;
-    */
-    if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
-        return true;
-    }
-    return false;
-}
-function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
-    if (vertex < 0 || vertex > 5)
-        return false;
-    if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
-        return false;
-    // proposed vertex must be empty - no other settlement/city
-    if (board[row][col].vertices[vertex] !== -1)
-        return false;
-    // TODO: is Water sufficient with "ANY" being allowed?
-    var has_land = false;
-    var hexes = getHexesAdjacentToVertex(row, col, vertex);
-    for (var i = 0; i < hexes.length; i++) {
-        if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
-            has_land = true;
-    }
-    if (has_land === false && gameLogic.isSea(row, col))
-        return false;
-    // new settlement has to be 2+ vertices away from another settlement/city
-    if (hasNearbyConstruct(board, row, col, vertex))
-        return false;
-    //If it's during init build and it's first building, just do it
-    if (initial && player.construction.reduce(function (a, b) { return a + b; }) === 1) {
-        return true;
-    }
-    // needs adjacent road to build
-    if (!hasAdjacentRoad(player, board, row, col, vertex)) {
-        return false;
-    }
-    return true;
-}
-function canUpgradeSettlement(player, board, row, col, vertex) {
-    if (vertex < 0 || vertex > 5)
-        return false;
-    if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
-        return false;
-    // proposed vertex must be empty - no other settlement/city
-    if (board[row][col].vertices[vertex] === Construction.Settlement &&
-        board[row][col].vertexOwner[vertex] === player.id)
-        return true;
-    return false;
-}
 // *****************
 // Helper functions for player-based functions
 // *****************
@@ -332,7 +223,7 @@ function getHexesAdjacentToVertexUnfiltered(row, col, vertex) {
     if (vertex === 5 && row % 2 === 1)
         return [[row + 1, col, 1], [row, col + 1, 3]];
     // default - shouldn't happen though
-    return [[]];
+    return [];
 }
 function getHexesAdjacentToVertex(row, col, vertex) {
     var _a = getHexesAdjacentToVertexUnfiltered(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
@@ -340,7 +231,7 @@ function getHexesAdjacentToVertex(row, col, vertex) {
     if (hex1[0] < 0 || hex1[1] < 0 || hex1[0] >= gameLogic.ROWS || hex1[1] >= gameLogic.COLS) {
         // both hexes oob
         if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
-            return [[]];
+            return [];
         }
         return [hex2];
     }

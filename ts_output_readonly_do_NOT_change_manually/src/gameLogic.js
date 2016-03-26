@@ -210,7 +210,7 @@ var gameLogic;
             devCardsPlayed: false,
             delta: null,
             moveType: MoveType.INIT_BUILD,
-            eventIdx: gameLogic.NUM_PLAYERS - 1,
+            eventIdx: 0,
             building: null
         };
     }
@@ -292,6 +292,128 @@ var gameLogic;
             throw new Error('Cannot build city legally!');
         }
     }
+    function canBuildRoadLegally(player, board, row, col, edge, initial) {
+        if (edge < 0 || edge > 5)
+            return false;
+        if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS)
+            return false;
+        // edge must be empty - no other roads
+        if (board[row][col].edges[edge] !== -1)
+            return false;
+        var adjHex = getHexAdjcentToEdge(row, col, edge);
+        if (adjHex.length === 0)
+            return false;
+        // both hexes cannot be water
+        if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
+            return false;
+        }
+        //	//If it's first build instruction during INIT_BUILD, just build it
+        //	if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 1) {
+        //      return true;
+        //	}
+        // player owns adjacent road in current hex or adjacent road in adjacent hex
+        if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id ||
+            board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id ||
+            board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id ||
+            board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id) {
+            // check if other player's settlement/city is inbetween existing road and proposed road
+            // cannot build through player's settlement/city, even with connecting road
+            // building CC on same hex
+            if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[edge] === Construction.Settlement ||
+                    board[row][col].vertices[edge] === Construction.City) &&
+                    board[row][col].vertexOwner[edge] !== player.id)) {
+                return false;
+            }
+            // building CW on same hex
+            if (board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
+                    board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
+                    board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
+                return false;
+            }
+            // building CC on adj. hex
+            if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[edge] === Construction.Settlement ||
+                    board[row][col].vertices[edge] === Construction.City) &&
+                    board[row][col].vertexOwner[edge] !== player.id)) {
+                return false;
+            }
+            // building CW on adj. hex
+            if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
+                    board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
+                    board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
+                return false;
+            }
+            return true;
+        }
+        /*
+        if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) ||
+          (board[row][col].vertices[(edge+1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge+1) % 6] === player.id) ||
+          (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
+          (board[row][col].vertices[(edge+1) % 6] === Construction.City && board[row][col].vertexOwner[(edge+1) % 6] === player.id))
+          return true;
+        */
+        if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
+            return true;
+        }
+        return false;
+    }
+    gameLogic.canBuildRoadLegally = canBuildRoadLegally;
+    function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
+        if (vertex < 0 || vertex > 5)
+            return false;
+        if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
+            return false;
+        // proposed vertex must be empty - no other settlement/city
+        if (board[row][col].vertices[vertex] !== -1)
+            return false;
+        // TODO: is Water sufficient with "ANY" being allowed?
+        var has_land = false;
+        if (board[row][col].label != Resource.Water)
+            has_land = true;
+        var hexes = getHexesAdjacentToVertex(row, col, vertex);
+        for (var i = 0; i < hexes.length; i++) {
+            if (hexes[i] === null)
+                continue;
+            if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
+                has_land = true;
+        }
+        if (has_land === false)
+            return false;
+        // new settlement has to be 2+ vertices away from another settlement/city
+        if (hasNearbyConstruct(board, row, col, vertex))
+            return false;
+        for (var i = 0; i < hexes.length; i++) {
+            if (hexes[i] === null)
+                continue;
+            if (hasNearbyConstruct(board, hexes[i][0], hexes[i][1], hexes[i][2]))
+                return false;
+        }
+        //If it's during init build and it's first building, just do it
+        if (initial) {
+            return true;
+        }
+        // needs adjacent road to build
+        if (!hasAdjacentRoad(player, board, row, col, vertex)) {
+            return false;
+        }
+        return true;
+    }
+    gameLogic.canBuildSettlementLegally = canBuildSettlementLegally;
+    function canUpgradeSettlement(player, board, row, col, vertex) {
+        if (vertex < 0 || vertex > 5)
+            return false;
+        if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
+            return false;
+        // proposed vertex must be empty - no other settlement/city
+        if (board[row][col].vertices[vertex] === Construction.Settlement &&
+            board[row][col].vertexOwner[vertex] === player.id)
+            return true;
+        return false;
+    }
+    gameLogic.canUpgradeSettlement = canUpgradeSettlement;
     /**
     * XXX: Assuming UI will disable this feature when bank has no dev cards
     */
@@ -494,7 +616,7 @@ var gameLogic;
             throw new Error('Not your turn to play!');
         }
         var stateBeforeMove = getStateBeforeMove(move);
-        if (stateBeforeMove.eventIdx !== gameLogic.NUM_PLAYERS - 1) {
+        if (stateBeforeMove.eventIdx !== 0) {
             throw new Error('Initial construction not finished!');
         }
         if (stateBeforeMove.moveType !== MoveType.INIT_BUILD) {
@@ -609,8 +731,8 @@ var gameLogic;
                 stateAfterMove.players[playerIdx].construction[Construction.Road]++;
                 break;
             case Construction.Settlement:
-                if (move.currState.players[playerIdx].construction[Construction.Settlement] >= 1) {
-                    throw new Error('Can only build 1 settlement during initialization!');
+                if (move.currState.players[playerIdx].construction[Construction.Settlement] >= 2) {
+                    throw new Error('Can only build 2 settlements during initialization!');
                 }
                 stateAfterMove.building.consType = Construction.Settlement;
                 stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
@@ -619,10 +741,22 @@ var gameLogic;
             default:
                 throw new Error('Can only build road/settlement during initialization!');
         }
-        //Advance eventIdx
+        //Update eventIdx - does circle back for 2 rounds of settlement/road building
         var player = stateAfterMove.players[playerIdx];
-        if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 2) {
-            stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + (gameLogic.NUM_PLAYERS - 1)) % gameLogic.NUM_PLAYERS;
+        if (player.construction[Construction.Settlement] > player.construction[Construction.Road]) {
+            stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+        }
+        else if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 1) {
+            if (playerIdx === gameLogic.NUM_PLAYERS - 1)
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+            else
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx + 1;
+        }
+        else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 2) {
+            if (playerIdx === 0)
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+            else
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx - 1;
         }
         else {
             stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
@@ -662,6 +796,9 @@ var gameLogic;
                 if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
                     throw new Error('Invalid building instruction!');
                 }
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.Road)) {
+                    throw new Error('Insufficient resources to build a road!');
+                }
                 stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
                 stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
                 stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
@@ -682,8 +819,7 @@ var gameLogic;
                     throw new Error('Invalid building instruction!');
                 }
                 player = stateAfterMove.players[playerIdx];
-                if (player.resources[Resource.Brick] <= 0 || player.resources[Resource.Lumber] <= 0 ||
-                    player.resources[Resource.Wool] <= 0 || player.resources[Resource.Grain] <= 0) {
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.Settlement)) {
                     throw new Error('Insufficient resources to build a settlement!');
                 }
                 stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
@@ -703,8 +839,8 @@ var gameLogic;
                     throw new Error('Invalid building instruction!');
                 }
                 player = stateAfterMove.players[playerIdx];
-                if (player.resources[Resource.Ore] <= 3 || player.resources[Resource.Grain] <= 2) {
-                    throw new Error('Insufficient resources to build a city!');
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.City)) {
+                    throw new Error('Insufficient resources to upgrade a settlement to a city!');
                 }
                 stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
                 stateAfterMove.players[playerIdx].resources[Resource.Ore] -= 3;
@@ -717,8 +853,7 @@ var gameLogic;
                     throw new Error('No development cards in bank right now!');
                 }
                 player = stateAfterMove.players[playerIdx];
-                if (player.resources[Resource.Ore] <= 0 || player.resources[Resource.Wool] <= 0 ||
-                    player.resources[Resource.Grain] <= 0) {
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.DevCard)) {
                     throw new Error('Insufficient resources to build a development card!');
                 }
                 //State transition to devCards

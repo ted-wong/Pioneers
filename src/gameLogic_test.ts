@@ -130,7 +130,7 @@ describe('Construction Tests', function() {
       let state: IState = gameLogic.getInitialState();
       let player: Player = state.players[0];
       
-      if (!canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+      if (!gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
         throw new Error('Cannot build initial settlement legally at legal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
@@ -142,7 +142,7 @@ describe('Construction Tests', function() {
       let state: IState = gameLogic.getInitialState();
       let player: Player = state.players[0];
       
-      if (canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+      if (gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
         throw new Error('Can build initial settlement legally at illegal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
@@ -164,7 +164,7 @@ describe('Construction Tests', function() {
       state.board[4][2].vertices[1] = 1;
       state.board[4][2].vertexOwner[1] = 0;
       
-      if (canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+      if (gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
         throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
@@ -190,7 +190,7 @@ describe('Construction Tests', function() {
       state.board[4][2].vertices[1] = 1;
       state.board[4][2].vertexOwner[1] = 0;
       
-      if (!canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+      if (!gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
         throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
@@ -223,7 +223,7 @@ describe('Construction Tests', function() {
       state.board[3][3].edges[2] = 0;
       state.board[2][2].edges[5] = 0;
       
-      if (!canBuildSettlementLegally(player, state.board, x, y, v, false)) {
+      if (!gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, false)) {
         throw new Error('Cannot build settlement legally at legal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
@@ -246,7 +246,7 @@ describe('Construction Tests', function() {
       state.board[3][3].edges[3] = 0;
       state.board[3][2].edges[0] = 0;
       
-      if (!canBuildRoadLegally(player, state.board, x, y, v, false)) {
+      if (!gameLogic.canBuildRoadLegally(player, state.board, x, y, v, false)) {
         throw new Error('Cannot build road legally at (' + x + ', ' + y + '): ' + v + '!');
       }
     }
@@ -267,7 +267,7 @@ describe('Construction Tests', function() {
       state.board[3][3].edges[3] = 0;
       state.board[3][2].edges[0] = 0;
       
-      if (canBuildRoadLegally(player, state.board, x, y, v, true)) {
+      if (gameLogic.canBuildRoadLegally(player, state.board, x, y, v, true)) {
         throw new Error('Can build road legally at (' + x + ', ' + y + '): ' + v + '!');
       }
     }
@@ -284,7 +284,7 @@ describe('Construction Tests', function() {
       state.board[3][3].vertices[3] = 1;
       state.board[3][3].vertexOwner[3] = 0;
             
-      if (!canBuildRoadLegally(player, state.board, x, y, v, true)) {
+      if (!gameLogic.canBuildRoadLegally(player, state.board, x, y, v, true)) {
         throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
       }
     }
