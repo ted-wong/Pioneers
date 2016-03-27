@@ -739,7 +739,7 @@ module game {
       onOkClicked = onBuild;
       infoModalHeader = 'Building';
       infoModalMsg = 'Are you sure you want to build a settlement?';
-	} else if (state.board[row][col].vertices[vertexNum] === 2 && state.board[row][col].vertexOwner[vertexNum] === mockPlayerIdx) {
+	} else if (state.board[row][col].vertices[vertexNum] === Construction.Settlement && state.board[row][col].vertexOwner[vertexNum] === mockPlayerIdx) {
       buildTarget = Construction.City;
       buildRow = row;
       buildCol = col;

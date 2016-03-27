@@ -677,7 +677,7 @@ var game;
             game.infoModalHeader = 'Building';
             game.infoModalMsg = 'Are you sure you want to build a settlement?';
         }
-        else if (game.state.board[row][col].vertices[vertexNum] === 2 && game.state.board[row][col].vertexOwner[vertexNum] === game.mockPlayerIdx) {
+        else if (game.state.board[row][col].vertices[vertexNum] === Construction.Settlement && game.state.board[row][col].vertexOwner[vertexNum] === game.mockPlayerIdx) {
             buildTarget = Construction.City;
             buildRow = row;
             buildCol = col;

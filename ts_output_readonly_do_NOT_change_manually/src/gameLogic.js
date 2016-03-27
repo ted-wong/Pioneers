@@ -65,6 +65,37 @@ var gameLogic;
         }
         return board;
     }
+    function assignRollNum2(board) {
+        var visited = [];
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            visited[i] = [];
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                visited[i][j] = i === 0 || j === 0 || i === gameLogic.ROWS - 1 || j === gameLogic.COLS - 1;
+            }
+        }
+        var dir = [
+            [1, 0],
+            [0, 1],
+            [-1, 0],
+            [0, -1] //left
+        ];
+        var r = 1;
+        var c = 1;
+        var tokenPtr = 0;
+        var dirPtr = 0;
+        while (!visited[r][c]) {
+            visited[r][c] = true;
+            if (board[r][c].label !== Resource.Water && board[r][c].label !== Resource.Dust) {
+                board[r][c].rollNum = tokens[tokenPtr++];
+            }
+            if (visited[r + dir[dirPtr][0]][c + dir[dirPtr][1]]) {
+                dirPtr = (dirPtr + 1) % dir.length;
+            }
+            r += dir[dirPtr][0];
+            c += dir[dirPtr][1];
+        }
+        return board;
+    }
     function assignHarbor(row, col) {
         for (var i = 0; i < harborPos.length; i++) {
             if (harborPos[i][0] === row && harborPos[i][1] === col) {
@@ -623,24 +654,6 @@ var gameLogic;
         }
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.moveType = MoveType.INIT;
-        /*
-            //Generate initial resources
-            for (let i = 0; i < ROWS; i++) {
-              for (let j = 0; j < COLS; j++) {
-                let resource = stateAfterMove.board[i][j].label;
-                if (resource >= Resource.SIZE) {
-                  continue;
-                }
-                for (let v = 0; v < 6; v++) {
-                  if (stateAfterMove.board[i][j].vertices[v] !== -1) {
-                    let idx = stateAfterMove.board[i][j].vertexOwner[v];
-                    stateAfterMove.players[idx].resources[resource]++;
-                    stateAfterMove.bank.resources[resource]--;
-                  }
-                }
-              }
-            }
-        */
         return {
             endMatchScores: null,
             turnIndexAfterMove: 0,
@@ -802,6 +815,8 @@ var gameLogic;
         var stateBeforeMove = getStateBeforeMove(move);
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.players[playerIdx].construction[buildingMove.consType]++;
+        if (buildingMove.consType === Construction.City)
+            stateAfterMove.players[playerIdx].construction[Construction.Settlement]--;
         stateAfterMove.building = {
             consType: buildingMove.consType,
             hexRow: buildingMove.hexRow,
@@ -819,6 +834,9 @@ var gameLogic;
                 if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.Road)) {
                     throw new Error('Insufficient resources to build a road!');
                 }
+                if (stateAfterMove.players[playerIdx].construction[Construction.Road] >= 15) {
+                    throw new Error('No more roads to build!');
+                }
                 stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
                 stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
                 stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
@@ -826,7 +844,7 @@ var gameLogic;
                 stateAfterMove.bank.resources[Resource.Brick]++;
                 stateAfterMove.bank.resources[Resource.Lumber]++;
                 //State transition to longest road awards
-                if (stateAfterMove.players[playerIdx].construction[Construction.Road] > stateBeforeMove.awards.longestRoad.length) {
+                if (getLongestRoad(stateAfterMove.players[playerIdx], stateAfterMove.board) > stateBeforeMove.awards.longestRoad.length) {
                     stateAfterMove.awards.longestRoad = {
                         player: playerIdx,
                         length: stateAfterMove.players[playerIdx].construction[Construction.Road]
@@ -1185,6 +1203,36 @@ var gameLogic;
             throw new Error('Must roll the dices!');
         }
         var stateBeforeMove = getStateBeforeMove(move);
+        // lowering road length if current player affected other players' longest road
+        // can happen by building road to get longest, or by building settlement to break other person's road
+        for (var i = turnIdx; i < turnIdx + gameLogic.NUM_PLAYERS; i++) {
+            var j = i % gameLogic.NUM_PLAYERS;
+            if (stateBeforeMove.awards.longestRoad.player === j &&
+                getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) < stateBeforeMove.awards.longestRoad.length) {
+                if (getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) >= 5) {
+                    stateBeforeMove.awards.longestRoad = {
+                        player: j,
+                        length: getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board)
+                    };
+                }
+                else {
+                    stateBeforeMove.awards.longestRoad = {
+                        player: -1,
+                        length: 4
+                    };
+                }
+            }
+        }
+        // determine new award winner for longest road
+        for (var i = turnIdx; i < turnIdx + gameLogic.NUM_PLAYERS; i++) {
+            var j = i % gameLogic.NUM_PLAYERS;
+            if (getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) > stateBeforeMove.awards.longestRoad.length) {
+                stateBeforeMove.awards.longestRoad = {
+                    player: j,
+                    length: getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board)
+                };
+            }
+        }
         var scores = countScores(stateBeforeMove);
         var hasWinner = false;
         for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
