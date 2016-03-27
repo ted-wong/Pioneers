@@ -757,34 +757,36 @@ module gameLogic {
 
     if (rollNum !== 7) {
       //State transition to resources production
-      for (let i = 0; i < ROWS; i++) {
-        for (let j = 0; j < COLS; j++) {
-          if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
-              stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
-            continue;
-          }
-
-          for (let v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
-            if (stateBeforeMove.board[i][j].vertexOwner[v] === -1) {
+	  for (let pIndex = turnIdx; pIndex < turnIdx + NUM_PLAYERS; pIndex++) {
+	    var playerIndex = pIndex % NUM_PLAYERS;
+    	for (let i = 0; i < ROWS; i++) {
+          for (let j = 0; j < COLS; j++) {
+        	if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
+            	stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
               continue;
-            }
+        	}
 
-            let owner = stateBeforeMove.board[i][j].vertexOwner[v];
-            let resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
-            let toAdd : number = 0;
-            switch (stateBeforeMove.board[i][j].vertices[v]) {
-              case Construction.City:
-                toAdd = resourceInBank < 2 ? resourceInBank : 2;
-                break;
-              case Construction.Settlement:
-                toAdd = resourceInBank < 1 ? resourceInBank : 1;
-                break;
-            }
-            stateAfterMove.players[owner].resources[stateBeforeMove.board[i][j].label] += toAdd;
-            stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
+        	for (let v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
+              if (stateBeforeMove.board[i][j].vertexOwner[v] !== playerIndex) {
+            	continue;
+              }
+
+              let resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
+              let toAdd : number = 0;
+              switch (stateBeforeMove.board[i][j].vertices[v]) {
+            	case Construction.City:
+                  toAdd = resourceInBank < 2 ? resourceInBank : 2;
+                  break;
+            	case Construction.Settlement:
+                  toAdd = resourceInBank < 1 ? resourceInBank : 1;
+                  break;
+              }
+              stateAfterMove.players[playerIndex].resources[stateBeforeMove.board[i][j].label] += toAdd;
+              stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
+        	}
           }
-        }
-      }
+    	}
+	  }
     } else {
       //Robber event will start
       stateAfterMove.eventIdx = turnIdx;

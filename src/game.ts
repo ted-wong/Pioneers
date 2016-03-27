@@ -636,8 +636,6 @@ module game {
 	var dx3 = cx - x2;
 	var dy3 = cy - y2;
 
-    console.log("at " + row + ", " + col + ":" + start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3);
-
     return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
   }
 

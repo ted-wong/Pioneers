@@ -665,29 +665,31 @@ var gameLogic;
         var rollNum = stateAfterMove.dices[0] + stateAfterMove.dices[1];
         if (rollNum !== 7) {
             //State transition to resources production
-            for (var i = 0; i < gameLogic.ROWS; i++) {
-                for (var j = 0; j < gameLogic.COLS; j++) {
-                    if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
-                        stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
-                        continue;
-                    }
-                    for (var v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
-                        if (stateBeforeMove.board[i][j].vertexOwner[v] === -1) {
+            for (var pIndex = turnIdx; pIndex < turnIdx + gameLogic.NUM_PLAYERS; pIndex++) {
+                var playerIndex = pIndex % gameLogic.NUM_PLAYERS;
+                for (var i = 0; i < gameLogic.ROWS; i++) {
+                    for (var j = 0; j < gameLogic.COLS; j++) {
+                        if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
+                            stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
                             continue;
                         }
-                        var owner = stateBeforeMove.board[i][j].vertexOwner[v];
-                        var resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
-                        var toAdd = 0;
-                        switch (stateBeforeMove.board[i][j].vertices[v]) {
-                            case Construction.City:
-                                toAdd = resourceInBank < 2 ? resourceInBank : 2;
-                                break;
-                            case Construction.Settlement:
-                                toAdd = resourceInBank < 1 ? resourceInBank : 1;
-                                break;
+                        for (var v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
+                            if (stateBeforeMove.board[i][j].vertexOwner[v] !== playerIndex) {
+                                continue;
+                            }
+                            var resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
+                            var toAdd = 0;
+                            switch (stateBeforeMove.board[i][j].vertices[v]) {
+                                case Construction.City:
+                                    toAdd = resourceInBank < 2 ? resourceInBank : 2;
+                                    break;
+                                case Construction.Settlement:
+                                    toAdd = resourceInBank < 1 ? resourceInBank : 1;
+                                    break;
+                            }
+                            stateAfterMove.players[playerIndex].resources[stateBeforeMove.board[i][j].label] += toAdd;
+                            stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
                         }
-                        stateAfterMove.players[owner].resources[stateBeforeMove.board[i][j].label] += toAdd;
-                        stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
                     }
                 }
             }
