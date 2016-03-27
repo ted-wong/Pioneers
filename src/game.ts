@@ -78,6 +78,7 @@ module game {
   export let wantedNum: number = 0;
   let tradeWithBank: boolean = false;
   
+  // needed for initial building phase
   export let initialBuilding: boolean = true;
   let initBuildingReverse: boolean = false;
   
@@ -286,10 +287,6 @@ module game {
     myIndex = params.yourPlayerIndex;
     mockPlayerIdx = state.eventIdx === -1 ? move.turnIndexAfterMove : state.eventIdx;
     canMakeMove = checkCanMakeMove();
-
-
-    console.log("turn idx = " + move.turnIndexAfterMove + " vs " + state.eventIdx);
-
 
     updateAlert();
     cleanupInfoModal();
@@ -712,15 +709,28 @@ module game {
   }
 
   export function onClickVertex(row: number, col: number, vertexNum: number) {
-    buildTarget = Construction.Settlement;
-    buildRow = row;
-    buildCol = col;
-    buildNum = vertexNum;
+    
+	if (state.board[row][col].vertices[vertexNum] === -1) {
+      buildTarget = Construction.Settlement;
+      buildRow = row;
+      buildCol = col;
+      buildNum = vertexNum;
 
-    showInfoModal = true;
-    onOkClicked = onBuild;
-    infoModalHeader = 'Building';
-    infoModalMsg = 'Are you sure to build a settlement?';
+      showInfoModal = true;
+      onOkClicked = onBuild;
+      infoModalHeader = 'Building';
+      infoModalMsg = 'Are you sure to build a settlement?';
+	} else if (state.board[row][col].vertices[vertexNum] === 2 && state.board[row][col].vertexOwner[vertexNum] === mockPlayerIdx) {
+      buildTarget = Construction.City;
+      buildRow = row;
+      buildCol = col;
+      buildNum = vertexNum;
+
+      showInfoModal = true;
+      onOkClicked = onBuild;
+      infoModalHeader = 'Building';
+      infoModalMsg = 'Are you sure to upgrade this settlement to a city?';
+	}
   }
 
   export function onBuild() {
@@ -835,6 +845,17 @@ module game {
   export function showEndTurn(): boolean {
     return state.moveType !== MoveType.INIT_BUILD && state.diceRolled;
   }
+
+  export function endTurn(): void {
+    let turnMove: TurnMove = {
+	  moveType: MoveType.INIT,
+	  playerIdx: mockPlayerIdx,
+	  currState: angular.copy(state)
+	}
+    let nextMove: IMove = gameLogic.onEndTurn(turnMove, move.turnIndexAfterMove);
+	moveService.makeMove(nextMove);
+  }
+
 
   export function getDicesNum(): number {
     return state.dices.reduce(function(a, b) {return a+b;});

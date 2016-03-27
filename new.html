@@ -341,7 +341,8 @@
                       ng-attr-stroke="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
                       stroke-width="5"
                       ng-attr-fill="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
-                      ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"/>
+                      ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"
+                      ng-click="game.onClickVertex(row, col, vertex)"/>
               </g>
             </g>
           </g>

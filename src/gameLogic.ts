@@ -696,7 +696,6 @@ module gameLogic {
   }
 
   export function onGameStart(move: TurnMove, turnIdx: number): IMove {
-    console.log(move.playerIdx + ' ' + turnIdx);
     if (move.playerIdx !== turnIdx) {
       throw new Error('Not your turn to play!');
     }
@@ -712,6 +711,8 @@ module gameLogic {
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
 
     stateAfterMove.moveType = MoveType.INIT;
+
+/*
     //Generate initial resources
     for (let i = 0; i < ROWS; i++) {
       for (let j = 0; j < COLS; j++) {
@@ -728,7 +729,7 @@ module gameLogic {
         }
       }
     }
-
+*/
     return {
       endMatchScores: null,
       turnIndexAfterMove: 0,
@@ -839,15 +840,35 @@ module gameLogic {
         throw new Error('Can only build road/settlement during initialization!');
     }
 
+
     //Update eventIdx - does circle back for 2 rounds of settlement/road building
     let player = stateAfterMove.players[playerIdx];
-	if (player.construction[Construction.Settlement] > player.construction[Construction.Road]) {
+
+	if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 0) {
       stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
     } else if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 1) {
 	  if (playerIdx === NUM_PLAYERS-1) 
 	    stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
       else
         stateAfterMove.eventIdx = stateBeforeMove.eventIdx + 1;
+    } else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 1) {
+
+      // assign resources based on second settlement
+	  let hexes = getHexesAdjacentToVertex(buildingMove.hexRow, buildingMove.hexCol, buildingMove.vertexOrEdge);
+	  let resource = stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].label;
+	  if (resource < Resource.SIZE) {
+		stateAfterMove.players[playerIdx].resources[resource]++;
+		stateAfterMove.bank.resources[resource]--;
+	  }
+	  for (var i = 0; i < hexes.length; i++) {
+		let resource = stateAfterMove.board[hexes[i][0]][hexes[i][1]].label;
+		if (resource < Resource.SIZE) {
+		  stateAfterMove.players[playerIdx].resources[resource]++;
+		  stateAfterMove.bank.resources[resource]--;
+		}
+	  }
+      stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+	
     } else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 2) {
 	  if (playerIdx === 0)
 	    stateAfterMove.eventIdx = stateBeforeMove.eventIdx;

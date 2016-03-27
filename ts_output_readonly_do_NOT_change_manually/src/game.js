@@ -61,6 +61,7 @@ var game;
     var wantedResource = -1;
     game.wantedNum = 0;
     var tradeWithBank = false;
+    // needed for initial building phase
     game.initialBuilding = true;
     var initBuildingReverse = false;
     function getPlayerInfo(playerIndex) {
@@ -260,7 +261,6 @@ var game;
         game.myIndex = params.yourPlayerIndex;
         game.mockPlayerIdx = game.state.eventIdx === -1 ? game.move.turnIndexAfterMove : game.state.eventIdx;
         game.canMakeMove = checkCanMakeMove();
-        console.log("turn idx = " + game.move.turnIndexAfterMove + " vs " + game.state.eventIdx);
         updateAlert();
         cleanupInfoModal();
         switch (game.state.moveType) {
@@ -655,14 +655,26 @@ var game;
     }
     game.onMouseOverVertex = onMouseOverVertex;
     function onClickVertex(row, col, vertexNum) {
-        buildTarget = Construction.Settlement;
-        buildRow = row;
-        buildCol = col;
-        buildNum = vertexNum;
-        game.showInfoModal = true;
-        game.onOkClicked = onBuild;
-        game.infoModalHeader = 'Building';
-        game.infoModalMsg = 'Are you sure to build a settlement?';
+        if (game.state.board[row][col].vertices[vertexNum] === -1) {
+            buildTarget = Construction.Settlement;
+            buildRow = row;
+            buildCol = col;
+            buildNum = vertexNum;
+            game.showInfoModal = true;
+            game.onOkClicked = onBuild;
+            game.infoModalHeader = 'Building';
+            game.infoModalMsg = 'Are you sure to build a settlement?';
+        }
+        else if (game.state.board[row][col].vertices[vertexNum] === 2 && game.state.board[row][col].vertexOwner[vertexNum] === game.mockPlayerIdx) {
+            buildTarget = Construction.City;
+            buildRow = row;
+            buildCol = col;
+            buildNum = vertexNum;
+            game.showInfoModal = true;
+            game.onOkClicked = onBuild;
+            game.infoModalHeader = 'Building';
+            game.infoModalMsg = 'Are you sure to upgrade this settlement to a city?';
+        }
     }
     game.onClickVertex = onClickVertex;
     function onBuild() {
@@ -771,6 +783,16 @@ var game;
         return game.state.moveType !== MoveType.INIT_BUILD && game.state.diceRolled;
     }
     game.showEndTurn = showEndTurn;
+    function endTurn() {
+        var turnMove = {
+            moveType: MoveType.INIT,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state)
+        };
+        var nextMove = gameLogic.onEndTurn(turnMove, game.move.turnIndexAfterMove);
+        moveService.makeMove(nextMove);
+    }
+    game.endTurn = endTurn;
     function getDicesNum() {
         return game.state.dices.reduce(function (a, b) { return a + b; });
     }

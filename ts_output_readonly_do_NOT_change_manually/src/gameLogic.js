@@ -611,7 +611,6 @@ var gameLogic;
         return ret;
     }
     function onGameStart(move, turnIdx) {
-        console.log(move.playerIdx + ' ' + turnIdx);
         if (move.playerIdx !== turnIdx) {
             throw new Error('Not your turn to play!');
         }
@@ -624,22 +623,24 @@ var gameLogic;
         }
         var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
         stateAfterMove.moveType = MoveType.INIT;
-        //Generate initial resources
-        for (var i = 0; i < gameLogic.ROWS; i++) {
-            for (var j = 0; j < gameLogic.COLS; j++) {
-                var resource = stateAfterMove.board[i][j].label;
+        /*
+            //Generate initial resources
+            for (let i = 0; i < ROWS; i++) {
+              for (let j = 0; j < COLS; j++) {
+                let resource = stateAfterMove.board[i][j].label;
                 if (resource >= Resource.SIZE) {
-                    continue;
+                  continue;
                 }
-                for (var v = 0; v < 6; v++) {
-                    if (stateAfterMove.board[i][j].vertices[v] !== -1) {
-                        var idx = stateAfterMove.board[i][j].vertexOwner[v];
-                        stateAfterMove.players[idx].resources[resource]++;
-                        stateAfterMove.bank.resources[resource]--;
-                    }
+                for (let v = 0; v < 6; v++) {
+                  if (stateAfterMove.board[i][j].vertices[v] !== -1) {
+                    let idx = stateAfterMove.board[i][j].vertexOwner[v];
+                    stateAfterMove.players[idx].resources[resource]++;
+                    stateAfterMove.bank.resources[resource]--;
+                  }
                 }
+              }
             }
-        }
+        */
         return {
             endMatchScores: null,
             turnIndexAfterMove: 0,
@@ -743,7 +744,7 @@ var gameLogic;
         }
         //Update eventIdx - does circle back for 2 rounds of settlement/road building
         var player = stateAfterMove.players[playerIdx];
-        if (player.construction[Construction.Settlement] > player.construction[Construction.Road]) {
+        if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 0) {
             stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
         }
         else if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 1) {
@@ -751,6 +752,23 @@ var gameLogic;
                 stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
             else
                 stateAfterMove.eventIdx = stateBeforeMove.eventIdx + 1;
+        }
+        else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 1) {
+            // assign resources based on second settlement
+            var hexes = getHexesAdjacentToVertex(buildingMove.hexRow, buildingMove.hexCol, buildingMove.vertexOrEdge);
+            var resource = stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].label;
+            if (resource < Resource.SIZE) {
+                stateAfterMove.players[playerIdx].resources[resource]++;
+                stateAfterMove.bank.resources[resource]--;
+            }
+            for (var i = 0; i < hexes.length; i++) {
+                var resource_1 = stateAfterMove.board[hexes[i][0]][hexes[i][1]].label;
+                if (resource_1 < Resource.SIZE) {
+                    stateAfterMove.players[playerIdx].resources[resource_1]++;
+                    stateAfterMove.bank.resources[resource_1]--;
+                }
+            }
+            stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
         }
         else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 2) {
             if (playerIdx === 0)
