@@ -375,28 +375,28 @@ module gameLogic {
 
   export function canBuildRoadLegally(player: Player, board: Board, row: number, col: number, edge: number, initial: boolean): boolean {
 
-	if (edge < 0 || edge > 5) return false;
-	if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS) return false;
+    if (edge < 0 || edge > 5) return false;
+    if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS) return false;
 
-	// edge must be empty - no other roads
-	if (board[row][col].edges[edge] !== -1) return false;
+    // edge must be empty - no other roads
+    if (board[row][col].edges[edge] !== -1) return false;
 
-	let adjHex: number[] = getHexAdjcentToEdge(row, col, edge);
-	if (adjHex.length === 0)
+    let adjHex: number[] = getHexAdjcentToEdge(row, col, edge);
+    if (adjHex.length === 0)
       return false;
 
-	// both hexes cannot be water
-	if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
+    // both hexes cannot be water
+    if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
       return false;
-	}
+    }
 
-//	//If it's first build instruction during INIT_BUILD, just build it
-//	if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 1) {
+//    //If it's first build instruction during INIT_BUILD, just build it
+//    if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 1) {
 //      return true;
-//	}
+//    }
 
-	// player owns adjacent road in current hex or adjacent road in adjacent hex
-	if (board[row][col].edges[((edge+1) % 6 + 6) % 6] === player.id ||
+    // player owns adjacent road in current hex or adjacent road in adjacent hex
+    if (board[row][col].edges[((edge+1) % 6 + 6) % 6] === player.id ||
       board[row][col].edges[((edge-1) % 6 + 6) % 6] === player.id || 
       board[adjHex[0]][adjHex[1]].edges[((edge+3+1) % 6 + 6) % 6] === player.id ||
       board[adjHex[0]][adjHex[1]].edges[((edge+3-1) % 6 + 6) % 6] === player.id) {
@@ -406,105 +406,105 @@ module gameLogic {
 
       // building CC on same hex
       if (board[row][col].edges[((edge+1) % 6 + 6) % 6] === player.id &&
-    	((board[row][col].vertices[edge] === Construction.Settlement ||
-    	board[row][col].vertices[edge] === Construction.City) && 
-    	board[row][col].vertexOwner[edge] !== player.id)) {
+        ((board[row][col].vertices[edge] === Construction.Settlement ||
+        board[row][col].vertices[edge] === Construction.City) && 
+        board[row][col].vertexOwner[edge] !== player.id)) {
 
-    	return false;
+        return false;
       }
       // building CW on same hex
       if (board[row][col].edges[((edge-1) % 6 + 6) % 6] === player.id && 
-    	((board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.Settlement || 
-    	board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.City) && 
-    	board[row][col].vertexOwner[((edge-1) % 6 + 6) % 6] !== player.id)) {
+        ((board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.Settlement || 
+        board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.City) && 
+        board[row][col].vertexOwner[((edge-1) % 6 + 6) % 6] !== player.id)) {
 
-    	return false;
+        return false;
       }
       // building CC on adj. hex
       if (board[adjHex[0]][adjHex[1]].edges[((edge+3-1) % 6 + 6) % 6] === player.id && 
-    	((board[row][col].vertices[edge] === Construction.Settlement || 
-    	board[row][col].vertices[edge] === Construction.City) && 
-    	board[row][col].vertexOwner[edge] !== player.id)) {
+        ((board[row][col].vertices[edge] === Construction.Settlement || 
+        board[row][col].vertices[edge] === Construction.City) && 
+        board[row][col].vertexOwner[edge] !== player.id)) {
 
-    	return false;
+        return false;
       }
       // building CW on adj. hex
       if (board[adjHex[0]][adjHex[1]].edges[((edge+3+1) % 6 + 6) % 6] === player.id && 
-    	((board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.Settlement || 
-    	board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.City) && 
-    	board[row][col].vertexOwner[((edge-1) % 6 + 6) % 6] !== player.id)) {
+        ((board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.Settlement || 
+        board[row][col].vertices[((edge-1) % 6 + 6) % 6] === Construction.City) && 
+        board[row][col].vertexOwner[((edge-1) % 6 + 6) % 6] !== player.id)) {
 
-    	return false;
+        return false;
       }
 
       return true;
-	}
+    }
 
-	/*
-	if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) || 
+    /*
+    if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) || 
       (board[row][col].vertices[(edge+1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge+1) % 6] === player.id) ||
       (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) || 
       (board[row][col].vertices[(edge+1) % 6] === Construction.City && board[row][col].vertexOwner[(edge+1) % 6] === player.id))
       return true;
-	*/
-	if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
+    */
+    if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
       return true;
-	}
+    }
 
-	return false;
+    return false;
   }
 
   export function canBuildSettlementLegally(player: Player, board: Board, row: number, col: number, vertex: number, initial: boolean): boolean {
 
-	if (vertex < 0 || vertex > 5) return false;
-	if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS) return false;
+    if (vertex < 0 || vertex > 5) return false;
+    if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS) return false;
 
-	// proposed vertex must be empty - no other settlement/city
-	if (board[row][col].vertices[vertex] !== -1) return false;
+    // proposed vertex must be empty - no other settlement/city
+    if (board[row][col].vertices[vertex] !== -1) return false;
 
-	// TODO: is Water sufficient with "ANY" being allowed?
-	var has_land: boolean = false;
-	if (board[row][col].label != Resource.Water) has_land = true;
-	let hexes = getHexesAdjacentToVertex(row, col, vertex);
-	for (var i = 0; i < hexes.length; i++) {
+    // TODO: is Water sufficient with "ANY" being allowed?
+    var has_land: boolean = false;
+    if (board[row][col].label != Resource.Water) has_land = true;
+    let hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i = 0; i < hexes.length; i++) {
       if (hexes[i] === null) continue;
       if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
-    	has_land = true;
-	}
-	if (has_land === false)
+        has_land = true;
+    }
+    if (has_land === false)
       return false;
 
-	// new settlement has to be 2+ vertices away from another settlement/city
-	if (hasNearbyConstruct(board, row, col, vertex)) return false;
-	for (var i = 0; i < hexes.length; i++) {
+    // new settlement has to be 2+ vertices away from another settlement/city
+    if (hasNearbyConstruct(board, row, col, vertex)) return false;
+    for (var i = 0; i < hexes.length; i++) {
       if (hexes[i] === null) continue;
       if (hasNearbyConstruct(board, hexes[i][0], hexes[i][1], hexes[i][2]))
         return false;
-	}
+    }
 
-	//If it's during init build and it's first building, just do it
-	if (initial) {
+    //If it's during init build and it's first building, just do it
+    if (initial) {
       return true;
-	}
+    }
 
-	// needs adjacent road to build
-	if (!hasAdjacentRoad(player, board, row, col, vertex)) {
+    // needs adjacent road to build
+    if (!hasAdjacentRoad(player, board, row, col, vertex)) {
       return false;
-	}
+    }
 
-	return true;
+    return true;
   }
 
   export function canUpgradeSettlement(player: Player, board: Board, row: number, col: number, vertex: number): boolean {
 
-	if (vertex < 0 || vertex > 5) return false;
-	if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS) return false;
+    if (vertex < 0 || vertex > 5) return false;
+    if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS) return false;
 
-	// proposed vertex must be empty - no other settlement/city
-	if (board[row][col].vertices[vertex] === Construction.Settlement && 
+    // proposed vertex must be empty - no other settlement/city
+    if (board[row][col].vertices[vertex] === Construction.Settlement && 
       board[row][col].vertexOwner[vertex] === player.id)
       return true;
-	return false;
+    return false;
   }
 
 
@@ -777,36 +777,36 @@ module gameLogic {
 
     if (rollNum !== 7) {
       //State transition to resources production
-	  for (let pIndex = turnIdx; pIndex < turnIdx + NUM_PLAYERS; pIndex++) {
-	    var playerIndex = pIndex % NUM_PLAYERS;
-    	for (let i = 0; i < ROWS; i++) {
+      for (let pIndex = turnIdx; pIndex < turnIdx + NUM_PLAYERS; pIndex++) {
+        var playerIndex = pIndex % NUM_PLAYERS;
+        for (let i = 0; i < ROWS; i++) {
           for (let j = 0; j < COLS; j++) {
-        	if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
-            	stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
+            if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
+                stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
               continue;
-        	}
+            }
 
-        	for (let v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
+            for (let v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
               if (stateBeforeMove.board[i][j].vertexOwner[v] !== playerIndex) {
-            	continue;
+                continue;
               }
 
               let resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
               let toAdd : number = 0;
               switch (stateBeforeMove.board[i][j].vertices[v]) {
-            	case Construction.City:
+                case Construction.City:
                   toAdd = resourceInBank < 2 ? resourceInBank : 2;
                   break;
-            	case Construction.Settlement:
+                case Construction.Settlement:
                   toAdd = resourceInBank < 1 ? resourceInBank : 1;
                   break;
               }
               stateAfterMove.players[playerIndex].resources[stateBeforeMove.board[i][j].label] += toAdd;
               stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
-        	}
+            }
           }
-    	}
-	  }
+        }
+      }
     } else {
       //Robber event will start
       stateAfterMove.eventIdx = turnIdx;
@@ -865,36 +865,36 @@ module gameLogic {
     //Update eventIdx - does circle back for 2 rounds of settlement/road building
     let player = stateAfterMove.players[playerIdx];
 
-	if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 0) {
+    if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 0) {
       stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
     } else if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 1) {
-	  if (playerIdx === NUM_PLAYERS-1) 
-	    stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+      if (playerIdx === NUM_PLAYERS-1) 
+        stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
       else
         stateAfterMove.eventIdx = stateBeforeMove.eventIdx + 1;
     } else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 1) {
 
       // assign resources based on second settlement
-	  let hexes = getHexesAdjacentToVertex(buildingMove.hexRow, buildingMove.hexCol, buildingMove.vertexOrEdge);
-	  let resource = stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].label;
-	  if (resource < Resource.SIZE) {
-		stateAfterMove.players[playerIdx].resources[resource]++;
-		stateAfterMove.bank.resources[resource]--;
-	  }
-	  for (var i = 0; i < hexes.length; i++) {
-		let resource = stateAfterMove.board[hexes[i][0]][hexes[i][1]].label;
-		if (resource < Resource.SIZE) {
-		  stateAfterMove.players[playerIdx].resources[resource]++;
-		  stateAfterMove.bank.resources[resource]--;
-		}
-	  }
+      let hexes = getHexesAdjacentToVertex(buildingMove.hexRow, buildingMove.hexCol, buildingMove.vertexOrEdge);
+      let resource = stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].label;
+      if (resource < Resource.SIZE) {
+        stateAfterMove.players[playerIdx].resources[resource]++;
+        stateAfterMove.bank.resources[resource]--;
+      }
+      for (var i = 0; i < hexes.length; i++) {
+        let resource = stateAfterMove.board[hexes[i][0]][hexes[i][1]].label;
+        if (resource < Resource.SIZE) {
+          stateAfterMove.players[playerIdx].resources[resource]++;
+          stateAfterMove.bank.resources[resource]--;
+        }
+      }
       stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
-	
+    
     } else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 2) {
-	  if (playerIdx === 0)
-	    stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
-	  else 
-	    stateAfterMove.eventIdx = stateBeforeMove.eventIdx - 1;
+      if (playerIdx === 0)
+        stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+      else 
+        stateAfterMove.eventIdx = stateBeforeMove.eventIdx - 1;
     } else {
       stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
     }
@@ -922,9 +922,9 @@ module gameLogic {
     let stateBeforeMove = getStateBeforeMove(move);
     let stateAfterMove = getStateAfterMove(move, stateBeforeMove);
     stateAfterMove.players[playerIdx].construction[buildingMove.consType]++;
-	if (buildingMove.consType === Construction.City)
+    if (buildingMove.consType === Construction.City)
       stateAfterMove.players[playerIdx].construction[Construction.Settlement]--;
-	
+    
     stateAfterMove.building = {
       consType: buildingMove.consType,
       hexRow: buildingMove.hexRow,
@@ -943,12 +943,12 @@ module gameLogic {
         if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.Road)) {
           throw new Error('Insufficient resources to build a road!');
         }
-		
-		if (stateAfterMove.players[playerIdx].construction[Construction.Road] >= 15) {
+        
+        if (stateAfterMove.players[playerIdx].construction[Construction.Road] >= 15) {
           throw new Error('No more roads to build!');
         }
-		
-		
+        
+        
         stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
         stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
 
@@ -957,14 +957,6 @@ module gameLogic {
 
         stateAfterMove.bank.resources[Resource.Brick]++;
         stateAfterMove.bank.resources[Resource.Lumber]++;
-
-        //State transition to longest road awards
-		if (getLongestRoad(stateAfterMove.players[playerIdx], stateAfterMove.board) > stateBeforeMove.awards.longestRoad.length) {
-          stateAfterMove.awards.longestRoad = {
-            player: playerIdx,
-            length: stateAfterMove.players[playerIdx].construction[Construction.Road]
-          };
-        }
         break;
       case Construction.Settlement:
         stateAfterMove.moveType = MoveType.BUILD_SETTLEMENT;
@@ -1368,29 +1360,29 @@ module gameLogic {
     let stateBeforeMove = getStateBeforeMove(move);
 
     // lowering road length if current player affected other players' longest road
-	// can happen by building road to get longest, or by building settlement to break other person's road
+    // can happen by building road to get longest, or by building settlement to break other person's road
     for (let i = turnIdx; i < turnIdx + NUM_PLAYERS; i++) {
-	  let j = i % NUM_PLAYERS;
-	  if (stateBeforeMove.awards.longestRoad.player === j && 
-	      getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) < stateBeforeMove.awards.longestRoad.length) {
-		  
-		if (getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) >= 5) {
-		  stateBeforeMove.awards.longestRoad = {
-		    player: j,
-			length: getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board)
-		  };
-	    } else {
-		  stateBeforeMove.awards.longestRoad = {
-		    player: -1,
-			length: 4
-		  };
-		}
+      let j = i % NUM_PLAYERS;
+      if (stateBeforeMove.awards.longestRoad.player === j && 
+          getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) < stateBeforeMove.awards.longestRoad.length) {
+          
+        if (getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) >= 5) {
+          stateBeforeMove.awards.longestRoad = {
+            player: j,
+            length: getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board)
+          };
+        } else {
+          stateBeforeMove.awards.longestRoad = {
+            player: -1,
+            length: 4
+          };
+        }
       }
-	}
-	
-	// determine new award winner for longest road
+    }
+    
+    // determine new award winner for longest road
     for (let i = turnIdx; i < turnIdx + NUM_PLAYERS; i++) {
-	  let j = i % NUM_PLAYERS;
+      let j = i % NUM_PLAYERS;
       if (getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) > stateBeforeMove.awards.longestRoad.length) { 
         stateBeforeMove.awards.longestRoad = {
           player: j,

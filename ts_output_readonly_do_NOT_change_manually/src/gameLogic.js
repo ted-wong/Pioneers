@@ -338,10 +338,10 @@ var gameLogic;
         if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
             return false;
         }
-        //	//If it's first build instruction during INIT_BUILD, just build it
-        //	if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 1) {
+        //    //If it's first build instruction during INIT_BUILD, just build it
+        //    if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 1) {
         //      return true;
-        //	}
+        //    }
         // player owns adjacent road in current hex or adjacent road in adjacent hex
         if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id ||
             board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id ||
@@ -843,13 +843,6 @@ var gameLogic;
                 stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
                 stateAfterMove.bank.resources[Resource.Brick]++;
                 stateAfterMove.bank.resources[Resource.Lumber]++;
-                //State transition to longest road awards
-                if (getLongestRoad(stateAfterMove.players[playerIdx], stateAfterMove.board) > stateBeforeMove.awards.longestRoad.length) {
-                    stateAfterMove.awards.longestRoad = {
-                        player: playerIdx,
-                        length: stateAfterMove.players[playerIdx].construction[Construction.Road]
-                    };
-                }
                 break;
             case Construction.Settlement:
                 stateAfterMove.moveType = MoveType.BUILD_SETTLEMENT;

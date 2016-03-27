@@ -216,9 +216,9 @@ module game {
             alertMsg = 'Please place your initial buildings and roads...';
           }
         } else {
-		  if (state.players[state.eventIdx].construction[Construction.Settlement] > 
-		    state.players[state.eventIdx].construction[Construction.Road]) {
-			alertMsg = 'Player ' + (state.eventIdx + 1) + ' placed a settlement, but now needs a road...';
+          if (state.players[state.eventIdx].construction[Construction.Settlement] > 
+            state.players[state.eventIdx].construction[Construction.Road]) {
+            alertMsg = 'Player ' + (state.eventIdx + 1) + ' placed a settlement, but now needs a road...';
           } else {
             alertMsg = 'Player ' + (state.eventIdx + 1) + ' placing initial buildings and roads...';
           }
@@ -292,9 +292,9 @@ module game {
     cleanupInfoModal();
     switch (state.moveType) {
       case MoveType.INIT_BUILD:
-		if (state.eventIdx === 0 && initBuildingReverse === true) {
-		  let allDoneInitBuild = true;
-		  for (let i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+        if (state.eventIdx === 0 && initBuildingReverse === true) {
+          let allDoneInitBuild = true;
+          for (let i = 0; i < gameLogic.NUM_PLAYERS; i++) {
             if (state.players[i].construction[Construction.Road] !== 2 || state.players[i].construction[Construction.Settlement] !== 2) {
               allDoneInitBuild = false;
               break;
@@ -305,7 +305,7 @@ module game {
             infoModalHeader = 'Start Game';
             infoModalMsg = "Everyone is ready, it's time to start the game!";
             canInfoModalTurnOff = false;
-			initialBuilding = false;
+            initialBuilding = false;
 
             let turnMove: TurnMove = {
               moveType: MoveType.INIT,
@@ -325,9 +325,9 @@ module game {
             };
           }
         }
-		if (state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+        if (state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
           initBuildingReverse = true;
-		}
+        }
         break;
       case MoveType.ROLL_DICE:
         if (state.dices[0] + state.dices[1] === 7 && move.turnIndexAfterMove === mockPlayerIdx) {
@@ -480,13 +480,13 @@ module game {
     if (mouseTarget === MouseTarget.VERTEX) {
       return targetNum === vertex;
     }
-	
+    
     if (initialBuilding && state.players[mockPlayerIdx].construction[Construction.Settlement] >
       state.players[mockPlayerIdx].construction[Construction.Road]) {
-	  return false;
-	}
-	
-	// only show buildable locations
+      return false;
+    }
+    
+    // only show buildable locations
     if (gameLogic.canBuildSettlementLegally(state.players[mockPlayerIdx], state.board, row, col, vertex, initialBuilding)) {
       return true;
     } else {
@@ -532,8 +532,8 @@ module game {
 
     if (initialBuilding && state.players[mockPlayerIdx].construction[Construction.Settlement] ===
       state.players[mockPlayerIdx].construction[Construction.Road]) {
-	  return false;
-	}
+      return false;
+    }
 
     // only show buildable locations
     if (gameLogic.canBuildRoadLegally(state.players[mockPlayerIdx], state.board, row, col, edge, true)) {
@@ -624,17 +624,17 @@ module game {
     var v = coordinates[row][col][state.board[row][col].harbor.vertices[0]].split(',');
     var x1 = parseFloat(v[0]);
     var y1 = parseFloat(v[1]);
-	
+    
     v = coordinates[row][col][state.board[row][col].harbor.vertices[1]].split(',');
     var x2 = parseFloat(v[0]);
     var y2 = parseFloat(v[1]);
 
     var dx1 = x1 - cx;
-	var dy1 = y1 - cy;
-	var dx2 = x2 - x1;
-	var dy2 = y2 - y1;
-	var dx3 = cx - x2;
-	var dy3 = cy - y2;
+    var dy1 = y1 - cy;
+    var dx2 = x2 - x1;
+    var dy2 = y2 - y1;
+    var dx3 = cx - x2;
+    var dy3 = cy - y2;
 
     return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
   }
@@ -729,7 +729,7 @@ module game {
 
   export function onClickVertex(row: number, col: number, vertexNum: number) {
     
-	if (state.board[row][col].vertices[vertexNum] === -1) {
+    if (state.board[row][col].vertices[vertexNum] === -1) {
       buildTarget = Construction.Settlement;
       buildRow = row;
       buildCol = col;
@@ -739,7 +739,8 @@ module game {
       onOkClicked = onBuild;
       infoModalHeader = 'Building';
       infoModalMsg = 'Are you sure you want to build a settlement?';
-	} else if (state.board[row][col].vertices[vertexNum] === Construction.Settlement && state.board[row][col].vertexOwner[vertexNum] === mockPlayerIdx) {
+
+    } else if (state.board[row][col].vertices[vertexNum] === Construction.Settlement && state.board[row][col].vertexOwner[vertexNum] === mockPlayerIdx) {
       buildTarget = Construction.City;
       buildRow = row;
       buildCol = col;
@@ -749,7 +750,7 @@ module game {
       onOkClicked = onBuild;
       infoModalHeader = 'Building';
       infoModalMsg = 'Are you sure you want to upgrade this settlement to a city?';
-	}
+    }
   }
 
   export function onBuild() {
@@ -867,12 +868,12 @@ module game {
 
   export function endTurn(): void {
     let turnMove: TurnMove = {
-	  moveType: MoveType.INIT,
-	  playerIdx: mockPlayerIdx,
-	  currState: angular.copy(state)
-	}
+      moveType: MoveType.INIT,
+      playerIdx: mockPlayerIdx,
+      currState: angular.copy(state)
+    }
     let nextMove: IMove = gameLogic.onEndTurn(turnMove, move.turnIndexAfterMove);
-	moveService.makeMove(nextMove);
+    moveService.makeMove(nextMove);
   }
 
 
