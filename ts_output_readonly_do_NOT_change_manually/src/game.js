@@ -352,17 +352,6 @@ var game;
             }
         }
     }
-    function clickedOnHexModal(evt) {
-        console.log("test");
-        if (evt.target === evt.currentTarget) {
-            console.log("in if");
-            evt.preventDefault();
-            evt.stopPropagation();
-            game.isHexModalShown = true;
-        }
-        return true;
-    }
-    game.clickedOnHexModal = clickedOnHexModal;
     function clickedOnModal(evt) {
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
@@ -577,6 +566,30 @@ var game;
         return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
     }
     game.getCity = getCity;
+    function getHarbor(row, col) {
+        var cx = Number(getCenter(row, col)[0]);
+        var cy = Number(getCenter(row, col)[1]);
+        var start = 'M' + cx + ',' + cy;
+        var v = game.coordinates[row][col][game.state.board[row][col].harbor.vertices[0]].split(',');
+        var x1 = parseFloat(v[0]);
+        var y1 = parseFloat(v[1]);
+        v = game.coordinates[row][col][game.state.board[row][col].harbor.vertices[1]].split(',');
+        var x2 = parseFloat(v[0]);
+        var y2 = parseFloat(v[1]);
+        var dx1 = x1 - cx;
+        var dy1 = y1 - cy;
+        var dx2 = x2 - x1;
+        var dy2 = y2 - y1;
+        var dx3 = cx - x2;
+        var dy3 = cy - y2;
+        console.log("at " + row + ", " + col + ":" + start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3);
+        return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
+    }
+    game.getHarbor = getHarbor;
+    function showHarbor(row, col) {
+        return game.state.board[row][col].harbor !== null;
+    }
+    game.showHarbor = showHarbor;
     function showRollNum(row, col) {
         return game.state.board[row][col].rollNum > 0 || (game.state.robber.row === row && game.state.robber.col === col);
     }
@@ -632,7 +645,7 @@ var game;
             if (game.devRoads.length === 2) {
                 game.showInfoModal = true;
                 game.infoModalHeader = 'Playing Development Cards';
-                game.infoModalMsg = 'Are you sure to build both roads?';
+                game.infoModalMsg = 'Are you sure you want to build both roads?';
                 game.onOkClicked = onRoadBuildingDone;
             }
             return;
@@ -644,7 +657,7 @@ var game;
         game.showInfoModal = true;
         game.onOkClicked = onBuild;
         game.infoModalHeader = 'Building';
-        game.infoModalMsg = 'Are you sure to build a road?';
+        game.infoModalMsg = 'Are you sure you want to build a road?';
     }
     game.onClickEdge = onClickEdge;
     function onMouseOverVertex(row, col, vertexNum) {
@@ -663,7 +676,7 @@ var game;
             game.showInfoModal = true;
             game.onOkClicked = onBuild;
             game.infoModalHeader = 'Building';
-            game.infoModalMsg = 'Are you sure to build a settlement?';
+            game.infoModalMsg = 'Are you sure you want to build a settlement?';
         }
         else if (game.state.board[row][col].vertices[vertexNum] === 2 && game.state.board[row][col].vertexOwner[vertexNum] === game.mockPlayerIdx) {
             buildTarget = Construction.City;
@@ -673,7 +686,7 @@ var game;
             game.showInfoModal = true;
             game.onOkClicked = onBuild;
             game.infoModalHeader = 'Building';
-            game.infoModalMsg = 'Are you sure to upgrade this settlement to a city?';
+            game.infoModalMsg = 'Are you sure you want to upgrade this settlement to a city?';
         }
     }
     game.onClickVertex = onClickVertex;
@@ -845,7 +858,7 @@ var game;
         game.showInfoModal = true;
         game.onOkClicked = devCardEventHandlers[cardIdx];
         game.infoModalHeader = 'Playing Development Cards';
-        game.infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx] + '?';
+        game.infoModalMsg = 'Are you sure you want to play ' + DevCard[cardIdx] + '?';
     }
     game.onDevCardClicked = onDevCardClicked;
     /**
@@ -1015,7 +1028,7 @@ var game;
         robberMovedCol = col;
         game.showInfoModal = true;
         game.infoModalHeader = 'Move Robber';
-        game.infoModalMsg = 'Are you sure to move robber to here?';
+        game.infoModalMsg = 'Are you sure you want to move the robber here?';
     }
     function onMoveRobberDone() {
         var turnMove = {

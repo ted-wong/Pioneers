@@ -282,6 +282,9 @@
             <pattern id="dice" patternUnits="userSpaceOnUse" width="70" height="70">
               <image xlink:href="imgs/dice2.png" x="0" y="0" width="70" height="70" />
             </pattern>
+            <pattern id="harbor" patternUnits="userSpaceOnUse" width="224" height="225">
+              <image xlink:href="imgs/harbor1.jpg" x="0" y="0" width="224" height="225" />
+            </pattern>
           </defs>
           <g ng-repeat="row in rows">
             <g ng-repeat="col in cols"
@@ -294,6 +297,10 @@
                       ng-attr-cy="{{game.getCenter(row, col)[1]}}"
                       r="15" fill="white"
                       ng-if="game.showRollNum(row, col)"/>
+              <path ng-attr-d="{{game.getHarbor(row, col)}}"
+					  stroke-width="5"
+					  fill="url(#harbor)"
+                      ng-if="game.showHarbor(row, col)"/>
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
                     ng-attr-y="{{game.getCenter(row, col)[1]}}"
                     text-anchor="middle" font-weight="bold"

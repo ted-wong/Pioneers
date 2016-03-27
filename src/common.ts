@@ -562,31 +562,31 @@ const terrains: Resource[] = [
  * Constants for harbors
  */
 const harborPos: number[][] = [
-  [1, 3],
-  [1, 4],
-  [2, 1],
-  [2, 4],
-  [3, 1],
-  [4, 1],
-  [4, 4],
-  [5, 3],
-  [5, 4]
+  [0, 1],
+  [0, 3],
+  [1, 5],
+  [2, 0],
+  [3, 6],
+  [4, 0],
+  [5, 5],
+  [6, 1],
+  [6, 3]
 ];
 const harbors: Harbor[] = [
   {
     trading: Resource.ANY,
-    vertices: [1, 2]
+    vertices: [4, 5]
+  },
+  {
+    trading: Resource.Grain,
+    vertices: [3, 4]
   },
   {
     trading: Resource.Ore,
-    vertices: [0, 1]
+    vertices: [3, 4]
   },
   {
     trading: Resource.Lumber,
-    vertices: [1, 2]
-  },
-  {
-    trading: Resource.ANY,
     vertices: [0, 5]
   },
   {
@@ -594,19 +594,19 @@ const harbors: Harbor[] = [
     vertices: [2, 3]
   },
   {
-    trading: Resource.Wool,
-    vertices: [3, 4]
-  },
-  {
     trading: Resource.Brick,
     vertices: [0, 5]
   },
   {
-    trading: Resource.Grain,
-    vertices: [3, 4]
+    trading: Resource.Wool,
+    vertices: [1, 2]
   },
   {
     trading: Resource.ANY,
-    vertices: [4, 5]
+    vertices: [0, 1]
+  },
+  {
+    trading: Resource.ANY,
+    vertices: [1, 2]
   }
 ];

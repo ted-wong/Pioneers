@@ -381,17 +381,6 @@ module game {
     }
   }
 
-  export function clickedOnHexModal(evt: Event) {
-    console.log("test");
-    if (evt.target === evt.currentTarget) {
-      console.log("in if");
-      evt.preventDefault();
-      evt.stopPropagation();
-      isHexModalShown = true;
-    }
-    return true;
-  }
-
   export function clickedOnModal(evt: Event) {
     if (evt.target === evt.currentTarget) {
       evt.preventDefault();
@@ -626,6 +615,38 @@ module game {
     return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
   }
 
+  export function getHarbor(row: number, col: number): string {
+
+    var cx = Number(getCenter(row, col)[0]);
+    var cy = Number(getCenter(row, col)[1]);
+    let start = 'M' + cx + ',' + cy;
+
+    var v = coordinates[row][col][state.board[row][col].harbor.vertices[0]].split(',');
+    var x1 = parseFloat(v[0]);
+    var y1 = parseFloat(v[1]);
+	
+    v = coordinates[row][col][state.board[row][col].harbor.vertices[1]].split(',');
+    var x2 = parseFloat(v[0]);
+    var y2 = parseFloat(v[1]);
+
+    var dx1 = x1 - cx;
+	var dy1 = y1 - cy;
+	var dx2 = x2 - x1;
+	var dy2 = y2 - y1;
+	var dx3 = cx - x2;
+	var dy3 = cy - y2;
+
+    console.log("at " + row + ", " + col + ":" + start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3);
+
+    return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
+  }
+
+
+
+  export function showHarbor(row: number, col: number): boolean {
+    return state.board[row][col].harbor !== null;
+  }
+
   export function showRollNum(row: number, col: number): boolean {
     return state.board[row][col].rollNum > 0 || (state.robber.row === row && state.robber.col === col);
   }
@@ -683,7 +704,7 @@ module game {
       if (devRoads.length === 2) {
         showInfoModal = true;
         infoModalHeader = 'Playing Development Cards';
-        infoModalMsg = 'Are you sure to build both roads?';
+        infoModalMsg = 'Are you sure you want to build both roads?';
         onOkClicked = onRoadBuildingDone;
       }
 
@@ -698,7 +719,7 @@ module game {
     showInfoModal = true;
     onOkClicked = onBuild;
     infoModalHeader = 'Building';
-    infoModalMsg = 'Are you sure to build a road?';
+    infoModalMsg = 'Are you sure you want to build a road?';
   }
 
   export function onMouseOverVertex(row: number, col: number, vertexNum: number) {
@@ -719,7 +740,7 @@ module game {
       showInfoModal = true;
       onOkClicked = onBuild;
       infoModalHeader = 'Building';
-      infoModalMsg = 'Are you sure to build a settlement?';
+      infoModalMsg = 'Are you sure you want to build a settlement?';
 	} else if (state.board[row][col].vertices[vertexNum] === 2 && state.board[row][col].vertexOwner[vertexNum] === mockPlayerIdx) {
       buildTarget = Construction.City;
       buildRow = row;
@@ -729,7 +750,7 @@ module game {
       showInfoModal = true;
       onOkClicked = onBuild;
       infoModalHeader = 'Building';
-      infoModalMsg = 'Are you sure to upgrade this settlement to a city?';
+      infoModalMsg = 'Are you sure you want to upgrade this settlement to a city?';
 	}
   }
 
@@ -911,7 +932,7 @@ module game {
     showInfoModal = true;
     onOkClicked = devCardEventHandlers[cardIdx];
     infoModalHeader = 'Playing Development Cards';
-    infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx] + '?';
+    infoModalMsg = 'Are you sure you want to play ' + DevCard[cardIdx] + '?';
   }
 
   /**
@@ -1090,7 +1111,7 @@ module game {
 
     showInfoModal = true;
     infoModalHeader = 'Move Robber';
-    infoModalMsg = 'Are you sure to move robber to here?';
+    infoModalMsg = 'Are you sure you want to move the robber here?';
   }
 
   function onMoveRobberDone() {

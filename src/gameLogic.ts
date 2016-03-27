@@ -840,7 +840,6 @@ module gameLogic {
         throw new Error('Can only build road/settlement during initialization!');
     }
 
-
     //Update eventIdx - does circle back for 2 rounds of settlement/road building
     let player = stateAfterMove.players[playerIdx];
 
