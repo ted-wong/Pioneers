@@ -61,6 +61,9 @@ var game;
     var wantedResource = -1;
     game.wantedNum = 0;
     var tradeWithBank = false;
+    // needed for initial building phase
+    game.initialBuilding = true;
+    var initBuildingReverse = false;
     function getPlayerInfo(playerIndex) {
         //    if (state == null)
         //      state = gameLogic.getInitialState();
@@ -174,36 +177,60 @@ var game;
     function updateAlert() {
         switch (game.state.moveType) {
             case MoveType.INIT:
+                game.alertStyle = 'success';
+                game.alertMsg = "It is now player 1's turn";
                 break;
             case MoveType.INIT_BUILD:
                 game.alertStyle = 'success';
                 if (game.state.eventIdx === game.myIndex) {
-                    if (game.state.players[game.myIndex].construction[Construction.Settlement] === 1 && game.state.players[game.myIndex].construction[Construction.Road] === 2) {
+                    if (game.state.players[game.myIndex].construction[Construction.Settlement] === 2 && game.state.players[game.myIndex].construction[Construction.Road] === 2) {
                         game.alertMsg = 'Initial buildings done, time to start the game!';
                     }
                     else {
-                        game.alertMsg = 'Please place your initial buildings...';
+                        game.alertMsg = 'Please place your initial buildings and roads...';
                     }
                 }
                 else {
-                    game.alertMsg = 'Player' + (game.state.eventIdx + 1) + ' placing initial buildings...';
+                    if (game.state.players[game.state.eventIdx].construction[Construction.Settlement] >
+                        game.state.players[game.state.eventIdx].construction[Construction.Road]) {
+                        game.alertMsg = 'Player ' + (game.state.eventIdx + 1) + ' placed a settlement, but now needs a road...';
+                    }
+                    else {
+                        game.alertMsg = 'Player ' + (game.state.eventIdx + 1) + ' placing initial buildings and roads...';
+                    }
                 }
                 break;
             case MoveType.ROLL_DICE:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1 rolled a " + game.state.dices.reduce(function (a, b) { return a + b; });
                 break;
             case MoveType.BUILD_ROAD:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " built a road!";
                 break;
             case MoveType.BUILD_SETTLEMENT:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " built a settlement!";
                 break;
             case MoveType.BUILD_CITY:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " upgraded a settlement to a city!";
                 break;
             case MoveType.BUILD_DEVCARD:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " bought a development card!";
                 break;
             case MoveType.KNIGHT:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " played a knight!";
                 break;
             case MoveType.MONOPOLY:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " played a monopoly development card!";
                 break;
             case MoveType.YEAR_OF_PLENTY:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " played a year of plenty card!";
                 break;
             case MoveType.TRADE:
                 break;
@@ -214,6 +241,7 @@ var game;
             case MoveType.ROB_PLAYER:
                 break;
             case MoveType.TRANSACTION_WITH_BANK:
+                game.alertMsg = "Player 1" + " traded with the bank!";
                 break;
             case MoveType.WIN:
                 break;
@@ -237,10 +265,10 @@ var game;
         cleanupInfoModal();
         switch (game.state.moveType) {
             case MoveType.INIT_BUILD:
-                if (game.state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+                if (game.state.eventIdx === 0 && initBuildingReverse === true) {
                     var allDoneInitBuild = true;
                     for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
-                        if (game.state.players[i].construction.reduce(function (a, b) { return a + b; }) !== 3) {
+                        if (game.state.players[i].construction[Construction.Road] !== 2 || game.state.players[i].construction[Construction.Settlement] !== 2) {
                             allDoneInitBuild = false;
                             break;
                         }
@@ -250,6 +278,7 @@ var game;
                         game.infoModalHeader = 'Start Game';
                         game.infoModalMsg = "Everyone is ready, it's time to start the game!";
                         game.canInfoModalTurnOff = false;
+                        game.initialBuilding = false;
                         var turnMove = {
                             moveType: MoveType.INIT,
                             playerIdx: game.myIndex,
@@ -267,6 +296,9 @@ var game;
                             }
                         };
                     }
+                }
+                if (game.state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+                    initBuildingReverse = true;
                 }
                 break;
             case MoveType.ROLL_DICE:
@@ -320,17 +352,6 @@ var game;
             }
         }
     }
-    function clickedOnHexModal(evt) {
-        console.log("test");
-        if (evt.target === evt.currentTarget) {
-            console.log("in if");
-            evt.preventDefault();
-            evt.stopPropagation();
-            game.isHexModalShown = true;
-        }
-        return true;
-    }
-    game.clickedOnHexModal = clickedOnHexModal;
     function clickedOnModal(evt) {
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
@@ -423,8 +444,16 @@ var game;
         if (mouseTarget === MouseTarget.VERTEX) {
             return targetNum === vertex;
         }
-        else {
+        if (game.initialBuilding && game.state.players[game.mockPlayerIdx].construction[Construction.Settlement] >
+            game.state.players[game.mockPlayerIdx].construction[Construction.Road]) {
+            return false;
+        }
+        // only show buildable locations
+        if (gameLogic.canBuildSettlementLegally(game.state.players[game.mockPlayerIdx], game.state.board, row, col, vertex, game.initialBuilding)) {
             return true;
+        }
+        else {
+            return false;
         }
     }
     game.showVertex = showVertex;
@@ -459,8 +488,16 @@ var game;
         if (mouseTarget === MouseTarget.EDGE) {
             return targetNum === edge;
         }
-        else {
+        if (game.initialBuilding && game.state.players[game.mockPlayerIdx].construction[Construction.Settlement] ===
+            game.state.players[game.mockPlayerIdx].construction[Construction.Road]) {
+            return false;
+        }
+        // only show buildable locations
+        if (gameLogic.canBuildRoadLegally(game.state.players[game.mockPlayerIdx], game.state.board, row, col, edge, true)) {
             return true;
+        }
+        else {
+            return false;
         }
     }
     game.showEdge = showEdge;
@@ -529,6 +566,29 @@ var game;
         return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
     }
     game.getCity = getCity;
+    function getHarbor(row, col) {
+        var cx = Number(getCenter(row, col)[0]);
+        var cy = Number(getCenter(row, col)[1]);
+        var start = 'M' + cx + ',' + cy;
+        var v = game.coordinates[row][col][game.state.board[row][col].harbor.vertices[0]].split(',');
+        var x1 = parseFloat(v[0]);
+        var y1 = parseFloat(v[1]);
+        v = game.coordinates[row][col][game.state.board[row][col].harbor.vertices[1]].split(',');
+        var x2 = parseFloat(v[0]);
+        var y2 = parseFloat(v[1]);
+        var dx1 = x1 - cx;
+        var dy1 = y1 - cy;
+        var dx2 = x2 - x1;
+        var dy2 = y2 - y1;
+        var dx3 = cx - x2;
+        var dy3 = cy - y2;
+        return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
+    }
+    game.getHarbor = getHarbor;
+    function showHarbor(row, col) {
+        return game.state.board[row][col].harbor !== null;
+    }
+    game.showHarbor = showHarbor;
     function showRollNum(row, col) {
         return game.state.board[row][col].rollNum > 0 || (game.state.robber.row === row && game.state.robber.col === col);
     }
@@ -584,7 +644,7 @@ var game;
             if (game.devRoads.length === 2) {
                 game.showInfoModal = true;
                 game.infoModalHeader = 'Playing Development Cards';
-                game.infoModalMsg = 'Are you sure to build both roads?';
+                game.infoModalMsg = 'Are you sure you want to build both roads?';
                 game.onOkClicked = onRoadBuildingDone;
             }
             return;
@@ -596,7 +656,7 @@ var game;
         game.showInfoModal = true;
         game.onOkClicked = onBuild;
         game.infoModalHeader = 'Building';
-        game.infoModalMsg = 'Are you sure to build a road?';
+        game.infoModalMsg = 'Are you sure you want to build a road?';
     }
     game.onClickEdge = onClickEdge;
     function onMouseOverVertex(row, col, vertexNum) {
@@ -607,14 +667,26 @@ var game;
     }
     game.onMouseOverVertex = onMouseOverVertex;
     function onClickVertex(row, col, vertexNum) {
-        buildTarget = Construction.Settlement;
-        buildRow = row;
-        buildCol = col;
-        buildNum = vertexNum;
-        game.showInfoModal = true;
-        game.onOkClicked = onBuild;
-        game.infoModalHeader = 'Building';
-        game.infoModalMsg = 'Are you sure to build a settlement?';
+        if (game.state.board[row][col].vertices[vertexNum] === -1) {
+            buildTarget = Construction.Settlement;
+            buildRow = row;
+            buildCol = col;
+            buildNum = vertexNum;
+            game.showInfoModal = true;
+            game.onOkClicked = onBuild;
+            game.infoModalHeader = 'Building';
+            game.infoModalMsg = 'Are you sure you want to build a settlement?';
+        }
+        else if (game.state.board[row][col].vertices[vertexNum] === Construction.Settlement && game.state.board[row][col].vertexOwner[vertexNum] === game.mockPlayerIdx) {
+            buildTarget = Construction.City;
+            buildRow = row;
+            buildCol = col;
+            buildNum = vertexNum;
+            game.showInfoModal = true;
+            game.onOkClicked = onBuild;
+            game.infoModalHeader = 'Building';
+            game.infoModalMsg = 'Are you sure you want to upgrade this settlement to a city?';
+        }
     }
     game.onClickVertex = onClickVertex;
     function onBuild() {
@@ -723,6 +795,16 @@ var game;
         return game.state.moveType !== MoveType.INIT_BUILD && game.state.diceRolled;
     }
     game.showEndTurn = showEndTurn;
+    function endTurn() {
+        var turnMove = {
+            moveType: MoveType.INIT,
+            playerIdx: game.mockPlayerIdx,
+            currState: angular.copy(game.state)
+        };
+        var nextMove = gameLogic.onEndTurn(turnMove, game.move.turnIndexAfterMove);
+        moveService.makeMove(nextMove);
+    }
+    game.endTurn = endTurn;
     function getDicesNum() {
         return game.state.dices.reduce(function (a, b) { return a + b; });
     }
@@ -775,7 +857,7 @@ var game;
         game.showInfoModal = true;
         game.onOkClicked = devCardEventHandlers[cardIdx];
         game.infoModalHeader = 'Playing Development Cards';
-        game.infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx] + '?';
+        game.infoModalMsg = 'Are you sure you want to play ' + DevCard[cardIdx] + '?';
     }
     game.onDevCardClicked = onDevCardClicked;
     /**
@@ -945,7 +1027,7 @@ var game;
         robberMovedCol = col;
         game.showInfoModal = true;
         game.infoModalHeader = 'Move Robber';
-        game.infoModalMsg = 'Are you sure to move robber to here?';
+        game.infoModalMsg = 'Are you sure you want to move the robber here?';
     }
     function onMoveRobberDone() {
         var turnMove = {
@@ -1113,7 +1195,7 @@ var game;
     game.showBuyDevCardButton = showBuyDevCardButton;
     function whenBuyDevCard() {
         game.infoModalHeader = 'Trade';
-        game.infoModalMsg = 'Are you sure to buy a development card?';
+        game.infoModalMsg = 'Are you sure you want to buy a development card?';
         game.showInfoModal = true;
         game.onOkClicked = confirmBuyDevCard;
     }

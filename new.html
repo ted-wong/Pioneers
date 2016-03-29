@@ -180,7 +180,7 @@
                 <strong>Dev Cards</strong> x {{game.getNumDevCards(3)}}
               </li>
             </ul>
-            <button class="btn btn-danger dice-and-end" ng-if="game.showEndTurn()">End Turn</button>
+            <button class="btn btn-danger dice-and-end" ng-if="game.showEndTurn()" ng-click="game.endTurn()">End Turn</button>
             <img src="imgs/dice1.png" alt="imgs/dice2.png" class="dice-and-end dice"
                  ng-if="game.showDice()" ng-click="game.onRollDice()"/>
           </div>
@@ -282,6 +282,9 @@
             <pattern id="dice" patternUnits="userSpaceOnUse" width="70" height="70">
               <image xlink:href="imgs/dice2.png" x="0" y="0" width="70" height="70" />
             </pattern>
+            <pattern id="harbor" patternUnits="userSpaceOnUse" width="224" height="225">
+              <image xlink:href="imgs/harbor1.jpg" x="0" y="0" width="224" height="225" />
+            </pattern>
           </defs>
           <g ng-repeat="row in rows">
             <g ng-repeat="col in cols"
@@ -294,6 +297,10 @@
                       ng-attr-cy="{{game.getCenter(row, col)[1]}}"
                       r="15" fill="white"
                       ng-if="game.showRollNum(row, col)"/>
+              <path ng-attr-d="{{game.getHarbor(row, col)}}"
+                      stroke-width="5"
+                      fill="url(#harbor)"
+                      ng-if="game.showHarbor(row, col)"/>
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
                     ng-attr-y="{{game.getCenter(row, col)[1]}}"
                     text-anchor="middle" font-weight="bold"
@@ -341,7 +348,8 @@
                       ng-attr-stroke="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
                       stroke-width="5"
                       ng-attr-fill="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
-                      ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"/>
+                      ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"
+                      ng-click="game.onClickVertex(row, col, vertex)"/>
               </g>
             </g>
           </g>
@@ -389,12 +397,12 @@
             <button class="btn btn-success btn-xs"
                     ng-click="game.onTradeWithBankStart()"
                     ng-if="game.showTradeButton()">
-              Trade With Bank
+              Trade with Bank
             </button>
             <button class="btn btn-success btn-xs"
                     ng-click="game.whenBuyDevCard()"
                     ng-if="game.showBuyDevCardButton()">
-              Buy a Dev. Card
+              Buy a Development Card
             </button>
           </div>
           <div class="panel-body">

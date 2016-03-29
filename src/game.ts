@@ -77,6 +77,11 @@ module game {
   let wantedResource: Resource = -1;
   export let wantedNum: number = 0;
   let tradeWithBank: boolean = false;
+  
+  // needed for initial building phase
+  export let initialBuilding: boolean = true;
+  let initBuildingReverse: boolean = false;
+  
 
   export function getPlayerInfo(playerIndex:number): Player {
 //    if (state == null)
@@ -199,34 +204,57 @@ module game {
   function updateAlert() {
     switch (state.moveType) {
       case MoveType.INIT:
+        alertStyle = 'success';
+        alertMsg = "It is now player 1's turn";
         break;
       case MoveType.INIT_BUILD:
         alertStyle = 'success';
         if (state.eventIdx === myIndex) {
-          if (state.players[myIndex].construction[Construction.Settlement] === 1 && state.players[myIndex].construction[Construction.Road] === 2) {
+          if (state.players[myIndex].construction[Construction.Settlement] === 2 && state.players[myIndex].construction[Construction.Road] === 2) {
             alertMsg = 'Initial buildings done, time to start the game!';
           } else {
-            alertMsg = 'Please place your initial buildings...';
+            alertMsg = 'Please place your initial buildings and roads...';
           }
         } else {
-          alertMsg = 'Player' + (state.eventIdx + 1) + ' placing initial buildings...'
+          if (state.players[state.eventIdx].construction[Construction.Settlement] > 
+            state.players[state.eventIdx].construction[Construction.Road]) {
+            alertMsg = 'Player ' + (state.eventIdx + 1) + ' placed a settlement, but now needs a road...';
+          } else {
+            alertMsg = 'Player ' + (state.eventIdx + 1) + ' placing initial buildings and roads...';
+          }
         }
         break;
       case MoveType.ROLL_DICE:
+        alertStyle = 'success';
+        alertMsg = "Player 1 rolled a " + state.dices.reduce(function(a, b) {return a+b;});
         break;
       case MoveType.BUILD_ROAD:
+        alertStyle = 'success';
+        alertMsg = "Player 1" + " built a road!";
         break;
       case MoveType.BUILD_SETTLEMENT:
+        alertStyle = 'success';
+        alertMsg = "Player 1" + " built a settlement!";
         break;
       case MoveType.BUILD_CITY:
+        alertStyle = 'success';
+        alertMsg = "Player 1" + " upgraded a settlement to a city!";
         break;
       case MoveType.BUILD_DEVCARD:
+        alertStyle = 'success';
+        alertMsg = "Player 1" + " bought a development card!";
         break;
       case MoveType.KNIGHT:
+        alertStyle = 'success';
+        alertMsg = "Player 1" + " played a knight!";
         break;
       case MoveType.MONOPOLY:
+        alertStyle = 'success';
+        alertMsg = "Player 1" + " played a monopoly development card!";
         break;
       case MoveType.YEAR_OF_PLENTY:
+        alertStyle = 'success';
+        alertMsg = "Player 1" + " played a year of plenty card!";
         break;
       case MoveType.TRADE:
         break;
@@ -237,6 +265,7 @@ module game {
       case MoveType.ROB_PLAYER:
         break;
       case MoveType.TRANSACTION_WITH_BANK:
+        alertMsg = "Player 1" + " traded with the bank!";
         break;
       case MoveType.WIN:
         break;
@@ -263,10 +292,10 @@ module game {
     cleanupInfoModal();
     switch (state.moveType) {
       case MoveType.INIT_BUILD:
-        if (state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+        if (state.eventIdx === 0 && initBuildingReverse === true) {
           let allDoneInitBuild = true;
           for (let i = 0; i < gameLogic.NUM_PLAYERS; i++) {
-            if (state.players[i].construction.reduce(function(a, b) {return a+b;}) !== 3) {
+            if (state.players[i].construction[Construction.Road] !== 2 || state.players[i].construction[Construction.Settlement] !== 2) {
               allDoneInitBuild = false;
               break;
             }
@@ -276,6 +305,7 @@ module game {
             infoModalHeader = 'Start Game';
             infoModalMsg = "Everyone is ready, it's time to start the game!";
             canInfoModalTurnOff = false;
+            initialBuilding = false;
 
             let turnMove: TurnMove = {
               moveType: MoveType.INIT,
@@ -294,6 +324,9 @@ module game {
               }
             };
           }
+        }
+        if (state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+          initBuildingReverse = true;
         }
         break;
       case MoveType.ROLL_DICE:
@@ -346,17 +379,6 @@ module game {
         sendComputerMove();
       }
     }
-  }
-
-  export function clickedOnHexModal(evt: Event) {
-    console.log("test");
-    if (evt.target === evt.currentTarget) {
-	  console.log("in if");
-      evt.preventDefault();
-      evt.stopPropagation();
-      isHexModalShown = true;
-    }
-    return true;
   }
 
   export function clickedOnModal(evt: Event) {
@@ -457,8 +479,18 @@ module game {
 
     if (mouseTarget === MouseTarget.VERTEX) {
       return targetNum === vertex;
-    } else {
+    }
+    
+    if (initialBuilding && state.players[mockPlayerIdx].construction[Construction.Settlement] >
+      state.players[mockPlayerIdx].construction[Construction.Road]) {
+      return false;
+    }
+    
+    // only show buildable locations
+    if (gameLogic.canBuildSettlementLegally(state.players[mockPlayerIdx], state.board, row, col, vertex, initialBuilding)) {
       return true;
+    } else {
+      return false;
     }
   }
 
@@ -496,8 +528,18 @@ module game {
 
     if (mouseTarget === MouseTarget.EDGE) {
       return targetNum === edge;
-    } else {
+    }
+
+    if (initialBuilding && state.players[mockPlayerIdx].construction[Construction.Settlement] ===
+      state.players[mockPlayerIdx].construction[Construction.Road]) {
+      return false;
+    }
+
+    // only show buildable locations
+    if (gameLogic.canBuildRoadLegally(state.players[mockPlayerIdx], state.board, row, col, edge, true)) {
       return true;
+    } else {
+      return false;
     }
   }
 
@@ -573,6 +615,36 @@ module game {
     return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
   }
 
+  export function getHarbor(row: number, col: number): string {
+
+    var cx = Number(getCenter(row, col)[0]);
+    var cy = Number(getCenter(row, col)[1]);
+    let start = 'M' + cx + ',' + cy;
+
+    var v = coordinates[row][col][state.board[row][col].harbor.vertices[0]].split(',');
+    var x1 = parseFloat(v[0]);
+    var y1 = parseFloat(v[1]);
+    
+    v = coordinates[row][col][state.board[row][col].harbor.vertices[1]].split(',');
+    var x2 = parseFloat(v[0]);
+    var y2 = parseFloat(v[1]);
+
+    var dx1 = x1 - cx;
+    var dy1 = y1 - cy;
+    var dx2 = x2 - x1;
+    var dy2 = y2 - y1;
+    var dx3 = cx - x2;
+    var dy3 = cy - y2;
+
+    return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
+  }
+
+
+
+  export function showHarbor(row: number, col: number): boolean {
+    return state.board[row][col].harbor !== null;
+  }
+
   export function showRollNum(row: number, col: number): boolean {
     return state.board[row][col].rollNum > 0 || (state.robber.row === row && state.robber.col === col);
   }
@@ -630,7 +702,7 @@ module game {
       if (devRoads.length === 2) {
         showInfoModal = true;
         infoModalHeader = 'Playing Development Cards';
-        infoModalMsg = 'Are you sure to build both roads?';
+        infoModalMsg = 'Are you sure you want to build both roads?';
         onOkClicked = onRoadBuildingDone;
       }
 
@@ -645,7 +717,7 @@ module game {
     showInfoModal = true;
     onOkClicked = onBuild;
     infoModalHeader = 'Building';
-    infoModalMsg = 'Are you sure to build a road?';
+    infoModalMsg = 'Are you sure you want to build a road?';
   }
 
   export function onMouseOverVertex(row: number, col: number, vertexNum: number) {
@@ -656,15 +728,29 @@ module game {
   }
 
   export function onClickVertex(row: number, col: number, vertexNum: number) {
-    buildTarget = Construction.Settlement;
-    buildRow = row;
-    buildCol = col;
-    buildNum = vertexNum;
+    
+    if (state.board[row][col].vertices[vertexNum] === -1) {
+      buildTarget = Construction.Settlement;
+      buildRow = row;
+      buildCol = col;
+      buildNum = vertexNum;
 
-    showInfoModal = true;
-    onOkClicked = onBuild;
-    infoModalHeader = 'Building';
-    infoModalMsg = 'Are you sure to build a settlement?';
+      showInfoModal = true;
+      onOkClicked = onBuild;
+      infoModalHeader = 'Building';
+      infoModalMsg = 'Are you sure you want to build a settlement?';
+
+    } else if (state.board[row][col].vertices[vertexNum] === Construction.Settlement && state.board[row][col].vertexOwner[vertexNum] === mockPlayerIdx) {
+      buildTarget = Construction.City;
+      buildRow = row;
+      buildCol = col;
+      buildNum = vertexNum;
+
+      showInfoModal = true;
+      onOkClicked = onBuild;
+      infoModalHeader = 'Building';
+      infoModalMsg = 'Are you sure you want to upgrade this settlement to a city?';
+    }
   }
 
   export function onBuild() {
@@ -780,6 +866,17 @@ module game {
     return state.moveType !== MoveType.INIT_BUILD && state.diceRolled;
   }
 
+  export function endTurn(): void {
+    let turnMove: TurnMove = {
+      moveType: MoveType.INIT,
+      playerIdx: mockPlayerIdx,
+      currState: angular.copy(state)
+    }
+    let nextMove: IMove = gameLogic.onEndTurn(turnMove, move.turnIndexAfterMove);
+    moveService.makeMove(nextMove);
+  }
+
+
   export function getDicesNum(): number {
     return state.dices.reduce(function(a, b) {return a+b;});
   }
@@ -834,7 +931,7 @@ module game {
     showInfoModal = true;
     onOkClicked = devCardEventHandlers[cardIdx];
     infoModalHeader = 'Playing Development Cards';
-    infoModalMsg = 'Are you sure to play ' + DevCard[cardIdx] + '?';
+    infoModalMsg = 'Are you sure you want to play ' + DevCard[cardIdx] + '?';
   }
 
   /**
@@ -1013,7 +1110,7 @@ module game {
 
     showInfoModal = true;
     infoModalHeader = 'Move Robber';
-    infoModalMsg = 'Are you sure to move robber to here?';
+    infoModalMsg = 'Are you sure you want to move the robber here?';
   }
 
   function onMoveRobberDone() {
@@ -1191,7 +1288,7 @@ module game {
 
   export function whenBuyDevCard() {
     infoModalHeader = 'Trade';
-    infoModalMsg = 'Are you sure to buy a development card?';
+    infoModalMsg = 'Are you sure you want to buy a development card?';
     showInfoModal = true;
     onOkClicked = confirmBuyDevCard;
   }
