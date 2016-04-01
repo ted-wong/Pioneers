@@ -27,7 +27,7 @@ module game {
   export let width: number = 0;
 
   export let coordinates: string[][][] = [];
-  export let playerColor = ['red', 'blue', 'brown', 'green'];
+  export let playerColor = ['#ED3B3B', '#3889F2', '#2AC761', '#CC9D04'];
   export let myIndex: number = -2;
   export let mockPlayerIdx: number = -2;
 
@@ -82,30 +82,6 @@ module game {
   export let initialBuilding: boolean = true;
   let initBuildingReverse: boolean = false;
   
-
-  export function getPlayerInfo(playerIndex:number): Player {
-//    if (state == null)
-//      state = gameLogic.getInitialState();
-    return state.players[playerIndex];
-  }
-
-  // type 0 for resource cards, 1 for dev cards
-  export function getPlayerCardCount(playerIndex:number, type:number): number {
-//    if (state == null)
-//      state = gameLogic.getInitialState();
-  
-    var total: number = 0;
-    if (type === 0) {
-      for (var i = 0; i < Resource.SIZE; i++) {
-        total += state.players[playerIndex].resources[i];
-      }
-    } else {
-      for (var i = 0; i < DevCard.SIZE; i++) {
-        total += state.players[playerIndex].devCards[i];
-      }
-    }
-    return total;
-  }
 
   export function init_callback(gameAreaWidth: number, gameAreaHeight: number): void {
     height = gameAreaHeight;
@@ -639,7 +615,16 @@ module game {
     return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
   }
 
+  export function getHarborFill(row: number, col: number): string {
+    if (state.board[row][col].harbor.trading === Resource.ANY)
+		return 'white';
+    return 'url(#r' + state.board[row][col].harbor.trading + ')';
+  }
 
+  export function harborIsAny(row: number, col: number): boolean {
+    if (state.board[row][col].harbor === null) return false;
+    return state.board[row][col].harbor.trading === Resource.ANY;
+  }
 
   export function showHarbor(row: number, col: number): boolean {
     return state.board[row][col].harbor !== null;
@@ -818,6 +803,25 @@ module game {
 
   export function getPlayerKnights(idx: number): number {
     return state.players[idx].knightsPlayed;
+  }
+
+  export function getPlayerRoadLength(idx: number): number {
+    return gameLogic.getLongestRoad(state.players[idx], state.board);
+  }
+
+  export function getPlayerBorder(idx: number): string {
+    if (idx === mockPlayerIdx)
+      return "5px solid #EBEB1A";
+	return "2px solid black";
+  }
+
+  export function getRollNumText(row: number, col: number): string {
+  	if (state.board[row][col].hasRobber) {
+		if (state.board[row][col].rollNum === -1)
+			return "R";
+		return "R" + state.board[row][col].rollNum;
+	}
+	return "" + state.board[row][col].rollNum;
   }
 
   export function getNumResources(playerIdx: number, resource: Resource): number {

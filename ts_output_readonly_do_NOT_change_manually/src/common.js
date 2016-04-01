@@ -241,22 +241,6 @@ function getHexesAdjacentToVertex(row, col, vertex) {
     }
     return [hex1, hex2];
 }
-function getLongestRoad(player, board) {
-    var max = 0;
-    // loop over all unique vertices
-    for (var i = 0; i < gameLogic.ROWS; i++) {
-        for (var j = 0; j < gameLogic.COLS; j++) {
-            // loop over every other vertex
-            // only need to do calculate from every other vertex to reduce computations
-            for (var k = 0; k < 6; k += 2) {
-                var roadLength = findRoadSubLength(player, board, i, j, k, []);
-                if (roadLength > max)
-                    max = roadLength;
-            }
-        }
-    }
-    return max;
-}
 // traverse each node (vertex) and recurse if a road exists between a neighboring node
 //
 // TODO: stop adding to length if other player settlement/city is inbetween roads

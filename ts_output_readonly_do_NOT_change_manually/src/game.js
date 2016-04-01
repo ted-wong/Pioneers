@@ -23,7 +23,7 @@ var game;
     game.height = 0;
     game.width = 0;
     game.coordinates = [];
-    game.playerColor = ['red', 'blue', 'brown', 'green'];
+    game.playerColor = ['#ED3B3B', '#3889F2', '#2AC761', '#CC9D04'];
     game.myIndex = -2;
     game.mockPlayerIdx = -2;
     game.alertStyle = 'success';
@@ -64,30 +64,6 @@ var game;
     // needed for initial building phase
     game.initialBuilding = true;
     var initBuildingReverse = false;
-    function getPlayerInfo(playerIndex) {
-        //    if (state == null)
-        //      state = gameLogic.getInitialState();
-        return game.state.players[playerIndex];
-    }
-    game.getPlayerInfo = getPlayerInfo;
-    // type 0 for resource cards, 1 for dev cards
-    function getPlayerCardCount(playerIndex, type) {
-        //    if (state == null)
-        //      state = gameLogic.getInitialState();
-        var total = 0;
-        if (type === 0) {
-            for (var i = 0; i < Resource.SIZE; i++) {
-                total += game.state.players[playerIndex].resources[i];
-            }
-        }
-        else {
-            for (var i = 0; i < DevCard.SIZE; i++) {
-                total += game.state.players[playerIndex].devCards[i];
-            }
-        }
-        return total;
-    }
-    game.getPlayerCardCount = getPlayerCardCount;
     function init_callback(gameAreaWidth, gameAreaHeight) {
         game.height = gameAreaHeight;
         game.width = gameAreaWidth;
@@ -585,6 +561,18 @@ var game;
         return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
     }
     game.getHarbor = getHarbor;
+    function getHarborFill(row, col) {
+        if (game.state.board[row][col].harbor.trading === Resource.ANY)
+            return 'white';
+        return 'url(#r' + game.state.board[row][col].harbor.trading + ')';
+    }
+    game.getHarborFill = getHarborFill;
+    function harborIsAny(row, col) {
+        if (game.state.board[row][col].harbor === null)
+            return false;
+        return game.state.board[row][col].harbor.trading === Resource.ANY;
+    }
+    game.harborIsAny = harborIsAny;
     function showHarbor(row, col) {
         return game.state.board[row][col].harbor !== null;
     }
@@ -752,6 +740,25 @@ var game;
         return game.state.players[idx].knightsPlayed;
     }
     game.getPlayerKnights = getPlayerKnights;
+    function getPlayerRoadLength(idx) {
+        return gameLogic.getLongestRoad(game.state.players[idx], game.state.board);
+    }
+    game.getPlayerRoadLength = getPlayerRoadLength;
+    function getPlayerBorder(idx) {
+        if (idx === game.mockPlayerIdx)
+            return "5px solid #EBEB1A";
+        return "2px solid black";
+    }
+    game.getPlayerBorder = getPlayerBorder;
+    function getRollNumText(row, col) {
+        if (game.state.board[row][col].hasRobber) {
+            if (game.state.board[row][col].rollNum === -1)
+                return "R";
+            return "R" + game.state.board[row][col].rollNum;
+        }
+        return "" + game.state.board[row][col].rollNum;
+    }
+    game.getRollNumText = getRollNumText;
     function getNumResources(playerIdx, resource) {
         if (!game.state || playerIdx < 0) {
             return 0;

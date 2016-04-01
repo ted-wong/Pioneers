@@ -303,7 +303,7 @@ describe('Construction Tests', function() {
       state.board[3][3].edges[2] = 0;
       state.board[2][2].edges[5] = 0;
 
-      if (getLongestRoad(player, state.board) != 2) {
+      if (gameLogic.getLongestRoad(player, state.board) != 2) {
         throw new Error('Road length is not 2');
       }
     }
@@ -329,7 +329,7 @@ describe('Construction Tests', function() {
       state.board[2][3].edges[3] = 0;
       state.board[2][2].edges[0] = 0;
 
-      if (getLongestRoad(player, state.board) != 3) {
+      if (gameLogic.getLongestRoad(player, state.board) != 3) {
         throw new Error('Road length is not 3');
       }
     }
