@@ -58,11 +58,11 @@
         <div class="modal-header">
           <button type="button" class="close" ng-click="game.isHelpModalShown = false" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 id="e2e_test_rules_title" class="modal-title">
-            {{ 'RULES_OF_TICTACTOE' | translate }}
+            {{ 'RULES_OF_PIONEERS' | translate }}
           </h4>
         </div>
         <div class="modal-body">
-          <carousel style="height: 150px">
+          <carousel style="height: 300px">
             <slide>
               <table>
                 <tr>
@@ -70,7 +70,7 @@
                     {{ 'RULES_SLIDE1' | translate }}
                   </td>
                   <td>
-                    <img src="imgs/HelpSlide1.png" alt="Help slide 1" style="height:100px;">
+                    <img src="imgs/devcards4.jpg" alt="Help slide 1" style="height:125px;">
                   </td>
                 </tr>
               </table>
@@ -82,7 +82,31 @@
                   {{ 'RULES_SLIDE2' | translate }}
                   </td>
                   <td>
-                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:100px;">
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
+                  </td>
+                </tr>
+              </table>
+            </slide>
+            <slide>
+              <table>
+                <tr>
+                  <td id="e2e_test_rules_slide3_text">
+                  {{ 'RULES_SLIDE3' | translate }}
+                  </td>
+                  <td>
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 3" style="height:150px;">
+                  </td>
+                </tr>
+              </table>
+            </slide>
+            <slide>
+              <table>
+                <tr>
+                  <td id="e2e_test_rules_slide4_text">
+                  {{ 'RULES_SLIDE4' | translate }}
+                  </td>
+                  <td>
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
                   </td>
                 </tr>
               </table>
@@ -116,11 +140,9 @@
             <span id="num-settlement" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="30" height="30" viewBox="0 0 30 30">
                 <path d="M15,0 l-15,15 v15 h30 v-15 l-15,-15"
-                      ng-attr-fill="black"
-                      stroke-width="0"/>
-                <path d="M15,1 l-14,14 v14 h28 v-14 l-14,-14"
                       ng-attr-fill="{{game.getColor(game.myIndex)}}"
-                      stroke-width="0"/>
+                      stroke-width="1"
+					  stroke="black"/>
                 <text x="15" y="20" text-anchor="middle" font-weight="bold" fill="black">
                   {{game.getNumSettlementCanBuild()}}
                 </text>
@@ -129,12 +151,10 @@
 
             <span id="num-city" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="45" height="30" viewBox="0 0 45 30">
-                <path d="M15,0 l-15,15 v15 h45 v-16 h-15 l-15,-15"
-                      ng-attr-fill="black"
-                      stroke-width="0"/>
-                <path d="M15,1 l-14,14 v14 h43 v-14 h-14 l-14,-14"
+                <path d="M15,0 l-15,15 v15 h45 v-15 h-15 l-15,-15"
                       ng-attr-fill="{{game.getColor(game.myIndex)}}"
-                      stroke-width="0"/>
+                      stroke-width="1"
+					  stroke="black"/>
                 <text x="15" y="20" text-anchor="middle" font-weight="bold" fill="black">
                     {{game.getNumCityCanBuild()}}
                 </text>
@@ -143,12 +163,10 @@
 
             <span id="num-road" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="60" height="30" viewBox="0 0 60 30">
-                <line x1="0" y1="22" x2="60" y2="22"
-                      stroke="black"
-                      stroke-width="16"/>
-                <line x1="1" y1="22" x2="59" y2="22"
-                      ng-attr-stroke="{{game.getColor(game.myIndex)}}"
-                      stroke-width="15"/>
+                <path d="M0,15 v15 h60 v-15 h-60"
+                      ng-attr-fill="{{game.getColor(game.myIndex)}}"
+                      stroke-width="1"
+					  stroke="black"/>
                 <text x="30" y="13" text-anchor="middle" font-weight="bold" fill="black">
                   {{game.getNumRoadCanBuild()}}
                 </text>
@@ -332,15 +350,15 @@
                       r="20" ng-attr-fill="{{game.getHarborFill(row, col)}}"
                       ng-if="game.showHarbor(row, col)"/>
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
-                    ng-attr-y="{{game.getCenter(row, col)[1]}}"
-                    text-anchor="middle" font-weight="bold"
+                    ng-attr-y="{{game.getCenter(row, col)[1] - 2}}"
+                    text-anchor="middle" font-weight="bold" dominant-baseline="central"
                     ng-attr-fill="{{game.getRollColor(row, col)}}"
                     ng-if="game.showHarbor(row, col) && game.harborIsAny(row, col)">
                 ?
               </text>
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
-                    ng-attr-y="{{game.getCenter(row, col)[1]}}"
-                    text-anchor="middle" font-weight="bold"
+                    ng-attr-y="{{game.getCenter(row, col)[1] - 2}}"
+                    text-anchor="middle" font-weight="bold" dominant-baseline="central"
                     ng-attr-fill="{{game.getRollColor(row, col)}}"
                     ng-if="game.showRollNum(row, col)">
                 {{game.getRollNumText(row, col)}}
@@ -355,8 +373,15 @@
                       ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
                       ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
                       ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
-                      ng-attr-stroke="{{game.getRoadColor(row, col, edge)}}"
+                      stroke="black"
                       stroke-width="7"
+                      ng-if="game.showRoad(row, col, edge)"/>
+                <line ng-attr-x1="{{game.getEdgeCoordinates(row, col, edge)[0][0]}}"
+                      ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
+                      ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
+                      ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
+                      ng-attr-stroke="{{game.getRoadColor(row, col, edge)}}"
+                      stroke-width="5"
                       ng-if="game.showRoad(row, col, edge)"/>
  
                 <line ng-attr-x1="{{game.getEdgeCoordinates(row, col, edge)[0][0]}}"
@@ -382,8 +407,8 @@
                         ng-if="game.showVertex(row, col, vertex)"/>
                 <path ng-attr-d="{{game.showSettlement(row, col, vertex) ? 
                                     game.getSettlement(row, col, vertex) : game.getCity(row, col, vertex)}}"
-                      ng-attr-stroke="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
-                      stroke-width="5"
+                      stroke="black"
+                      stroke-width="1"
                       ng-attr-fill="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
                       ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"
                       ng-click="game.onClickVertex(row, col, vertex)"/>
