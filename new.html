@@ -58,11 +58,11 @@
         <div class="modal-header">
           <button type="button" class="close" ng-click="game.isHelpModalShown = false" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 id="e2e_test_rules_title" class="modal-title">
-            {{ 'RULES_OF_TICTACTOE' | translate }}
+            {{ 'RULES_OF_PIONEERS' | translate }}
           </h4>
         </div>
         <div class="modal-body">
-          <carousel style="height: 150px">
+          <carousel style="height: 300px">
             <slide>
               <table>
                 <tr>
@@ -70,7 +70,7 @@
                     {{ 'RULES_SLIDE1' | translate }}
                   </td>
                   <td>
-                    <img src="imgs/HelpSlide1.png" alt="Help slide 1" style="height:100px;">
+                    <img src="imgs/devcards4.jpg" alt="Help slide 1" style="height:125px;">
                   </td>
                 </tr>
               </table>
@@ -82,7 +82,31 @@
                   {{ 'RULES_SLIDE2' | translate }}
                   </td>
                   <td>
-                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:100px;">
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
+                  </td>
+                </tr>
+              </table>
+            </slide>
+            <slide>
+              <table>
+                <tr>
+                  <td id="e2e_test_rules_slide3_text">
+                  {{ 'RULES_SLIDE3' | translate }}
+                  </td>
+                  <td>
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 3" style="height:150px;">
+                  </td>
+                </tr>
+              </table>
+            </slide>
+            <slide>
+              <table>
+                <tr>
+                  <td id="e2e_test_rules_slide4_text">
+                  {{ 'RULES_SLIDE4' | translate }}
+                  </td>
+                  <td>
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
                   </td>
                 </tr>
               </table>
@@ -101,8 +125,8 @@
 
 <div id="gameArea">
   <div class="container-fluid">
-    <div class="row" id="gameBoardAndPlayersInfoAndBuildingInfo">
-      <div class="col-md-4" id="BuildingInfoAndPlayersInfo">
+    <div id="gameBoardAndPlayersInfoAndBuildingInfo">
+      <div id="BuildingInfoAndPlayersInfo">
         <div class="panel-default" id="AlertInfo">
           <div class="panel-body">
             <div ng-attr-class="alert alert-{{game.alertStyle}}" role="alert">
@@ -111,14 +135,14 @@
           </div>
         </div>
         <div class="panel-default" id="BuildingInfo">
-          <div class="panel-heading"><strong>You can Build:</strong></div>
-          <div class="panel-body">
+          <p><strong>Pieces left to build:</strong></p>
+          <div class="buildings-body">
             <span id="num-settlement" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="30" height="30" viewBox="0 0 30 30">
-                <path d="M15,0 l-15,15 v15 h30 v-15 l-17.5,-17.5"
+                <path d="M15,0 l-15,15 v15 h30 v-15 l-15,-15"
                       ng-attr-fill="{{game.getColor(game.myIndex)}}"
-                      stroke-width="0"/>
-
+                      stroke-width="1"
+					  stroke="black"/>
                 <text x="15" y="20" text-anchor="middle" font-weight="bold" fill="black">
                   {{game.getNumSettlementCanBuild()}}
                 </text>
@@ -126,11 +150,11 @@
             </span>
 
             <span id="num-city" draggable="true" class="building-info">
-              <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="45" height="30" viewBox="0 0 30 30">
-                <path d="M15,0 l-15,15 v15 h45 v-15 h-15 l-17.5,-17.5"
+              <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="45" height="30" viewBox="0 0 45 30">
+                <path d="M15,0 l-15,15 v15 h45 v-15 h-15 l-15,-15"
                       ng-attr-fill="{{game.getColor(game.myIndex)}}"
-                      stroke-width="0"/>
-
+                      stroke-width="1"
+					  stroke="black"/>
                 <text x="15" y="20" text-anchor="middle" font-weight="bold" fill="black">
                     {{game.getNumCityCanBuild()}}
                 </text>
@@ -138,13 +162,12 @@
             </span>
 
             <span id="num-road" draggable="true" class="building-info">
-              <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="30" viewBox="0 0 20 30">
-                <line x1="0" y1="0" x2="0" y2="30"
-                      ng-attr-stroke="{{game.getColor(game.myIndex)}}"
+              <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="60" height="30" viewBox="0 0 60 30">
+                <path d="M0,15 v15 h60 v-15 h-60"
                       ng-attr-fill="{{game.getColor(game.myIndex)}}"
-                      stroke-width="30"/>
-
-                <text x="10" y="20" text-anchor="middle" font-weight="bold" fill="black">
+                      stroke-width="1"
+					  stroke="black"/>
+                <text x="30" y="13" text-anchor="middle" font-weight="bold" fill="black">
                   {{game.getNumRoadCanBuild()}}
                 </text>
               </svg>
@@ -152,33 +175,46 @@
           </div>
         </div>
         <div class="panel-default" id="PlayersInfo">
-          <div class="panel-heading"><strong>Players</strong></div>
           <div class="panel-body">
             <ul class="list-group player-info">
-              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[0]}}">
-                <strong>Points</strong> x {{game.getPlayerPoints(0)}}
-                <strong>Knights</strong> x {{game.getPlayerKnights(0)}}
-                <strong>Resources</strong> x {{game.getNumResources(0)}}
-                <strong>Dev Cards</strong> x {{game.getNumDevCards(0)}}
+              <li class="playertable-item" ng-attr-style="background-color:{{game.playerColor[0]}}; border:{{game.getPlayerBorder(0)}}"><p><strong>Player 1</strong></p>
+                <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(0)}}
+                <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(0)}}
+                <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(0)}}
+                <img src="imgs/devcards0.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerKnights(0)}}
+				<img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(0)}}
               </li>
-              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[1]}}">
-                <strong>Points</strong> x {{game.getPlayerPoints(1)}}
-                <strong>Knights</strong> x {{game.getPlayerKnights(1)}}
-                <strong>Resources</strong> x {{game.getNumResources(1)}}
-                <strong>Dev Cards</strong> x {{game.getNumDevCards(1)}}
+              <li class="playertable-item" ng-attr-style="background-color:{{game.playerColor[1]}}; border:{{game.getPlayerBorder(1)}}"><p><strong>Player 2</strong></p>
+                <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(1)}}
+                <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(1)}}
+                <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(1)}}
+                <img src="imgs/devcards0.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerKnights(1)}}
+				<img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(1)}}
               </li>
-              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[2]}}">
-                <strong>Points</strong> x {{game.getPlayerPoints(2)}}
-                <strong>Knights</strong> x {{game.getPlayerKnights(2)}}
-                <strong>Resources</strong> x {{game.getNumResources(2)}}
-                <strong>Dev Cards</strong> x {{game.getNumDevCards(2)}}
+              <li class="playertable-item" ng-attr-style="background-color:{{game.playerColor[2]}}; border:{{game.getPlayerBorder(2)}}"><p><strong>Player 3</strong></p>
+                <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(2)}}
+                <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(2)}}
+                <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(2)}}
+                <img src="imgs/devcards0.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerKnights(2)}}
+				<img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(2)}}
               </li>
-              <li class="list-group-item" ng-attr-style="background-color:{{game.playerColor[3]}}">
-                <strong>Points</strong> x {{game.getPlayerPoints(3)}}
-                <strong>Knights</strong> x {{game.getPlayerKnights(3)}}
-                <strong>Resources</strong> x {{game.getNumResources(3)}}
-                <strong>Dev Cards</strong> x {{game.getNumDevCards(3)}}
+              <li class="playertable-item" ng-attr-style="background-color:{{game.playerColor[3]}}; border:{{game.getPlayerBorder(3)}}"><p><strong>Player 4</strong></p>
+                <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(3)}}
+                <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(3)}}
+                <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(3)}}
+                <img src="imgs/devcards0.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerKnights(3)}}
+				<img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(3)}}
               </li>
+              <li class="playertable-item" style="background-color:#eb9bd7; border:2px solid black"><p><strong>Bank</strong></p>
+            	<span ng-repeat="idx in resourceSize">
+            	  <img ng-attr-src="imgs/resource{{idx}}.png" alt="imgs/develop.svg" class="resource-pic2">
+                	x {{game.getBankResources(idx)}}
+            	  </img>
+            	</span>
+            	<img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic">
+            	  x {{game.getBankDevCards()}}
+            	</img>
+        	  </li>
             </ul>
             <button class="btn btn-danger dice-and-end" ng-if="game.showEndTurn()" ng-click="game.endTurn()">End Turn</button>
             <img src="imgs/dice1.png" alt="imgs/dice2.png" class="dice-and-end dice"
@@ -186,7 +222,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-8" id="GameBoard">
+      <div id="GameBoard">
         <div class="overlayModal" ng-click="game.clickedOnInfoModal($event)"
              ng-class="{zeroOpacity: !game.showInfoModal, oneOpacity: game.showInfoModal}" aria-hidden="true">
           <div class="modal-dialog">
@@ -203,14 +239,14 @@
                 {{game.infoModalMsg}}
                 <div class="row">
                   <div ng-repeat="r in resourceSize" ng-if="game.showResourcePicker">
-                    <img ng-attr-src="imgs/resource{{r}}.jpg"
-                         alt="imgs/resource{{r}}.jpg"
+                    <img ng-attr-src="imgs/resource{{r}}.png"
+                         alt="imgs/resource{{r}}.png"
                          ng-click="game.onOneTargetResourcePicked(r)"
                          ng-attr-class="{{game.oneTargetResourceClass(r)}}"/>
                   </div>
                   <div ng-repeat="r in resourceSize" ng-if="game.showResourcePickerMultiple">
-                    <img ng-attr-src="imgs/resource{{r}}.jpg"
-                         alt="imgs/resource{{r}}.jpg"
+                    <img ng-attr-src="imgs/resource{{r}}.png"
+                         alt="imgs/resource{{r}}.png"
                          ng-attr-class="{{game.oneTargetResourceClass(r)}}">
                       x {{game.resourcesPicked[r]}}
                       <button type="button" class="btn btn-success btn-xs" ng-click="game.onMultipleResourcesPicked(r, true)">+</button>
@@ -225,8 +261,8 @@
                     <div class="col-md-6 col-xs-12">
                       Trading: {{game.tradingNum}}<br>
                       <div ng-repeat="r in resourceSize">
-                        <img ng-attr-src="imgs/resource{{r}}.jpg"
-                             ng-attr-alt="imgs/resource{{r}}.jpg"
+                        <img ng-attr-src="imgs/resource{{r}}.png"
+                             ng-attr-alt="imgs/resource{{r}}.png"
                              ng-click="game.onTradingSelected(r)"
                              ng-attr-class="{{game.tradingResourceClass(r, true)}}"/>
                       </div>
@@ -236,8 +272,8 @@
                     <div class="col-md-6 col-xs-12">
                       For: {{game.wantedNum}}<br>
                       <div ng-repeat="r in resourceSize">
-                        <img ng-attr-src="imgs/resource{{r}}.jpg"
-                             ng-attr-alt="imgs/resource{{r}}.jpg"
+                        <img ng-attr-src="imgs/resource{{r}}.png"
+                             ng-attr-alt="imgs/resource{{r}}.png"
                              ng-click="game.onWantedSelected(r)"
                              ng-attr-class="{{game.tradingResourceClass(r, false)}}"/>
                       </div>
@@ -282,8 +318,8 @@
             <pattern id="dice" patternUnits="userSpaceOnUse" width="70" height="70">
               <image xlink:href="imgs/dice2.png" x="0" y="0" width="70" height="70" />
             </pattern>
-            <pattern id="harbor" patternUnits="userSpaceOnUse" width="224" height="225">
-              <image xlink:href="imgs/harbor1.jpg" x="0" y="0" width="224" height="225" />
+            <pattern id="harbor" patternUnits="userSpaceOnUse" width="160" height="120">
+              <image xlink:href="imgs/harbor2.jpg" x="0" y="0" width="160" height="120" />
             </pattern>
           </defs>
           <g ng-repeat="row in rows">
@@ -295,18 +331,37 @@
                        ng-attr-fill="{{game.getHexFill(row, col)}}"/>
               <circle ng-attr-cx="{{game.getCenter(row, col)[0]}}"
                       ng-attr-cy="{{game.getCenter(row, col)[1]}}"
+                      r="16" fill="black"
+                      ng-if="game.showRollNum(row, col)"/>
+              <circle ng-attr-cx="{{game.getCenter(row, col)[0]}}"
+                      ng-attr-cy="{{game.getCenter(row, col)[1]}}"
                       r="15" fill="white"
                       ng-if="game.showRollNum(row, col)"/>
               <path ng-attr-d="{{game.getHarbor(row, col)}}"
                       stroke-width="5"
                       fill="url(#harbor)"
                       ng-if="game.showHarbor(row, col)"/>
+              <circle ng-attr-cx="{{game.getCenter(row, col)[0]}}"
+                      ng-attr-cy="{{game.getCenter(row, col)[1]}}"
+                      r="21" fill="black"
+                      ng-if="game.showHarbor(row, col)"/>
+              <circle ng-attr-cx="{{game.getCenter(row, col)[0]}}"
+                      ng-attr-cy="{{game.getCenter(row, col)[1]}}"
+                      r="20" ng-attr-fill="{{game.getHarborFill(row, col)}}"
+                      ng-if="game.showHarbor(row, col)"/>
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
-                    ng-attr-y="{{game.getCenter(row, col)[1]}}"
-                    text-anchor="middle" font-weight="bold"
+                    ng-attr-y="{{game.getCenter(row, col)[1] - 2}}"
+                    text-anchor="middle" font-weight="bold" dominant-baseline="central"
+                    ng-attr-fill="{{game.getRollColor(row, col)}}"
+                    ng-if="game.showHarbor(row, col) && game.harborIsAny(row, col)">
+                ?
+              </text>
+              <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
+                    ng-attr-y="{{game.getCenter(row, col)[1] - 2}}"
+                    text-anchor="middle" font-weight="bold" dominant-baseline="central"
                     ng-attr-fill="{{game.getRollColor(row, col)}}"
                     ng-if="game.showRollNum(row, col)">
-                {{game.state.board[row][col].hasRobber ? "R" : game.state.board[row][col].rollNum}}
+                {{game.getRollNumText(row, col)}}
               </text>
             </g>
           </g>
@@ -318,8 +373,15 @@
                       ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
                       ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
                       ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
-                      ng-attr-stroke="{{game.getRoadColor(row, col, edge)}}"
+                      stroke="black"
                       stroke-width="7"
+                      ng-if="game.showRoad(row, col, edge)"/>
+                <line ng-attr-x1="{{game.getEdgeCoordinates(row, col, edge)[0][0]}}"
+                      ng-attr-y1="{{game.getEdgeCoordinates(row, col, edge)[0][1]}}"
+                      ng-attr-x2="{{game.getEdgeCoordinates(row, col, edge)[1][0]}}"
+                      ng-attr-y2="{{game.getEdgeCoordinates(row, col, edge)[1][1]}}"
+                      ng-attr-stroke="{{game.getRoadColor(row, col, edge)}}"
+                      stroke-width="5"
                       ng-if="game.showRoad(row, col, edge)"/>
  
                 <line ng-attr-x1="{{game.getEdgeCoordinates(row, col, edge)[0][0]}}"
@@ -345,8 +407,8 @@
                         ng-if="game.showVertex(row, col, vertex)"/>
                 <path ng-attr-d="{{game.showSettlement(row, col, vertex) ? 
                                     game.getSettlement(row, col, vertex) : game.getCity(row, col, vertex)}}"
-                      ng-attr-stroke="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
-                      stroke-width="5"
+                      stroke="black"
+                      stroke-width="1"
                       ng-attr-fill="{{game.getColor(game.state.board[row][col].vertexOwner[vertex])}}"
                       ng-if="game.showSettlement(row, col, vertex) || game.showCity(row, col, vertex)"
                       ng-click="game.onClickVertex(row, col, vertex)"/>
@@ -371,29 +433,11 @@
         </svg>
       </div>
     </div>
-    <div class="row" id="MyResourcesInfoAndBankInfo">
-      <div class="col-md-6" id="MyResourcesInfo">
+    <div id="MyResourcesInfoAndBankInfo">
+      <div id="MyResourcesInfo">
         <div class="panel-default my-detail">
-          <div class="panel-heading"><strong>My Cards</strong></div>
-          <div class="panel-body">
-            <span ng-repeat="idx in resourceSize">
-              <img ng-attr-src="imgs/resource{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic">
-                x {{game.getNumResources(game.myIndex, idx)}}
-              </img>
-            </span>
-            <span ng-repeat="idx in devCardsSize">
-              <img ng-attr-src="imgs/devcards{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic"
-                   ng-click="game.onDevCardClicked(idx)">
-                x {{game.getNumDevCards(game.myIndex, idx)}}
-              </img>
-            </span>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6" id="BankInfo">
-        <div class="panel-default">
-          <div class="panel-heading">
-            <strong>Bank Info</strong>
+          <div class="mycards-header">
+		    <strong>My Cards</strong>
             <button class="btn btn-success btn-xs"
                     ng-click="game.onTradeWithBankStart()"
                     ng-if="game.showTradeButton()">
@@ -404,16 +448,21 @@
                     ng-if="game.showBuyDevCardButton()">
               Buy a Development Card
             </button>
-          </div>
-          <div class="panel-body">
+		  </div>
+          <div class="panel-body my-cards">
             <span ng-repeat="idx in resourceSize">
-              <img ng-attr-src="imgs/resource{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic">
-                x {{game.getBankResources(idx)}}
+              <img ng-attr-src="imgs/resource{{idx}}.png" alt="imgs/develop.svg">
+                x {{game.getNumResources(game.myIndex, idx)}}
               </img>
             </span>
-            <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic">
-              x {{game.getBankDevCards()}}
-            </img>
+            <span ng-repeat="idx in devCardsSize">
+              <img ng-attr-src="imgs/devcards{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic"
+                  ng-click="game.onDevCardClicked(idx)" ng-if="game.getNumDevCards(game.myIndex, idx) > 0">
+              <img ng-attr-src="imgs/devcards{{idx}}.jpg" alt="imgs/develop.svg" class="resource-pic"
+			      ng-if="game.getNumDevCards(game.myIndex, idx) == 0">
+                x {{game.getNumDevCards(game.myIndex, idx)}}
+              </img>
+            </span>
           </div>
         </div>
       </div>

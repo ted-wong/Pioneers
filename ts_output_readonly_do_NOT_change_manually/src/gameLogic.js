@@ -1245,5 +1245,22 @@ var gameLogic;
         };
     }
     gameLogic.onEndTurn = onEndTurn;
+    function getLongestRoad(player, board) {
+        var max = 0;
+        // loop over all unique vertices
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                // loop over every other vertex
+                // only need to do calculate from every other vertex to reduce computations
+                for (var k = 0; k < 6; k += 2) {
+                    var roadLength = findRoadSubLength(player, board, i, j, k, []);
+                    if (roadLength > max)
+                        max = roadLength;
+                }
+            }
+        }
+        return max;
+    }
+    gameLogic.getLongestRoad = getLongestRoad;
 })(gameLogic || (gameLogic = {}));
 //# sourceMappingURL=gameLogic.js.map

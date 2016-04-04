@@ -23,7 +23,7 @@ var game;
     game.height = 0;
     game.width = 0;
     game.coordinates = [];
-    game.playerColor = ['red', 'blue', 'brown', 'green'];
+    game.playerColor = ['#ED3B3B', '#3889F2', '#2AC761', '#CC9D04'];
     game.myIndex = -2;
     game.mockPlayerIdx = -2;
     game.alertStyle = 'success';
@@ -64,30 +64,6 @@ var game;
     // needed for initial building phase
     game.initialBuilding = true;
     var initBuildingReverse = false;
-    function getPlayerInfo(playerIndex) {
-        //    if (state == null)
-        //      state = gameLogic.getInitialState();
-        return game.state.players[playerIndex];
-    }
-    game.getPlayerInfo = getPlayerInfo;
-    // type 0 for resource cards, 1 for dev cards
-    function getPlayerCardCount(playerIndex, type) {
-        //    if (state == null)
-        //      state = gameLogic.getInitialState();
-        var total = 0;
-        if (type === 0) {
-            for (var i = 0; i < Resource.SIZE; i++) {
-                total += game.state.players[playerIndex].resources[i];
-            }
-        }
-        else {
-            for (var i = 0; i < DevCard.SIZE; i++) {
-                total += game.state.players[playerIndex].devCards[i];
-            }
-        }
-        return total;
-    }
-    game.getPlayerCardCount = getPlayerCardCount;
     function init_callback(gameAreaWidth, gameAreaHeight) {
         game.height = gameAreaHeight;
         game.width = gameAreaWidth;
@@ -98,7 +74,7 @@ var game;
         //resizeGameAreaService.setWidthToHeight(1.33333, init_callback);
         translate.setTranslations(getTranslations());
         translate.setLanguage('en');
-        log.log("Translation of 'RULES_OF_TICTACTOE' is " + translate('RULES_OF_TICTACTOE'));
+        log.log("Translation of 'Pioneers' is " + translate('RULES_OF_PIONEERS'));
         //    resizeGameAreaService.setWidthToHeight(1);
         resizeGameAreaService.setWidthToHeight(1.33333);
         moveService.setGame({
@@ -132,21 +108,34 @@ var game;
     game.init = init;
     function getTranslations() {
         return {
-            RULES_OF_TICTACTOE: {
+            RULES_OF_PIONEERS: {
                 en: "Rules of Pioneers",
-                iw: "חוקי המשחק",
             },
             RULES_SLIDE1: {
-                en: "You and your opponent take turns to mark the grid in an empty spot. The first mark is X, then O, then X, then O, etc.",
-                iw: "אתה והיריב מסמנים איקס או עיגול כל תור",
+                en: "You and your opponent take turns to building settlements and cities on the island.  The first to reach 10 points wins!",
             },
             RULES_SLIDE2: {
-                en: "The first to mark a whole row, column or diagonal wins.",
-                iw: "הראשון שמסמן שורה, עמודה או אלכסון מנצח",
+                en: "Initial building phase starts with a placing a settlement on a vertex and an adjacent road on an edge, once the last player finishes, " +
+                    "it repeats in the opposite direction, gaining resources adjacent to the second settlement.  " +
+                    "After the first player's finishes their second settlement and road, the game starts.  ",
+            },
+            RULES_SLIDE3: {
+                en: "Settlements cannot be on adjacent vertices, they must be at least one vertex apart.  " +
+                    "You can only build settlements if you have a road leading to the vertex (aside from the first two settlements).  " +
+                    "When the dice are rolled, the number on the hex will yield that resource to players having a settlement or city adjacent to it.  " +
+                    "Having settlements on hexes with numbers closer to 7 are more likely to be rolled.  " +
+                    "However, if a 7 is rolled, no resources will be handed out, but instead players must drop cards if they have too many.  " +
+                    "In addition, the player who rolled the dice gets to move the robber to a new hex, allowing that person to steal a resource card from another player.  " +
+                    "Settlements can be upgraded to cities to yield double resources when a number is rolled.  ",
+            },
+            RULES_SLIDE4: {
+                en: "The cost of a road is: 1 wood and 1 brick.  " +
+                    "The cost of a settlement is: 1 wood, 1 brick, 1 sheep, and 1 wheat.  " +
+                    "The cost of upgrading to a city is: 3 wheat and 2 ore.\r" +
+                    "The cost of a development card is: 1 sheep, 1 wheat, and 1 ore.",
             },
             CLOSE: {
                 en: "Close",
-                iw: "סגור",
             },
         };
     }
@@ -386,14 +375,14 @@ var game;
     }
     function getBoardHex(row, col) {
         var offset = getOffset(row, 45);
-        var x = 120 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
-        var y = 120 + offset * row * Math.sqrt(3);
+        var x = 105 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
+        var y = 100 + offset * row * Math.sqrt(3);
         return getHexPoints(x, y, 45);
     }
     function getCenter(row, col) {
         var offset = getOffset(row, 45);
-        var x = 120 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
-        var y = 120 + offset * row * Math.sqrt(3);
+        var x = 105 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
+        var y = 100 + offset * row * Math.sqrt(3);
         return [x.toString(), y.toString()];
     }
     game.getCenter = getCenter;
@@ -555,7 +544,7 @@ var game;
         var x = parseFloat(v[0]);
         var y = parseFloat(v[1]);
         var start = 'M' + x + ',' + (y - 10);
-        return start + ' l-10,10' + ' v10' + ' h20' + ' v-10' + ' l-12,-12';
+        return start + ' l-10,10' + ' v10' + ' h20' + ' v-10' + ' l-10,-10';
     }
     game.getSettlement = getSettlement;
     function getCity(row, col, vertex) {
@@ -563,7 +552,7 @@ var game;
         var x = parseFloat(v[0]);
         var y = parseFloat(v[1]);
         var start = 'M' + x + ',' + (y - 10);
-        return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-12,-12';
+        return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-10,-10';
     }
     game.getCity = getCity;
     function getHarbor(row, col) {
@@ -585,6 +574,18 @@ var game;
         return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
     }
     game.getHarbor = getHarbor;
+    function getHarborFill(row, col) {
+        if (game.state.board[row][col].harbor.trading === Resource.ANY)
+            return 'white';
+        return 'url(#r' + game.state.board[row][col].harbor.trading + ')';
+    }
+    game.getHarborFill = getHarborFill;
+    function harborIsAny(row, col) {
+        if (game.state.board[row][col].harbor === null)
+            return false;
+        return game.state.board[row][col].harbor.trading === Resource.ANY;
+    }
+    game.harborIsAny = harborIsAny;
     function showHarbor(row, col) {
         return game.state.board[row][col].harbor !== null;
     }
@@ -752,6 +753,25 @@ var game;
         return game.state.players[idx].knightsPlayed;
     }
     game.getPlayerKnights = getPlayerKnights;
+    function getPlayerRoadLength(idx) {
+        return gameLogic.getLongestRoad(game.state.players[idx], game.state.board);
+    }
+    game.getPlayerRoadLength = getPlayerRoadLength;
+    function getPlayerBorder(idx) {
+        if (idx === game.mockPlayerIdx)
+            return "5px solid #EBEB1A";
+        return "2px solid black";
+    }
+    game.getPlayerBorder = getPlayerBorder;
+    function getRollNumText(row, col) {
+        if (game.state.board[row][col].hasRobber) {
+            if (game.state.board[row][col].rollNum === -1)
+                return "R";
+            return "R" + game.state.board[row][col].rollNum;
+        }
+        return "" + game.state.board[row][col].rollNum;
+    }
+    game.getRollNumText = getRollNumText;
     function getNumResources(playerIdx, resource) {
         if (!game.state || playerIdx < 0) {
             return 0;
