@@ -176,26 +176,26 @@
         </div>
         <div class="panel-default" id="PlayersInfo">
           <div class="panel-body">
-            <ul class="list-group player-info">
-              <span ng-repeat="p in players">
-                <li class="playertable-item" ng-attr-style="background-color:{{game.playerColor[p]}}; border:{{game.getPlayerBorder(p)}}"><p><strong>Player {{p+1}}</strong></p>
-                  <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(p)}}
-                  <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(p)}}
-                  <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(p)}}
-                  <img src="imgs/devcards0.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerKnights(p)}}
-                  <img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(p)}}
-                </li>
-              </span>
-              <li class="playertable-item" style="background-color:#eb9bd7; border:2px solid black"><p><strong>Bank</strong></p>
-              <span ng-repeat="idx in resourceSize">
-                <img ng-attr-src="imgs/resource{{idx}}.png" alt="imgs/develop.svg" class="resource-pic2">
-                  x {{game.getBankResources(idx)}}
+            <ul class="list-group player-table-group player-info">
+              <li ng-repeat="p in players" ng-attr-class="player-table-item {{'player-' + p + '-color'}} {{game.getPlayerBorder(p)}}">
+                <p><strong>Player {{p+1}}</strong></p>
+                <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(p)}}
+                <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(p)}}
+                <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(p)}}
+                <img src="imgs/devcards0.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerKnights(p)}}
+                <img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(p)}}
+              </li>
+              <li class="player-table-item bank-info">
+                <p><strong>Bank</strong></p>
+                <span ng-repeat="idx in resourceSize">
+                  <img ng-attr-src="imgs/resource{{idx}}.png" alt="imgs/develop.svg" class="resource-pic2">
+                    x {{game.getBankResources(idx)}}
+                  </img>
+                </span>
+                <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic">
+                  x {{game.getBankDevCards()}}
                 </img>
-              </span>
-              <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic">
-                x {{game.getBankDevCards()}}
-              </img>
-            </li>
+              </li>
             </ul>
             <button class="btn btn-danger dice-and-end" ng-if="game.showEndTurn()" ng-click="game.endTurn()">End Turn</button>
             <img src="imgs/dice1.png" alt="imgs/dice2.png" class="dice-and-end dice"

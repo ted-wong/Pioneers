@@ -758,9 +758,7 @@ var game;
     }
     game.getPlayerRoadLength = getPlayerRoadLength;
     function getPlayerBorder(idx) {
-        if (idx === game.mockPlayerIdx)
-            return "5px solid #EBEB1A";
-        return "2px solid black";
+        return idx === game.mockPlayerIdx ? 'my-info-border' : 'player-info-border';
     }
     game.getPlayerBorder = getPlayerBorder;
     function getRollNumText(row, col) {

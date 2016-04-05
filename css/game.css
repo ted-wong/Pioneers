@@ -160,13 +160,13 @@ li img {
 margin-left: 7px;
 }
 
-.list-group {
+.player-table-group {
 	color: black;
 	margin-left:-15px;
 	margin-right:-15px;
 }
 
-.playertable-item img {
+.player-table-item img {
   width: 8%;
   height: 8%;
 }
@@ -201,6 +201,34 @@ body {
 	margin-left:7px;
 }
 
+.bank-info {
+  background-color: #eb9bd7;
+  border: 2px solid black;
+}
+
+.player-0-color {
+  background-color: #ED3B3B;
+}
+
+.player-1-color {
+  background-color: #3889F2;
+}
+
+.player-2-color {
+  background-color: #2AC761;
+}
+
+.player-3-color {
+  background-color: #CC9D04;
+}
+
+.player-info-border {
+  border: 2px solid black;
+}
+
+.my-info-border {
+ border: 5px solid #EBEB1A;
+}
 
 #PlayersInfo {
 	position:absolute;

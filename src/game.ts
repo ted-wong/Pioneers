@@ -1,4 +1,4 @@
-interface SupportedLanguages { en: string, iw: string};
+interface SupportedLanguages { en: string};
 interface Translations {
   [index: string]: SupportedLanguages;
 }
@@ -136,26 +136,26 @@ module game {
       },
       RULES_SLIDE1: { 
         en: "You and your opponent take turns to building settlements and cities on the island.  The first to reach 10 points wins!",
-	  },
+    },
       RULES_SLIDE2: {
-		en: "Initial building phase starts with a placing a settlement on a vertex and an adjacent road on an edge, once the last player finishes, " + 
-			"it repeats in the opposite direction, gaining resources adjacent to the second settlement.  "  +
-			"After the first player's finishes their second settlement and road, the game starts.  ",
-	  },
-	  RULES_SLIDE3: {
-	    en: "Settlements cannot be on adjacent vertices, they must be at least one vertex apart.  " + 
-			"You can only build settlements if you have a road leading to the vertex (aside from the first two settlements).  " + 
-			"When the dice are rolled, the number on the hex will yield that resource to players having a settlement or city adjacent to it.  " +
-			"Having settlements on hexes with numbers closer to 7 are more likely to be rolled.  " + 
-			"However, if a 7 is rolled, no resources will be handed out, but instead players must drop cards if they have too many.  " + 
-			"In addition, the player who rolled the dice gets to move the robber to a new hex, allowing that person to steal a resource card from another player.  " + 
-			"Settlements can be upgraded to cities to yield double resources when a number is rolled.  ",
+    en: "Initial building phase starts with a placing a settlement on a vertex and an adjacent road on an edge, once the last player finishes, " + 
+      "it repeats in the opposite direction, gaining resources adjacent to the second settlement.  "  +
+      "After the first player's finishes their second settlement and road, the game starts.  ",
+    },
+    RULES_SLIDE3: {
+      en: "Settlements cannot be on adjacent vertices, they must be at least one vertex apart.  " + 
+      "You can only build settlements if you have a road leading to the vertex (aside from the first two settlements).  " + 
+      "When the dice are rolled, the number on the hex will yield that resource to players having a settlement or city adjacent to it.  " +
+      "Having settlements on hexes with numbers closer to 7 are more likely to be rolled.  " + 
+      "However, if a 7 is rolled, no resources will be handed out, but instead players must drop cards if they have too many.  " + 
+      "In addition, the player who rolled the dice gets to move the robber to a new hex, allowing that person to steal a resource card from another player.  " + 
+      "Settlements can be upgraded to cities to yield double resources when a number is rolled.  ",
       },
       RULES_SLIDE4: {
         en: "The cost of a road is: 1 wood and 1 brick.  " +
-		    "The cost of a settlement is: 1 wood, 1 brick, 1 sheep, and 1 wheat.  " + 
-			"The cost of upgrading to a city is: 3 wheat and 2 ore.\r" + 
-			"The cost of a development card is: 1 sheep, 1 wheat, and 1 ore.",
+        "The cost of a settlement is: 1 wood, 1 brick, 1 sheep, and 1 wheat.  " + 
+      "The cost of upgrading to a city is: 3 wheat and 2 ore.\r" + 
+      "The cost of a development card is: 1 sheep, 1 wheat, and 1 ore.",
       },
       CLOSE:  {
         en: "Close",
@@ -630,7 +630,7 @@ module game {
 
   export function getHarborFill(row: number, col: number): string {
     if (state.board[row][col].harbor.trading === Resource.ANY)
-		return 'white';
+    return 'white';
     return 'url(#r' + state.board[row][col].harbor.trading + ')';
   }
 
@@ -823,18 +823,16 @@ module game {
   }
 
   export function getPlayerBorder(idx: number): string {
-    if (idx === mockPlayerIdx)
-      return "5px solid #EBEB1A";
-	return "2px solid black";
+    return idx === mockPlayerIdx ? 'my-info-border' : 'player-info-border';
   }
 
   export function getRollNumText(row: number, col: number): string {
-  	if (state.board[row][col].hasRobber) {
-		if (state.board[row][col].rollNum === -1)
-			return "R";
-		return "R" + state.board[row][col].rollNum;
-	}
-	return "" + state.board[row][col].rollNum;
+    if (state.board[row][col].hasRobber) {
+      if (state.board[row][col].rollNum === -1)
+        return "R";
+      return "R" + state.board[row][col].rollNum;
+    }
+    return "" + state.board[row][col].rollNum;
   }
 
   export function getNumResources(playerIdx: number, resource: Resource): number {
