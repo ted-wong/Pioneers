@@ -333,9 +333,9 @@
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
                     ng-attr-y="{{game.getCenter(row, col)[1] - 2}}"
                     text-anchor="middle" font-weight="bold" dominant-baseline="central"
-                    ng-attr-fill="{{game.getRollColor(row, col)}}"
-                    ng-if="game.showHarbor(row, col) && game.harborIsAny(row, col)">
-                ?
+                    ng-attr-fill="{{game.harborIsAny(row, col) ? 'black' : 'white'}}"
+                    ng-if="game.showHarbor(row, col)">
+                {{game.harborIsAny(row, col) ? '3:1' : '2:1'}}
               </text>
               <text ng-attr-x="{{game.getCenter(row, col)[0]}}"
                     ng-attr-y="{{game.getCenter(row, col)[1] - 2}}"
