@@ -25,7 +25,6 @@ var game;
     game.coordinates = [];
     game.playerColor = ['#ED3B3B', '#3889F2', '#2AC761', '#CC9D04'];
     game.myIndex = -2;
-    game.mockPlayerIdx = -2;
     game.alertStyle = 'success';
     game.alertMsg = 'Welcome to Pioneers Game!';
     game.showInfoModal = false;
@@ -248,7 +247,6 @@ var game;
             game.state = gameLogic.getInitialState();
         }
         game.myIndex = params.yourPlayerIndex;
-        game.mockPlayerIdx = game.state.eventIdx === -1 ? game.move.turnIndexAfterMove : game.state.eventIdx;
         game.canMakeMove = checkCanMakeMove();
         updateAlert();
         cleanupInfoModal();
@@ -291,31 +289,31 @@ var game;
                 }
                 break;
             case MoveType.ROLL_DICE:
-                if (game.state.dices[0] + game.state.dices[1] === 7 && game.move.turnIndexAfterMove === game.mockPlayerIdx) {
+                if (game.state.dices[0] + game.state.dices[1] === 7 && game.move.turnIndexAfterMove === game.myIndex) {
                     whenRobberEvent();
                 }
                 break;
             case MoveType.ROBBER_EVENT:
                 if (game.state.eventIdx === game.move.turnIndexAfterMove) {
-                    if (game.mockPlayerIdx === game.move.turnIndexAfterMove) {
+                    if (game.myIndex === game.move.turnIndexAfterMove) {
                         game.alertStyle = 'warning';
                         game.alertMsg = 'Moving robber...';
                         whenMoveRobberStart();
                     }
                 }
                 else {
-                    if (game.state.eventIdx === game.mockPlayerIdx) {
+                    if (game.state.eventIdx === game.myIndex) {
                         whenRobberEvent();
                     }
                 }
                 break;
             case MoveType.ROBBER_MOVE:
-                if (game.mockPlayerIdx === game.move.turnIndexAfterMove) {
+                if (game.myIndex === game.move.turnIndexAfterMove) {
                     whenRobPlayerStart();
                 }
                 break;
             case MoveType.KNIGHT:
-                if (game.mockPlayerIdx === game.move.turnIndexAfterMove) {
+                if (game.myIndex === game.move.turnIndexAfterMove) {
                     game.alertStyle = 'warning';
                     game.alertMsg = 'Knight!  Moving robber...';
                     whenMoveRobberStart();
@@ -433,12 +431,12 @@ var game;
         if (mouseTarget === MouseTarget.VERTEX) {
             return targetNum === vertex;
         }
-        if (game.initialBuilding && game.state.players[game.mockPlayerIdx].construction[Construction.Settlement] >
-            game.state.players[game.mockPlayerIdx].construction[Construction.Road]) {
+        if (game.initialBuilding && game.state.players[game.myIndex].construction[Construction.Settlement] >
+            game.state.players[game.myIndex].construction[Construction.Road]) {
             return false;
         }
         // only show buildable locations
-        if (gameLogic.canBuildSettlementLegally(game.state.players[game.mockPlayerIdx], game.state.board, row, col, vertex, game.initialBuilding)) {
+        if (gameLogic.canBuildSettlementLegally(game.state.players[game.myIndex], game.state.board, row, col, vertex, game.initialBuilding)) {
             return true;
         }
         else {
@@ -477,12 +475,12 @@ var game;
         if (mouseTarget === MouseTarget.EDGE) {
             return targetNum === edge;
         }
-        if (game.initialBuilding && game.state.players[game.mockPlayerIdx].construction[Construction.Settlement] ===
-            game.state.players[game.mockPlayerIdx].construction[Construction.Road]) {
+        if (game.initialBuilding && game.state.players[game.myIndex].construction[Construction.Settlement] ===
+            game.state.players[game.myIndex].construction[Construction.Road]) {
             return false;
         }
         // only show buildable locations
-        if (gameLogic.canBuildRoadLegally(game.state.players[game.mockPlayerIdx], game.state.board, row, col, edge, true)) {
+        if (gameLogic.canBuildRoadLegally(game.state.players[game.myIndex], game.state.board, row, col, edge, true)) {
             return true;
         }
         else {
@@ -612,7 +610,7 @@ var game;
     game.getNumRoadCanBuild = getNumRoadCanBuild;
     function getHexFill(row, col) {
         if (row === robberMovedRow && col === robberMovedCol) {
-            return getColor(game.mockPlayerIdx);
+            return getColor(game.myIndex);
         }
         return 'url(#r' + game.state.board[row][col].label + ')';
     }
@@ -634,7 +632,7 @@ var game;
         if (game.playingDevRoadBuild) {
             var devRoad = {
                 moveType: MoveType.BUILD_ROAD,
-                playerIdx: game.mockPlayerIdx,
+                playerIdx: game.myIndex,
                 currState: game.state,
                 consType: Construction.Road,
                 hexRow: row,
@@ -678,7 +676,7 @@ var game;
             game.infoModalHeader = 'Building';
             game.infoModalMsg = 'Are you sure you want to build a settlement?';
         }
-        else if (game.state.board[row][col].vertices[vertexNum] === Construction.Settlement && game.state.board[row][col].vertexOwner[vertexNum] === game.mockPlayerIdx) {
+        else if (game.state.board[row][col].vertices[vertexNum] === Construction.Settlement && game.state.board[row][col].vertexOwner[vertexNum] === game.myIndex) {
             buildTarget = Construction.City;
             buildRow = row;
             buildCol = col;
@@ -698,7 +696,7 @@ var game;
         }
         var buildMove = {
             moveType: game.state.moveType,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state),
             consType: buildTarget,
             hexRow: buildRow,
@@ -758,7 +756,7 @@ var game;
     }
     game.getPlayerRoadLength = getPlayerRoadLength;
     function getPlayerBorder(idx) {
-        return idx === game.mockPlayerIdx ? 'my-info-border' : 'player-info-border';
+        return idx === game.myIndex ? 'my-info-border' : 'player-info-border';
     }
     game.getPlayerBorder = getPlayerBorder;
     function getRollNumText(row, col) {
@@ -816,7 +814,7 @@ var game;
     function endTurn() {
         var turnMove = {
             moveType: MoveType.INIT,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state)
         };
         var nextMove = gameLogic.onEndTurn(turnMove, game.move.turnIndexAfterMove);
@@ -829,7 +827,7 @@ var game;
     game.getDicesNum = getDicesNum;
     function onRollDice() {
         var turnMove = {
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             moveType: MoveType.ROLL_DICE,
             currState: game.state
         };
@@ -852,7 +850,7 @@ var game;
     function onDevCardClicked(cardIdx) {
         makeMove = {
             moveType: null,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state)
         };
         switch (cardIdx) {
@@ -938,7 +936,7 @@ var game;
     function onRoadBuildingDone() {
         var turnMove = {
             moveType: MoveType.ROAD_BUILDING,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state),
             road1: game.devRoads[0],
             road2: game.devRoads[1]
@@ -997,7 +995,7 @@ var game;
         }
     }
     function whenRobberEvent() {
-        if (game.state.players[game.mockPlayerIdx].resources.reduce(function (a, b) { return a + b; }) > 7) {
+        if (game.state.players[game.myIndex].resources.reduce(function (a, b) { return a + b; }) > 7) {
             game.showResourcePickerMultiple = true;
             game.infoModalHeader = 'Please dump half of resources on hand';
             game.infoModalMsg = '';
@@ -1013,7 +1011,7 @@ var game;
     function onRobberEventDone() {
         var turnMove = {
             moveType: MoveType.ROBBER_EVENT,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state),
             tossed: angular.copy(game.resourcesPicked)
         };
@@ -1029,7 +1027,7 @@ var game;
         }
     }
     function whenMoveRobberStart() {
-        if (game.mockPlayerIdx !== game.move.turnIndexAfterMove) {
+        if (game.myIndex !== game.move.turnIndexAfterMove) {
             return;
         }
         game.onClickHex = whenMoveRobber;
@@ -1050,7 +1048,7 @@ var game;
     function onMoveRobberDone() {
         var turnMove = {
             moveType: MoveType.ROBBER_MOVE,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: game.state,
             row: robberMovedRow,
             col: robberMovedCol
@@ -1100,9 +1098,9 @@ var game;
     function onRobPlayerDone() {
         var turnMove = {
             moveType: MoveType.ROB_PLAYER,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state),
-            stealingIdx: game.mockPlayerIdx,
+            stealingIdx: game.myIndex,
             stolenIdx: robberVictomIdx
         };
         try {
@@ -1120,14 +1118,14 @@ var game;
         var r = game.state.robber.row, c = game.state.robber.col;
         for (var i = 0; i < game.state.board[r][c].vertexOwner.length; i++) {
             if (game.state.board[r][c].vertexOwner[i] === idx) {
-                return idx !== game.mockPlayerIdx && game.state.players[idx].resources.reduce(function (a, b) { return a + b; }) > 0;
+                return idx !== game.myIndex && game.state.players[idx].resources.reduce(function (a, b) { return a + b; }) > 0;
             }
         }
         return false;
     }
     game.possibleRobberVictom = possibleRobberVictom;
     function showTradeButton() {
-        return game.state.diceRolled && game.mockPlayerIdx === game.move.turnIndexAfterMove;
+        return game.state.diceRolled && game.myIndex === game.move.turnIndexAfterMove;
     }
     game.showTradeButton = showTradeButton;
     function onTradeWithBankStart() {
@@ -1156,7 +1154,7 @@ var game;
         }
         var turnMove = {
             moveType: MoveType.TRANSACTION_WITH_BANK,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state),
             sellingItem: tradingResource,
             sellingNum: game.tradingNum,
@@ -1208,7 +1206,7 @@ var game;
     }
     game.changeWantedNum = changeWantedNum;
     function showBuyDevCardButton() {
-        return game.state.diceRolled && game.mockPlayerIdx === game.move.turnIndexAfterMove;
+        return game.state.diceRolled && game.myIndex === game.move.turnIndexAfterMove;
     }
     game.showBuyDevCardButton = showBuyDevCardButton;
     function whenBuyDevCard() {
@@ -1221,7 +1219,7 @@ var game;
     function confirmBuyDevCard() {
         var turnMove = {
             moveType: MoveType.BUILD_DEVCARD,
-            playerIdx: game.mockPlayerIdx,
+            playerIdx: game.myIndex,
             currState: angular.copy(game.state),
             consType: Construction.DevCard,
             hexRow: -1,
