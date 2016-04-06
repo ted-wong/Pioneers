@@ -523,33 +523,33 @@ var game;
     game.move = null;
     game.state = null;
     game.isHelpModalShown = false;
-    function init() {
         /*
+    function init() {
         translate.setTranslations(getTranslations());
         translate.setLanguage('en');
         log.log("Translation of 'RULES_OF_TICTACTOE' is " + translate('RULES_OF_TICTACTOE'));
         resizeGameAreaService.setWidthToHeight(1);
-        moveService.setGame({
           minNumberOfPlayers: 2,
           maxNumberOfPlayers: 2,
           checkMoveOk: gameLogic.checkMoveOk,
           updateUI: updateUI
-        });
+            updateUI: updateUI
     
+        });
         // See http://www.sitepoint.com/css3-animation-javascript-event-handlers/
         document.addEventListener("animationend", animationEndedCallback, false); // standard
         document.addEventListener("webkitAnimationEnd", animationEndedCallback, false); // WebKit
         document.addEventListener("oanimationend", animationEndedCallback, false); // Opera
-    
-        let w: any = window;
-        if (w["HTMLInspector"]) {
+        setTimeout(animationEndedCallback, 1000); // Just in case animationEnded is not fired by some browser.
+        var w = window;
           setInterval(function () {
             w["HTMLInspector"].inspect({
               excludeRules: ["unused-classes", "script-placement"],
             });
           }, 3000);
-        }
+            }, 3000);
         */
+        }
     }
     game.init = init;
     function getTranslations() {
@@ -573,6 +573,8 @@ var game;
         };
     }
     function animationEndedCallback() {
+        if (game.animationEnded)
+            return;
         $rootScope.$apply(function () {
             log.info("Animation ended");
             game.animationEnded = true;
@@ -613,63 +615,64 @@ var game;
             }
         }
     }
-    function cellClicked(row, col) {
         /*
-        log.info("Clicked on cell:", row, col);
+    function cellClicked(row, col) {
         if (window.location.search === '?throwException') { // to test encoding a stack trace with sourcemap
           throw new Error("Throwing the error because URL has '?throwException'");
-        }
+            throw new Error("Throwing the error because URL has '?throwException'");
         if (!canMakeMove) {
           return;
+            return;
         }
+        var nextMove = null;
         try {
-          let nextMove = gameLogic.createMove(
-              state, row, col, move.turnIndexAfterMove);
-          canMakeMove = false; // to prevent making another move
-          moveService.makeMove(nextMove);
-        } catch (e) {
-          log.info(["Cell is already full in position:", row, col]);
-          return;
+            nextMove = gameLogic.createMove(game.state, row, col, game.move.turnIndexAfterMove);
         }
-        */
+        catch (e) {
+            log.info(["Cell is already full in position:", row, col]);
+            return;
+        }
+        // Move is legal, make it!
+        game.canMakeMove = false; // to prevent making another move
+        moveService.makeMove(nextMove);
     }
     game.cellClicked = cellClicked;
-    function shouldShowImage(row, col) {
         /*
         let cell = state.board[row][col];
-        return cell !== "";
+        var cell = game.state.board[row][col];
         */
         return true;
+        return cell !== "";
     }
     game.shouldShowImage = shouldShowImage;
-    function isPieceX(row, col) {
         //return state.board[row][col] === 'X';
         return true;
+        return game.state.board[row][col] === 'X';
     }
     game.isPieceX = isPieceX;
-    function isPieceO(row, col) {
         //return state.board[row][col] === 'O';
         return true;
+        return game.state.board[row][col] === 'O';
     }
     game.isPieceO = isPieceO;
-    function shouldSlowlyAppear(row, col) {
         /*
         return !animationEnded &&
             state.delta &&
             state.delta.row === row && state.delta.col === col;
         */
         return false;
+            game.state.delta.row === row && game.state.delta.col === col;
     }
     game.shouldSlowlyAppear = shouldSlowlyAppear;
-    function clickedOnModal(evt) {
         /*
-        if (evt.target === evt.currentTarget) {
+    function clickedOnModal(evt) {
           evt.preventDefault();
           evt.stopPropagation();
           isHelpModalShown = false;
+            game.isHelpModalShown = false;
         }
-        return true;
         */
+        return true;
         return true;
     }
     game.clickedOnModal = clickedOnModal;
@@ -678,8 +681,8 @@ angular.module('myApp', ['ngTouch', 'ui.bootstrap', 'gameServices'])
     .run(function () {
     $rootScope['game'] = game;
     game.init();
-});
 //# sourceMappingURL=game.js.map
+;
 ;
 var aiService;
 (function (aiService) {
@@ -697,8 +700,8 @@ var aiService;
     function getPossibleMoves(state, turnIndexBeforeMove) {
         var possibleMoves = [];
         for (var i = 0; i < gameLogic.ROWS; i++) {
-            for (var j = 0; j < gameLogic.COLS; j++) {
                 try {
+                    possibleMoves.push(gameLogic.createMove(state, i, j, turnIndexBeforeMove));
                 }
                 catch (e) {
                 }
