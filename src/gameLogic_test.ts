@@ -1,162 +1,343 @@
-describe("In TicTacToe", function() {
-  let OK = true;
-  let ILLEGAL = false;
-  let X_TURN = 0;
-  let O_TURN = 1;
-  let NO_ONE_TURN = -1;
-  let NO_ONE_WINS: number[] = null;
-  let X_WIN_SCORES = [1, 0];
-  let O_WIN_SCORES = [0, 1];
-  let TIE_SCORES = [0, 0];
-
-  function expectMove(
-      isOk: boolean,
-      turnIndexBeforeMove: number,
-      boardBeforeMove: Board,
-      row: number,
-      col: number,
-      boardAfterMove: Board,
-      turnIndexAfterMove: number,
-      endMatchScores: number[]): void {
-    let stateTransition: IStateTransition = {
-      turnIndexBeforeMove: turnIndexBeforeMove,
-      stateBeforeMove: boardBeforeMove ? {board: boardBeforeMove, delta: null} : null,
-      move: {
-        turnIndexAfterMove: turnIndexAfterMove,
-        endMatchScores: endMatchScores,
-        stateAfterMove: {board: boardAfterMove, delta: {row: row, col: col}}
-      },
-      numberOfPlayers: null
-    };
-    if (isOk) {
-      gameLogic.checkMoveOk(stateTransition);
-    } else {
-      // We expect an exception to be thrown :)
-      let didThrowException = false;
-      try {
-        gameLogic.checkMoveOk(stateTransition);
-      } catch (e) {
-        didThrowException = true;
+describe('Initial state tests', function() {
+  it('Check that all terrains are assigned', function() {
+    function check(): void {
+      let terrainCheck: boolean[] = [];
+      for (let i = 0; i < terrains.length; i++) {
+        terrainCheck[i] = false;
       }
-      if (!didThrowException) {
-        throw new Error("We expect an illegal move, but checkMoveOk didn't throw any exception!")
+
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+      for (let i = 0; i < gameLogic.ROWS; i++) {
+        for (let j = 0; j < gameLogic.COLS; j++) {
+          if ((state.board[i][j].label < Resource.SIZE || state.board[i][j].label === Resource.Dust)) {
+            for (let idx = 0; idx < terrains.length; idx++) {
+              if (terrains[idx] === state.board[i][j].label && !terrainCheck[idx]) {
+                terrainCheck[idx] = true;
+                cnt++;
+              }
+            }
+          }
+        }
+      }
+
+      if (cnt !== terrains.length) {
+        throw new Error('Not all terrains are assigned!');
       }
     }
-  }
 
-  it("placing X in 0x0 from initial state is legal", function() {
-    expectMove(OK, X_TURN, null, 0, 0,
-      [['X', '', ''],
-       ['', '', ''],
-       ['', '', '']], O_TURN, NO_ONE_WINS);
+    for (let i = 0; i < 10; i++) {
+      check();
+    }
   });
 
-  it("placing X in 0x0 from initial state but setting the turn to yourself is illegal", function() {
-    expectMove(ILLEGAL, X_TURN, null, 0, 0,
-      [['X', '', ''],
-       ['', '', ''],
-       ['', '', '']], X_TURN, NO_ONE_WINS);
+  it('Check if all number tokens are assigned', function() {
+    function check(): void {
+      let tokenCheck: boolean[] = [];
+      for (let i = 0; i < tokens.length; i++) {
+        tokenCheck[i] = false;
+      }
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+
+      for (let i = 0; i < gameLogic.ROWS; i++) {
+        for (let j = 0; j < gameLogic.COLS; j++) {
+          if (state.board[i][j].rollNum !== -1) {
+            for (let idx = 0; idx < tokenCheck.length; idx++) {
+              if (tokens[idx] === state.board[i][j].rollNum && !tokenCheck[idx]) {
+                tokenCheck[idx] = true;
+                cnt++;
+              }
+            }
+          }
+        }
+      }
+
+      if (cnt !== tokens.length) {
+        throw new Error('Not all number tokens are assigned!');
+      }
+    }
+
+    for (let i = 0; i < 10; i++)  check();
   });
 
-  it("placing X in 0x0 from initial state and winning is illegal", function() {
-    expectMove(ILLEGAL, X_TURN, null, 0, 0,
-      [['X', '', ''],
-       ['', '', ''],
-       ['', '', '']], NO_ONE_TURN, X_WIN_SCORES);
+  it('Check initial bank inventories', function() {
+    let state: IState = gameLogic.getInitialState();
+
+    for (let i = 0; i < Resource.SIZE; i++) {
+      if (state.bank.resources[i] !== 19) {
+        throw new Error('Resource ' + Resource[i] + ' has wrong starting inventory in bank!');
+      }
+    }
+    for (let i = 0; i < DevCard.SIZE; i++) {
+      switch (i) {
+        case DevCard.Knight:
+          if (state.bank.devCards[i] !== 14) {
+            throw new Error('Having wrong number of knight cards in bank!');
+          }
+          break;
+        case DevCard.Monopoly:
+          if (state.bank.devCards[i] !== 2) {
+            throw new Error('Having wrong number of monopoly cards in bank!');
+          }
+          break;
+        case DevCard.RoadBuilding:
+          if (state.bank.devCards[i] !== 2) {
+            throw new Error('Having wrong number of Road Building cards in bank!');
+          }
+          break;
+        case DevCard.YearOfPlenty:
+          if (state.bank.devCards[i] !== 2) {
+            throw new Error('Having wrong number of Year of Plenty cards in bank!');
+          }
+          break;
+        case DevCard.VictoryPoint:
+          if (state.bank.devCards[i] !== 5) {
+            throw new Error('Having wrong number of Victory Point cards in bank!');
+          }
+          break;
+        default:
+          throw new Error('Unexpected index to dev cards!');
+      }
+    }
   });
 
-  it("placing X in 0x0 from initial state and setting the wrong board is illegal", function() {
-    expectMove(ILLEGAL, X_TURN, null, 0, 0,
-      [['X', 'X', ''],
-       ['', '', ''],
-       ['', '', '']], O_TURN, NO_ONE_WINS);
-  });
-
-  it("placing O in 0x1 after X placed X in 0x0 is legal", function() {
-    expectMove(OK, O_TURN,
-      [['X', '', ''],
-       ['', '', ''],
-       ['', '', '']], 0, 1,
-      [['X', 'O', ''],
-       ['', '', ''],
-       ['', '', '']], X_TURN, NO_ONE_WINS);
-  });
-
-  it("placing an O in a non-empty position is illegal", function() {
-    expectMove(ILLEGAL, O_TURN,
-      [['X', '', ''],
-       ['', '', ''],
-       ['', '', '']], 0, 0,
-      [['O', '', ''],
-       ['', '', ''],
-       ['', '', '']], X_TURN, NO_ONE_WINS);
-  });
-
-  it("cannot move after the game is over", function() {
-    expectMove(ILLEGAL, O_TURN,
-      [['X', 'O', ''],
-       ['X', 'O', ''],
-       ['X', '', '']], 2, 1,
-      [['X', 'O', ''],
-       ['X', 'O', ''],
-       ['X', 'O', '']], X_TURN, NO_ONE_WINS);
-  });
-
-  it("placing O in 2x1 is legal", function() {
-    expectMove(OK, O_TURN,
-      [['O', 'X', ''],
-       ['X', 'O', ''],
-       ['X', '', '']], 2, 1,
-      [['O', 'X', ''],
-       ['X', 'O', ''],
-       ['X', 'O', '']], X_TURN, NO_ONE_WINS);
-  });
-
-  it("X wins by placing X in 2x0 is legal", function() {
-    expectMove(OK, X_TURN,
-      [['X', 'O', ''],
-       ['X', 'O', ''],
-       ['', '', '']], 2, 0,
-      [['X', 'O', ''],
-       ['X', 'O', ''],
-       ['X', '', '']], NO_ONE_TURN, X_WIN_SCORES);
-  });
-
-  it("O wins by placing O in 1x1 is legal", function() {
-    expectMove(OK, O_TURN,
-      [['X', 'X', 'O'],
-       ['X', '', ''],
-       ['O', '', '']], 1, 1,
-      [['X', 'X', 'O'],
-       ['X', 'O', ''],
-       ['O', '', '']], NO_ONE_TURN, O_WIN_SCORES);
-  });
-
-  it("the game ties when there are no more empty cells", function() {
-    expectMove(OK, X_TURN,
-      [['X', 'O', 'X'],
-       ['X', 'O', 'O'],
-       ['O', 'X', '']], 2, 2,
-      [['X', 'O', 'X'],
-       ['X', 'O', 'O'],
-       ['O', 'X', 'X']], NO_ONE_TURN, TIE_SCORES);
-  });
-
-  it("move without board is illegal", function() {
-    expectMove(ILLEGAL, X_TURN,
-      [['X', 'O', 'X'],
-       ['X', 'O', 'O'],
-       ['O', 'X', '']], 2, 2,
-      null, NO_ONE_TURN, TIE_SCORES);
-  });
-
-  it("placing X outside the board (in 0x3) is illegal", function() {
-    expectMove(ILLEGAL, X_TURN,
-      [['', '', ''],
-       ['', '', ''],
-       ['', '', '']], 0, 3,
-      [['', '', '', 'X'],
-       ['', '', ''],
-       ['', '', '']], O_TURN, NO_ONE_WINS);
+  it('Check robber is in desert at beginning', function() {
+    let state: IState = gameLogic.getInitialState();
+    if (state.board[state.robber.row][state.robber.col].label !== Resource.Dust) {
+      throw new Error('Robber is in wrong position: ' + Resource[state.board[state.robber.row][state.robber.col].label]);
+    }
   });
 });
+
+/*
+describe('Robber related validation', function() {
+  it('TEST2', function() {
+  });
+});
+
+describe('Playing dev cards validation', function() {
+
+});
+
+describe('Trading with bank validation', function() {
+
+});
+*/
+describe('Construction Tests', function() {
+  it('Check valid initial settlement placement', function() {
+    function check(x: number, y: number, v:number): void {
+      let state: IState = gameLogic.getInitialState();
+      let player: Player = state.players[0];
+      
+      if (!gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+        throw new Error('Cannot build initial settlement legally at legal location (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    check(0, 3, 5);
+  });
+  
+  it('Check invalid initial settlement placement', function() {
+    function check(x: number, y: number, v:number): void {
+      let state: IState = gameLogic.getInitialState();
+      let player: Player = state.players[0];
+      
+      if (gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+        throw new Error('Can build initial settlement legally at illegal location (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    check(0, 3, 0);
+  });
+  
+  it('Check invalid initial settlement placement too close', function() {
+    function check(x: number, y: number, v:number): void {
+      let state: IState = gameLogic.getInitialState();
+      let player: Player = state.players[0];
+      
+      state.board[3][3].vertices[3] = 1; // settlement
+      state.board[3][3].vertexOwner[3] = 0; // owned by player 0
+      
+      // updating other 2 hexes
+      state.board[3][2].vertices[5] = 1;
+      state.board[3][2].vertexOwner[5] = 0;
+      
+      state.board[4][2].vertices[1] = 1;
+      state.board[4][2].vertexOwner[1] = 0;
+      
+      if (gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+        throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    // all 4 are illegal spots
+    check(3, 3, 3); // same vertex - same hex
+    check(3, 3, 4); // adj vertex - same hex
+    check(4, 2, 1); // same vertex - different hex
+    check(4, 2, 0); // adj vertex - different hex
+  });
+
+  it('Check valid initial settlement placement far away', function() {
+    function check(x: number, y: number, v:number): void {
+      let state: IState = gameLogic.getInitialState();
+      let player: Player = state.players[0];
+      
+      state.board[3][3].vertices[3] = 1; // settlement
+      state.board[3][3].vertexOwner[3] = 0; // owned by player 0
+      
+      // updating other 2 hexes
+      state.board[3][2].vertices[5] = 1;
+      state.board[3][2].vertexOwner[5] = 0;
+      
+      state.board[4][2].vertices[1] = 1;
+      state.board[4][2].vertexOwner[1] = 0;
+      
+      if (!gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, true)) {
+        throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    // all 3 valid spots - same vertex
+    check(4, 4, 1);
+    check(3, 4, 5);
+    check(3, 5, 3);
+  });
+
+
+  // non-initial settlements
+  it('Check settlement placement wrt road', function() {
+    function check(x: number, y: number, v:number): void {
+      let state: IState = gameLogic.getInitialState();
+      let player: Player = state.players[0];
+      
+      state.board[3][3].vertices[3] = 1; // settlement
+      state.board[3][3].vertexOwner[3] = 0; // owned by player 0
+      
+      // updating other 2 hexes
+      state.board[3][2].vertices[5] = 1;
+      state.board[3][2].vertexOwner[5] = 0;      
+      state.board[4][2].vertices[1] = 1;
+      state.board[4][2].vertexOwner[1] = 0;
+
+      // roads for settlement
+      state.board[3][3].edges[3] = 0;
+      state.board[3][2].edges[0] = 0;
+      
+      state.board[3][3].edges[2] = 0;
+      state.board[2][2].edges[5] = 0;
+      
+      if (!gameLogic.canBuildSettlementLegally(player, state.board, x, y, v, false)) {
+        throw new Error('Cannot build settlement legally at legal location (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    // all 3 are legal spots
+    check(2, 2, 5);
+    //check(2, 3, 3);
+    check(3, 3, 1);
+  });
+
+  
+  it('Check valid road placement', function() {
+    function check(x: number, y: number, v: number): void {
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+      let player: Player = state.players[0];
+      
+      state.board[3][3].vertices[3] = 1;
+      state.board[3][3].vertexOwner[3] = 0;
+      
+      state.board[3][3].edges[3] = 0;
+      state.board[3][2].edges[0] = 0;
+      
+      if (!gameLogic.canBuildRoadLegally(player, state.board, x, y, v, false)) {
+        throw new Error('Cannot build road legally at (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    check(3, 3, 2);
+    check(2, 2, 5);
+
+  });
+  
+  it('Check invalid road placement', function() {
+    function check(x: number, y: number, v: number): void {
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+      let player: Player = state.players[0];
+      
+      state.board[3][3].vertices[3] = 1;
+      state.board[3][3].vertexOwner[3] = 0;
+      
+      state.board[3][3].edges[3] = 0;
+      state.board[3][2].edges[0] = 0;
+      
+      if (gameLogic.canBuildRoadLegally(player, state.board, x, y, v, true)) {
+        throw new Error('Can build road legally at (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    check(5, 3, 2);
+
+  });
+
+  it('Check valid settlement placements too close', function() {
+    function check(x: number, y: number, v: number): void {
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+      let player: Player = state.players[0];
+      
+      state.board[3][3].vertices[3] = 1;
+      state.board[3][3].vertexOwner[3] = 0;
+            
+      if (!gameLogic.canBuildRoadLegally(player, state.board, x, y, v, true)) {
+        throw new Error('Can build settlement illegally at illegal location (' + x + ', ' + y + '): ' + v + '!');
+      }
+    }
+    check(3, 3, 2)
+  });
+
+  it('Check simple road length', function() {
+    function check(): void {
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+      let player: Player = state.players[0];
+      
+      state.board[3][3].edges[3] = 0;
+      state.board[3][2].edges[0] = 0;
+
+      state.board[3][3].edges[2] = 0;
+      state.board[2][2].edges[5] = 0;
+
+      if (gameLogic.getLongestRoad(player, state.board) != 2) {
+        throw new Error('Road length is not 2');
+      }
+    }
+    check();
+  });
+
+  it('Check longer road length', function() {
+    function check(): void {
+      let state: IState = gameLogic.getInitialState();
+      let cnt: number = 0;
+      let player: Player = state.players[0];
+      
+      state.board[3][3].edges[3] = 0;
+      state.board[3][2].edges[0] = 0;
+
+      state.board[3][3].edges[2] = 0;
+      state.board[2][2].edges[5] = 0;
+	  
+      state.board[3][3].edges[1] = 0;
+      state.board[2][3].edges[4] = 0;
+	  
+      // creating fork in road path
+      state.board[2][3].edges[3] = 0;
+      state.board[2][2].edges[0] = 0;
+
+      if (gameLogic.getLongestRoad(player, state.board) != 3) {
+        throw new Error('Road length is not 3');
+      }
+    }
+    check();
+  });
+
+
+
+});
+
+

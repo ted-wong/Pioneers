@@ -6,10 +6,10 @@ module.exports = function(config) {
     files : [
       'http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.js',
       'ts_output_readonly_do_NOT_change_manually/src/gameLogic.js',
+      'ts_output_readonly_do_NOT_change_manually/src/common.js',
       'ts_output_readonly_do_NOT_change_manually/src/aiService.js',
       'http://yoav-zibin.github.io/emulator/dist/turnBasedServices.3.js',
-      'ts_output_readonly_do_NOT_change_manually/src/gameLogic_test.js',
-      'ts_output_readonly_do_NOT_change_manually/src/aiService_test.js'
+      'ts_output_readonly_do_NOT_change_manually/src/gameLogic_test.js'
     ],
 
     reporters: ['progress', 'coverage'],
@@ -19,7 +19,7 @@ module.exports = function(config) {
       // (these files will be instrumented by Istanbul)
       // Do not include tests or libraries.
       'ts_output_readonly_do_NOT_change_manually/src/gameLogic.js': ['coverage'],
-      'ts_output_readonly_do_NOT_change_manually/src/aiService.js': ['coverage']
+      'ts_output_readonly_do_NOT_change_manually/src/common.js': ['coverage']
     },
 
     // optionally, configure the reporter
