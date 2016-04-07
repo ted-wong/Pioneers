@@ -202,7 +202,7 @@ module.exports = function(grunt) {
             'imgs/resource3.png',
             'imgs/resource4.png',
             'imgs/resource7.jpg',
-            'imgs/raod.png',
+            'imgs/road.png',
             'imgs/terrain0.jpg',
             'imgs/terrain1.jpg',
             'imgs/terrain2.jpg',
