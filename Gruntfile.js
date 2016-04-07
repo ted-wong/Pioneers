@@ -186,7 +186,7 @@ module.exports = function(grunt) {
             'imgs/card-pattern.jpg',
             'imgs/devcards0.jpg',
             'imgs/devcards1.jpg',
-            'imgs/devcards2.jpg',
+            'imgs/devcards2.JPG',
             'imgs/devcards3.jpg',
             'imgs/devcards4.jpg',
             'imgs/develop.svg',
