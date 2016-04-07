@@ -36,7 +36,8 @@
     "prestart": "npm install",
     "start": "http-server -a localhost -p 9000 -c-1",
     "test": "node --harmony ./node_modules/.bin/grunt karma",
-    "make": "node --harmony ./node_modules/.bin/grunt"
+    "make": "node --harmony ./node_modules/.bin/grunt",
+    "shell": "node --harmony ./node_modules/.bin/grunt shell"
   },
   "author": "Hung-Ting Wen"
 }
