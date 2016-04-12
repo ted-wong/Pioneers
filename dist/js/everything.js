@@ -2503,10 +2503,6 @@ var game;
             game.alertMsg = e.message;
         }
     }
-    function test() {
-        alert('This is test');
-    }
-    game.test = test;
 })(game || (game = {}));
 function getArray(length) {
     var ret = [];

@@ -1326,10 +1326,6 @@ module game {
       alertMsg = e.message;
     }
   }
-
-  export function test() {
-    alert('This is test');
-  }
 }
 
 function getArray(length: number): number[] {
