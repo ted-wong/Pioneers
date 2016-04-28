@@ -1,146 +1,1278 @@
 var gameLogic;
 (function (gameLogic) {
-    gameLogic.ROWS = 3;
-    gameLogic.COLS = 3;
-    /** Returns the initial TicTacToe board, which is a ROWSxCOLS matrix containing ''. */
-    function getInitialBoard() {
-        var board = [];
-        for (var i = 0; i < gameLogic.ROWS; i++) {
-            board[i] = [];
-            for (var j = 0; j < gameLogic.COLS; j++) {
-                board[i][j] = '';
+    gameLogic.ROWS = 7;
+    gameLogic.COLS = 7;
+    gameLogic.NUM_PLAYERS = 4;
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+    function test_func() {
+        var is = getInitialState();
+        return is.board[3][3].label;
+    }
+    gameLogic.test_func = test_func;
+    function shuffleArray(src) {
+        var ret = angular.copy(src);
+        for (var j = void 0, x = void 0, i = ret.length; i; j = Math.floor(Math.random() * i), x = ret[--i], ret[i] = ret[j], ret[j] = x)
+            ;
+        return ret;
+    }
+    function isSea(row, col) {
+        if (row === 0 || col === 0 || row === gameLogic.ROWS - 1 || col === gameLogic.COLS - 1) {
+            return true;
+        }
+        else if (row === 1 || row === 5) {
+            if (col === 1 || col > 4) {
+                return true;
             }
+        }
+        else if (row === 2 || row === 4) {
+            if (col > 4) {
+                return true;
+            }
+        }
+        return false;
+    }
+    gameLogic.isSea = isSea;
+    function assignRollNum(board) {
+        var visited = [];
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            visited[i] = [];
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                visited[i][j] = i === 0 || j === 0 || i === gameLogic.ROWS - 1 || j === gameLogic.COLS - 1;
+            }
+        }
+        var dir = [
+            [1, 0],
+            [0, 1],
+            [-1, 0],
+            [0, -1] //left
+        ];
+        var r = 1;
+        var c = 1;
+        var tokenPtr = 0;
+        var dirPtr = 0;
+        while (!visited[r][c]) {
+            visited[r][c] = true;
+            if (board[r][c].label !== Resource.Water && board[r][c].label !== Resource.Dust) {
+                board[r][c].rollNum = tokens[tokenPtr++];
+            }
+            if (visited[r + dir[dirPtr][0]][c + dir[dirPtr][1]]) {
+                dirPtr = (dirPtr + 1) % dir.length;
+            }
+            r += dir[dirPtr][0];
+            c += dir[dirPtr][1];
         }
         return board;
     }
-    function getInitialState() {
-        return { board: getInitialBoard(), delta: null };
+    function assignRollNum2(board) {
+        var visited = [];
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            visited[i] = [];
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                visited[i][j] = i === 0 || j === 0 || i === gameLogic.ROWS - 1 || j === gameLogic.COLS - 1;
+            }
+        }
+        var dir = [
+            [1, 0],
+            [0, 1],
+            [-1, 0],
+            [0, -1] //left
+        ];
+        var r = 1;
+        var c = 1;
+        var tokenPtr = 0;
+        var dirPtr = 0;
+        while (!visited[r][c]) {
+            visited[r][c] = true;
+            if (board[r][c].label !== Resource.Water && board[r][c].label !== Resource.Dust) {
+                board[r][c].rollNum = tokens[tokenPtr++];
+            }
+            if (visited[r + dir[dirPtr][0]][c + dir[dirPtr][1]]) {
+                dirPtr = (dirPtr + 1) % dir.length;
+            }
+            r += dir[dirPtr][0];
+            c += dir[dirPtr][1];
+        }
+        return board;
     }
-    gameLogic.getInitialState = getInitialState;
-    /**
-     * Returns true if the game ended in a tie because there are no empty cells.
-     * E.g., isTie returns true for the following board:
-     *     [['X', 'O', 'X'],
-     *      ['X', 'O', 'O'],
-     *      ['O', 'X', 'X']]
-     */
-    function isTie(board) {
+    function assignHarbor(row, col) {
+        for (var i = 0; i < harborPos.length; i++) {
+            if (harborPos[i][0] === row && harborPos[i][1] === col) {
+                return harbors[i];
+            }
+        }
+        return null;
+    }
+    function getInitialBoard() {
+        var board = [];
+        //Shuffle & terrains
+        var newTerrains = shuffleArray(terrains);
+        var terrainPtr = 0;
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            board[i] = [];
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                var edges = [-1, -1, -1, -1, -1, -1];
+                var vertices = [-1, -1, -1, -1, -1, -1];
+                var vertexOwner = [-1, -1, -1, -1, -1, -1];
+                var label = isSea(i, j) ? Resource.Water : newTerrains[terrainPtr++];
+                var hex = {
+                    label: label,
+                    edges: edges,
+                    vertices: vertices,
+                    vertexOwner: vertexOwner,
+                    rollNum: -1,
+                    harbor: assignHarbor(i, j),
+                    hasRobber: label === Resource.Dust
+                };
+                board[i][j] = hex;
+            }
+        }
+        return assignRollNum(board);
+    }
+    gameLogic.getInitialBoard = getInitialBoard;
+    function getInitialArray(size) {
+        var ret = [];
+        for (var i = 0; i < size; i++) {
+            ret[i] = 0;
+        }
+        return ret;
+    }
+    function getInitialPlayers() {
+        var players = [];
+        for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+            players[i] = {
+                id: i,
+                points: 0,
+                resources: getInitialArray(Resource.SIZE),
+                devCards: getInitialArray(DevCard.SIZE),
+                knightsPlayed: 0,
+                longestRoad: 0,
+                construction: getInitialArray(Construction.SIZE)
+            };
+        }
+        return players;
+    }
+    function getInitialBank() {
+        var bank = {
+            resources: getInitialArray(Resource.SIZE),
+            devCards: getInitialArray(DevCard.SIZE),
+            devCardsOrder: null
+        };
+        //Assign total size of resources/devCards in bank according to rules
+        for (var i = 0; i < Resource.SIZE; i++) {
+            bank.resources[i] = 19;
+        }
+        var devCardsOrder = [];
+        for (var i = 0; i < DevCard.SIZE; i++) {
+            switch (i) {
+                case DevCard.Knight:
+                    bank.devCards[i] = 14;
+                    for (var _ = 0; _ < 14; _++) {
+                        devCardsOrder.push(DevCard.Knight);
+                    }
+                    break;
+                case DevCard.Monopoly:
+                    bank.devCards[i] = 2;
+                    for (var _ = 0; _ < 2; _++) {
+                        devCardsOrder.push(DevCard.Monopoly);
+                    }
+                    break;
+                case DevCard.RoadBuilding:
+                    bank.devCards[i] = 2;
+                    for (var _ = 0; _ < 2; _++) {
+                        devCardsOrder.push(DevCard.RoadBuilding);
+                    }
+                    break;
+                case DevCard.YearOfPlenty:
+                    bank.devCards[i] = 2;
+                    for (var _ = 0; _ < 2; _++) {
+                        devCardsOrder.push(DevCard.YearOfPlenty);
+                    }
+                    break;
+                case DevCard.VictoryPoint:
+                    bank.devCards[i] = 5;
+                    for (var _ = 0; _ < 5; _++) {
+                        devCardsOrder.push(DevCard.VictoryPoint);
+                    }
+                    break;
+            }
+        }
+        bank.devCardsOrder = shuffleArray(devCardsOrder);
+        return bank;
+    }
+    function getInitialAwards() {
+        return {
+            longestRoad: {
+                player: -1,
+                length: 4
+            },
+            largestArmy: {
+                player: -1,
+                num: 2
+            }
+        };
+    }
+    function getInitialRobber(board) {
+        var row = -1;
+        var col = -1;
         for (var i = 0; i < gameLogic.ROWS; i++) {
             for (var j = 0; j < gameLogic.COLS; j++) {
-                if (board[i][j] === '') {
-                    // If there is an empty cell then we do not have a tie.
-                    return false;
+                if (board[i][j].hasRobber) {
+                    row = i;
+                    col = j;
+                    break;
                 }
             }
         }
-        // No empty cells, so we have a tie!
+        return { row: row, col: col };
+    }
+    function getInitialState() {
+        var board = getInitialBoard();
+        var robber = getInitialRobber(board);
+        return {
+            board: board,
+            dices: [1, 1],
+            players: getInitialPlayers(),
+            bank: getInitialBank(),
+            awards: getInitialAwards(),
+            robber: robber,
+            diceRolled: false,
+            devCardsPlayed: false,
+            delta: null,
+            moveType: MoveType.INIT_BUILD,
+            eventIdx: 0,
+            building: null
+        };
+    }
+    gameLogic.getInitialState = getInitialState;
+    /**
+     * Validation logics
+     */
+    /**
+     * XXX: MUST have the same ordering as MoveType has
+     */
+    var validateHandlers = [
+        null,
+        checkInitBuild,
+        checkRollDice,
+        checkBuildRoad,
+        checkBuildSettlement,
+        checkBuildCity,
+        checkBuildDevCards,
+        checkPlayDevCard,
+        checkPlayDevCard,
+        checkPlayDevCard,
+        checkPlayDevCard,
+        null,
+        checkRobberEvent,
+        checkRobberMove,
+        checkRobPlayer,
+        checkTradeResourceWithBank
+    ];
+    function checkInitBuild(prevState, nextState, idx) {
+        switch (nextState.building.consType) {
+            case Construction.Road:
+                checkBuildRoad(prevState, nextState, idx);
+                break;
+            case Construction.Settlement:
+                checkBuildSettlement(prevState, nextState, idx);
+                break;
+            default:
+                throw new Error('Invalid build during initialization!');
+        }
+    }
+    function checkRollDice(prevState, nextState, idx) {
+        if (prevState.diceRolled) {
+            throw new Error('Dices already rolled');
+        }
+    }
+    function checkResourcesToBuild(player, consType, bank) {
+        if (!canAffordConstruction(player, consType)) {
+            throw new Error('Insufficient resources to build ' + Construction[consType]);
+        }
+        if (!hasSufficientConstructsToBuild(player, consType, bank)) {
+            throw new Error('Has no enough constructions to build ' + consType);
+        }
+    }
+    function checkBuildRoad(prevState, nextState, idx) {
+        var building = nextState.building;
+        var player = nextState.players[idx];
+        if (!building.init) {
+            checkResourcesToBuild(prevState.players[idx], Construction.Road, prevState.bank);
+        }
+        if (!canBuildRoadLegally(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge, building.init)) {
+            throw new Error('Cannot build road legally!');
+        }
+    }
+    function checkBuildSettlement(prevState, nextState, idx) {
+        var building = nextState.building;
+        var player = nextState.players[idx];
+        if (!building.init) {
+            checkResourcesToBuild(prevState.players[idx], Construction.Settlement, prevState.bank);
+        }
+        if (!canBuildSettlementLegally(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge, building.init)) {
+            throw new Error('Cannot build settlement legally!');
+        }
+    }
+    function checkBuildCity(prevState, nextState, idx) {
+        checkResourcesToBuild(prevState.players[idx], Construction.City, prevState.bank);
+        var building = nextState.building;
+        var player = nextState.players[idx];
+        if (!canUpgradeSettlement(player, prevState.board, building.hexRow, building.hexCol, building.vertexOrEdge)) {
+            throw new Error('Cannot build city legally!');
+        }
+    }
+    function canBuildRoadLegally(player, board, row, col, edge, initial) {
+        if (edge < 0 || edge > 5)
+            return false;
+        if (row < 0 || row > gameLogic.ROWS || col < 0 || col > gameLogic.COLS)
+            return false;
+        // edge must be empty - no other roads
+        if (board[row][col].edges[edge] !== -1)
+            return false;
+        var adjHex = getHexAdjcentToEdge(row, col, edge);
+        if (adjHex.length === 0)
+            return false;
+        // both hexes cannot be water
+        if (board[row][col].label === Resource.Water && board[adjHex[0]][adjHex[1]].label === Resource.Water) {
+            return false;
+        }
+        //    //If it's first build instruction during INIT_BUILD, just build it
+        //    if (initial && player.construction.reduce(function(a, b) {return a + b;}) === 1) {
+        //      return true;
+        //    }
+        // player owns adjacent road in current hex or adjacent road in adjacent hex
+        if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id ||
+            board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id ||
+            board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id ||
+            board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id) {
+            // check if other player's settlement/city is inbetween existing road and proposed road
+            // cannot build through player's settlement/city, even with connecting road
+            // building CC on same hex
+            if (board[row][col].edges[((edge + 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[edge] === Construction.Settlement ||
+                    board[row][col].vertices[edge] === Construction.City) &&
+                    board[row][col].vertexOwner[edge] !== player.id)) {
+                return false;
+            }
+            // building CW on same hex
+            if (board[row][col].edges[((edge - 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
+                    board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
+                    board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
+                return false;
+            }
+            // building CC on adj. hex
+            if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 - 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[edge] === Construction.Settlement ||
+                    board[row][col].vertices[edge] === Construction.City) &&
+                    board[row][col].vertexOwner[edge] !== player.id)) {
+                return false;
+            }
+            // building CW on adj. hex
+            if (board[adjHex[0]][adjHex[1]].edges[((edge + 3 + 1) % 6 + 6) % 6] === player.id &&
+                ((board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.Settlement ||
+                    board[row][col].vertices[((edge - 1) % 6 + 6) % 6] === Construction.City) &&
+                    board[row][col].vertexOwner[((edge - 1) % 6 + 6) % 6] !== player.id)) {
+                return false;
+            }
+            return true;
+        }
+        /*
+        if ((board[row][col].vertices[edge] === Construction.Settlement && board[row][col].vertexOwner[edge] === player.id) ||
+          (board[row][col].vertices[(edge+1) % 6] === Construction.Settlement && board[row][col].vertexOwner[(edge+1) % 6] === player.id) ||
+          (board[row][col].vertices[edge] === Construction.City && board[row][col].vertexOwner[edge] === player.id) ||
+          (board[row][col].vertices[(edge+1) % 6] === Construction.City && board[row][col].vertexOwner[(edge+1) % 6] === player.id))
+          return true;
+        */
+        if (board[row][col].vertexOwner[edge] === player.id || board[row][col].vertexOwner[(edge + 5) % 6] === player.id) {
+            return true;
+        }
+        return false;
+    }
+    gameLogic.canBuildRoadLegally = canBuildRoadLegally;
+    function canBuildSettlementLegally(player, board, row, col, vertex, initial) {
+        if (vertex < 0 || vertex > 5)
+            return false;
+        if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
+            return false;
+        // proposed vertex must be empty - no other settlement/city
+        if (board[row][col].vertices[vertex] !== -1)
+            return false;
+        // TODO: is Water sufficient with "ANY" being allowed?
+        var has_land = false;
+        if (board[row][col].label != Resource.Water)
+            has_land = true;
+        var hexes = getHexesAdjacentToVertex(row, col, vertex);
+        for (var i = 0; i < hexes.length; i++) {
+            if (hexes[i] === null)
+                continue;
+            if (board[hexes[i][0]][hexes[i][1]].label != Resource.Water)
+                has_land = true;
+        }
+        if (has_land === false)
+            return false;
+        // new settlement has to be 2+ vertices away from another settlement/city
+        if (hasNearbyConstruct(board, row, col, vertex))
+            return false;
+        for (var i = 0; i < hexes.length; i++) {
+            if (hexes[i] === null)
+                continue;
+            if (hasNearbyConstruct(board, hexes[i][0], hexes[i][1], hexes[i][2]))
+                return false;
+        }
+        //If it's during init build and it's first building, just do it
+        if (initial) {
+            return true;
+        }
+        // needs adjacent road to build
+        if (!hasAdjacentRoad(player, board, row, col, vertex)) {
+            return false;
+        }
         return true;
     }
+    gameLogic.canBuildSettlementLegally = canBuildSettlementLegally;
+    function canUpgradeSettlement(player, board, row, col, vertex) {
+        if (vertex < 0 || vertex > 5)
+            return false;
+        if (row < 0 || row >= gameLogic.ROWS || col < 0 || col >= gameLogic.COLS)
+            return false;
+        // proposed vertex must be empty - no other settlement/city
+        if (board[row][col].vertices[vertex] === Construction.Settlement &&
+            board[row][col].vertexOwner[vertex] === player.id)
+            return true;
+        return false;
+    }
+    gameLogic.canUpgradeSettlement = canUpgradeSettlement;
     /**
-     * Return the winner (either 'X' or 'O') or '' if there is no winner.
-     * The board is a matrix of size 3x3 containing either 'X', 'O', or ''.
-     * E.g., getWinner returns 'X' for the following board:
-     *     [['X', 'O', ''],
-     *      ['X', 'O', ''],
-     *      ['X', '', '']]
-     */
-    function getWinner(board) {
-        var boardString = '';
+    * XXX: Assuming UI will disable this feature when bank has no dev cards
+    */
+    function checkBuildDevCards(prevState, nextState, idx) {
+        if (!prevState.diceRolled) {
+            throw new Error('Need to roll dices first');
+        }
+        checkResources(nextState.players[idx].resources);
+    }
+    function checkPlayDevCard(prevState, nextState, idx) {
+        if (prevState.devCardsPlayed) {
+            throw new Error('Already played development cards');
+        }
+        //Check when playing year of plenty
+        try {
+            checkResources(nextState.bank.resources);
+        }
+        catch (e) {
+            throw new Error('Bank Error: ' + e.message);
+        }
+    }
+    function checkRobberEvent(prevState, nextState, idx) {
+        var prevSum = 0;
+        var nextSum = 0;
+        for (var i = 0; i < Resource.SIZE; i++) {
+            prevSum += prevState.players[idx].resources[i];
+            nextSum += nextState.players[idx].resources[i];
+        }
+        if (prevSum > 7 && nextSum > prevSum / 2) {
+            throw new Error('Need to toss half of resource cards');
+        }
+    }
+    function checkRobberMove(prevState, nextState, idx) {
+        if (angular.equals(prevState.robber, nextState.robber)) {
+            throw new Error('Need to move robber');
+        }
+    }
+    function checkResources(resources) {
+        for (var i = 0; i < Resource.SIZE; i++) {
+            if (resources[i] < 0) {
+                throw new Error('Insufficient resources: ' + Resource[i]);
+            }
+        }
+    }
+    function findTradingRatio(board, trading, idx) {
         for (var i = 0; i < gameLogic.ROWS; i++) {
             for (var j = 0; j < gameLogic.COLS; j++) {
-                var cell = board[i][j];
-                boardString += cell === '' ? ' ' : cell;
+                if (board[i][j].harbor === null || board[i][j].harbor.trading !== Resource.ANY ||
+                    board[i][j].harbor.trading !== trading) {
+                    continue;
+                }
+                var harbor = board[i][j].harbor;
+                for (var v = 0; v < 6; v++) {
+                    if (board[i][j].vertexOwner[v] === idx &&
+                        (harbor.vertices[0] === v || harbor.vertices[1] === v)) {
+                        return board[i][j].harbor.trading === Resource.ANY ? 3 : 2;
+                    }
+                }
             }
         }
-        var win_patterns = [
-            'XXX......',
-            '...XXX...',
-            '......XXX',
-            'X..X..X..',
-            '.X..X..X.',
-            '..X..X..X',
-            'X...X...X',
-            '..X.X.X..'
-        ];
-        for (var _i = 0; _i < win_patterns.length; _i++) {
-            var win_pattern = win_patterns[_i];
-            var x_regexp = new RegExp(win_pattern);
-            var o_regexp = new RegExp(win_pattern.replace(/X/g, 'O'));
-            if (x_regexp.test(boardString)) {
-                return 'X';
-            }
-            if (o_regexp.test(boardString)) {
-                return 'O';
-            }
-        }
-        return '';
+        return 4;
     }
-    /**
-     * Returns the move that should be performed when player
-     * with index turnIndexBeforeMove makes a move in cell row X col.
-     */
-    function createMove(stateBeforeMove, row, col, turnIndexBeforeMove) {
-        if (!stateBeforeMove) {
-            stateBeforeMove = getInitialState();
+    function checkRobPlayer(prevState, nextState, idx) {
+        var stealing = { player: -1, item: Resource.Dust, num: 0 };
+        var stolen = { player: -1, item: Resource.Dust, num: 0 };
+        for (var p = 0; p < gameLogic.NUM_PLAYERS; p++) {
+            for (var r = 0; r < Resource.SIZE; r++) {
+                var diff = nextState.players[p].resources[r] - prevState.players[p].resources[r];
+                if (diff < 0) {
+                    //Stolen scenario
+                    if (stolen.player !== -1 || stolen.item !== Resource.Dust) {
+                        throw new Error('Cannot steal multiple players!');
+                    }
+                    stolen = { player: p, item: r, num: -diff };
+                }
+                if (diff > 0) {
+                    //Stealing scenario
+                    if (stealing.player !== -1 || stealing.item !== Resource.Dust) {
+                        throw new Error('Cannot have multiple stealings!');
+                    }
+                    stealing = { player: p, item: r, num: diff };
+                }
+            }
         }
-        var board = stateBeforeMove.board;
-        if (board[row][col] !== '') {
-            throw new Error("One can only make a move in an empty position!");
+        if (stealing.player !== idx) {
+            throw new Error('Only current player can steal from others!');
         }
-        if (getWinner(board) !== '' || isTie(board)) {
-            throw new Error("Can only make a move if the game is not over!");
+        if (stealing.player === stolen.player) {
+            throw new Error('Cannot steal from self!');
         }
-        var boardAfterMove = angular.copy(board);
-        boardAfterMove[row][col] = turnIndexBeforeMove === 0 ? 'X' : 'O';
-        var winner = getWinner(boardAfterMove);
-        var endMatchScores;
-        var turnIndexAfterMove;
-        if (winner !== '' || isTie(boardAfterMove)) {
-            // Game over.
-            turnIndexAfterMove = -1;
-            endMatchScores = winner === 'X' ? [1, 0] : winner === 'O' ? [0, 1] : [0, 0];
+        if (stealing.item !== stolen.item) {
+            throw new Error('Error! Stealing item is not matching stolen item!');
         }
-        else {
-            // Game continues. Now it's the opponent's turn (the turn switches from 0 to 1 and 1 to 0).
-            turnIndexAfterMove = 1 - turnIndexBeforeMove;
-            endMatchScores = null;
+        if (stealing.item === Resource.Dust) {
+            throw new Error('Must designate what to steal!');
         }
-        var delta = { row: row, col: col };
-        var stateAfterMove = { delta: delta, board: boardAfterMove };
-        return { endMatchScores: endMatchScores, turnIndexAfterMove: turnIndexAfterMove, stateAfterMove: stateAfterMove };
+        if (stealing.num !== stolen.num) {
+            throw new Error('Error! Stealing number is not matching stolen number! ' + stealing.num + ' : ' + stolen.num);
+        }
+        if (stealing.num !== 1) {
+            throw new Error('Must steal one resource at a time!');
+        }
+        checkResources(nextState.players[stealing.player].resources);
+        checkResources(nextState.players[stolen.player].resources);
     }
-    gameLogic.createMove = createMove;
+    function checkTradeResourceWithBank(prevState, nextState, idx) {
+        if (!prevState.diceRolled) {
+            throw new Error('Need to roll dices first');
+        }
+        var selling = { item: Resource.Dust, num: 0 };
+        var buying = { item: Resource.Dust, num: 0 };
+        checkResources(nextState.players[idx].resources);
+        for (var i = 0; i < Resource.SIZE; i++) {
+            if (nextState.players[idx].resources[i] < prevState.players[idx].resources[i]) {
+                if (selling.item !== Resource.Dust) {
+                    throw new Error('Need to use same resources for trading');
+                }
+                selling = {
+                    item: i,
+                    num: prevState.players[idx].resources[i] - nextState.players[idx].resources[i]
+                };
+            }
+            if (nextState.players[idx].resources[i] > prevState.players[idx].resources[i]) {
+                if (buying.item !== Resource.Dust) {
+                    throw new Error('One resource per trade');
+                }
+                buying = {
+                    item: i,
+                    num: nextState.players[idx].resources[i] - prevState.players[idx].resources[i]
+                };
+            }
+        }
+        if (selling.item === Resource.Dust || buying.item === Resource.Dust) {
+            throw new Error('Missing trading item!');
+        }
+        if (selling.item === buying.item) {
+            throw new Error('Cannot trade the same resources');
+        }
+        if (buying.num * findTradingRatio(nextState.board, buying.item, idx) !== selling.num) {
+            throw new Error('Wrong trading ratio');
+        }
+    }
     function checkMoveOk(stateTransition) {
-        // We can assume that turnIndexBeforeMove and stateBeforeMove are legal, and we need
-        // to verify that the move is OK.
-        var turnIndexBeforeMove = stateTransition.turnIndexBeforeMove;
-        var stateBeforeMove = stateTransition.stateBeforeMove;
-        var move = stateTransition.move;
-        var deltaValue = stateTransition.move.stateAfterMove.delta;
-        var row = deltaValue.row;
-        var col = deltaValue.col;
-        var expectedMove = createMove(stateBeforeMove, row, col, turnIndexBeforeMove);
-        if (!angular.equals(move, expectedMove)) {
-            throw new Error("Expected move=" + angular.toJson(expectedMove, true) +
-                ", but got stateTransition=" + angular.toJson(stateTransition, true));
+        var prevState = stateTransition.stateBeforeMove ? stateTransition.stateBeforeMove : getInitialState();
+        var nextState = stateTransition.move.stateAfterMove;
+        var prevIdx = prevState.eventIdx !== -1 ? prevState.eventIdx : stateTransition.turnIndexBeforeMove;
+        //TODO: What are these for, exactly?
+        var nextIdx = stateTransition.move.turnIndexAfterMove;
+        var delta = stateTransition.move.stateAfterMove.delta;
+        if (nextState.moveType !== MoveType.INIT && nextState.moveType !== MoveType.WIN) {
+            if (nextState.moveType >= MoveType.SIZE || validateHandlers[nextState.moveType] === null) {
+                throw new Error('Unknown move!');
+            }
+            else {
+                validateHandlers[nextState.moveType](prevState, nextState, prevIdx);
+            }
         }
     }
     gameLogic.checkMoveOk = checkMoveOk;
-    function forSimpleTestHtml() {
-        var move = gameLogic.createMove(null, 0, 0, 0);
-        log.log("move=", move);
-        var params = {
-            turnIndexBeforeMove: 0,
-            stateBeforeMove: null,
-            move: move,
-            numberOfPlayers: 2 };
-        gameLogic.checkMoveOk(params);
+    /**
+     * create move logics
+     */
+    function countScores(state) {
+        var scores = [];
+        for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+            scores[i] = 0;
+        }
+        for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+            //Count scores from construction
+            var player = state.players[i];
+            scores[i] += 1 * player.construction[Construction.Settlement];
+            scores[i] += 2 * player.construction[Construction.City];
+            //Count scores from victory point cards
+            scores[i] += player.devCards[DevCard.VictoryPoint];
+        }
+        //Add scores if awards assigned
+        if (state.awards.longestRoad.player !== -1) {
+            scores[state.awards.longestRoad.player] += 2;
+        }
+        if (state.awards.largestArmy.player !== -1) {
+            scores[state.awards.largestArmy.player] += 2;
+        }
+        return scores;
     }
-    gameLogic.forSimpleTestHtml = forSimpleTestHtml;
+    function getStateBeforeMove(move) {
+        var ret = angular.copy(move.currState);
+        ret.delta = null;
+        return ret;
+    }
+    function getStateAfterMove(move, stateBeforeMove) {
+        var ret = angular.copy(move.currState);
+        ret.eventIdx = -1;
+        ret.building = null;
+        ret.delta = stateBeforeMove;
+        return ret;
+    }
+    function onGameStart(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        if (stateBeforeMove.eventIdx !== 0) {
+            throw new Error('Initial construction not finished!');
+        }
+        if (stateBeforeMove.moveType !== MoveType.INIT_BUILD) {
+            throw new Error('Invalid operation!');
+        }
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.INIT;
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: 0,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onGameStart = onGameStart;
+    function onRollDice(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (move.currState.diceRolled) {
+            throw new Error('Dices already rolled!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROLL_DICE;
+        //State transition
+        stateAfterMove.diceRolled = true;
+        stateAfterMove.dices[0] = getRandomInt(1, 7);
+        stateAfterMove.dices[1] = getRandomInt(1, 7);
+        var rollNum = stateAfterMove.dices[0] + stateAfterMove.dices[1];
+        if (rollNum !== 7) {
+            //State transition to resources production
+            for (var pIndex = turnIdx; pIndex < turnIdx + gameLogic.NUM_PLAYERS; pIndex++) {
+                var playerIndex = pIndex % gameLogic.NUM_PLAYERS;
+                for (var i = 0; i < gameLogic.ROWS; i++) {
+                    for (var j = 0; j < gameLogic.COLS; j++) {
+                        if (isSea(i, j) || stateBeforeMove.board[i][j].label === Resource.Dust ||
+                            stateBeforeMove.board[i][j].hasRobber || stateBeforeMove.board[i][j].rollNum !== rollNum) {
+                            continue;
+                        }
+                        for (var v = 0; v < stateBeforeMove.board[i][j].vertexOwner.length; v++) {
+                            if (stateBeforeMove.board[i][j].vertexOwner[v] !== playerIndex) {
+                                continue;
+                            }
+                            var resourceInBank = stateBeforeMove.bank.resources[stateBeforeMove.board[i][j].label];
+                            var toAdd = 0;
+                            switch (stateBeforeMove.board[i][j].vertices[v]) {
+                                case Construction.City:
+                                    toAdd = resourceInBank < 2 ? resourceInBank : 2;
+                                    break;
+                                case Construction.Settlement:
+                                    toAdd = resourceInBank < 1 ? resourceInBank : 1;
+                                    break;
+                            }
+                            stateAfterMove.players[playerIndex].resources[stateBeforeMove.board[i][j].label] += toAdd;
+                            stateAfterMove.bank.resources[stateBeforeMove.board[i][j].label] -= toAdd;
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            //Robber event will start
+            stateAfterMove.eventIdx = turnIdx;
+        }
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onRollDice = onRollDice;
+    function onInitBuilding(move, turnIdx) {
+        var buildingMove = move;
+        var playerIdx = buildingMove.playerIdx;
+        if (playerIdx !== move.currState.eventIdx) {
+            throw new Error('It\'s not your turn to build!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.INIT_BUILD;
+        stateAfterMove.building = {
+            consType: null,
+            hexRow: buildingMove.hexRow,
+            hexCol: buildingMove.hexCol,
+            vertexOrEdge: buildingMove.vertexOrEdge,
+            init: true
+        };
+        switch (buildingMove.consType) {
+            case Construction.Road:
+                if (move.currState.players[playerIdx].construction[Construction.Road] >= 2) {
+                    throw new Error('Can only build 2 roads during initialization!');
+                }
+                if (stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
+                    throw new Error('Road already built on this place!');
+                }
+                stateAfterMove.building.consType = Construction.Road;
+                stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
+                stateAfterMove.players[playerIdx].construction[Construction.Road]++;
+                break;
+            case Construction.Settlement:
+                if (move.currState.players[playerIdx].construction[Construction.Settlement] >= 2) {
+                    throw new Error('Can only build 2 settlements during initialization!');
+                }
+                stateAfterMove.building.consType = Construction.Settlement;
+                stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
+                stateAfterMove.players[playerIdx].construction[Construction.Settlement]++;
+                break;
+            default:
+                throw new Error('Can only build road/settlement during initialization!');
+        }
+        //Update eventIdx - does circle back for 2 rounds of settlement/road building
+        var player = stateAfterMove.players[playerIdx];
+        if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 0) {
+            stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+        }
+        else if (player.construction[Construction.Settlement] === 1 && player.construction[Construction.Road] === 1) {
+            if (playerIdx === gameLogic.NUM_PLAYERS - 1)
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+            else
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx + 1;
+        }
+        else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 1) {
+            // assign resources based on second settlement
+            var hexes = getHexesAdjacentToVertex(buildingMove.hexRow, buildingMove.hexCol, buildingMove.vertexOrEdge);
+            var resource = stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].label;
+            if (resource < Resource.SIZE) {
+                stateAfterMove.players[playerIdx].resources[resource]++;
+                stateAfterMove.bank.resources[resource]--;
+            }
+            for (var i = 0; i < hexes.length; i++) {
+                var resource_1 = stateAfterMove.board[hexes[i][0]][hexes[i][1]].label;
+                if (resource_1 < Resource.SIZE) {
+                    stateAfterMove.players[playerIdx].resources[resource_1]++;
+                    stateAfterMove.bank.resources[resource_1]--;
+                }
+            }
+            stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+        }
+        else if (player.construction[Construction.Settlement] === 2 && player.construction[Construction.Road] === 2) {
+            if (playerIdx === 0)
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+            else
+                stateAfterMove.eventIdx = stateBeforeMove.eventIdx - 1;
+        }
+        else {
+            stateAfterMove.eventIdx = stateBeforeMove.eventIdx;
+        }
+        stateAfterMove.players[playerIdx].points = countScores(stateAfterMove)[playerIdx];
+        stateAfterMove.players[playerIdx].points -= stateAfterMove.players[playerIdx].devCards[DevCard.VictoryPoint];
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onInitBuilding = onInitBuilding;
+    function onBuilding(move, turnIdx) {
+        var buildingMove = move;
+        var playerIdx = buildingMove.playerIdx;
+        if (playerIdx !== turnIdx) {
+            throw new Error('It\'s not your turn!');
+        }
+        if (!move.currState.diceRolled) {
+            throw new Error('Must roll the dices before construction!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.players[playerIdx].construction[buildingMove.consType]++;
+        if (buildingMove.consType === Construction.City)
+            stateAfterMove.players[playerIdx].construction[Construction.Settlement]--;
+        stateAfterMove.building = {
+            consType: buildingMove.consType,
+            hexRow: buildingMove.hexRow,
+            hexCol: buildingMove.hexCol,
+            vertexOrEdge: buildingMove.vertexOrEdge,
+            init: false
+        };
+        var player = null;
+        switch (buildingMove.consType) {
+            case Construction.Road:
+                stateAfterMove.moveType = MoveType.BUILD_ROAD;
+                if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] !== -1) {
+                    throw new Error('Invalid building instruction!');
+                }
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.Road)) {
+                    throw new Error('Insufficient resources to build a road!');
+                }
+                if (stateAfterMove.players[playerIdx].construction[Construction.Road] >= 15) {
+                    throw new Error('No more roads to build!');
+                }
+                stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
+                stateAfterMove.board[buildingMove.hexRow][buildingMove.hexCol].edges[buildingMove.vertexOrEdge] = playerIdx;
+                stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
+                stateAfterMove.bank.resources[Resource.Brick]++;
+                stateAfterMove.bank.resources[Resource.Lumber]++;
+                break;
+            case Construction.Settlement:
+                stateAfterMove.moveType = MoveType.BUILD_SETTLEMENT;
+                if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== -1) {
+                    throw new Error('Invalid building instruction!');
+                }
+                player = stateAfterMove.players[playerIdx];
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.Settlement)) {
+                    throw new Error('Insufficient resources to build a settlement!');
+                }
+                stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
+                stateAfterMove.players[playerIdx].resources[Resource.Brick]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Lumber]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Wool]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Grain]--;
+                stateAfterMove.bank.resources[Resource.Brick]++;
+                stateAfterMove.bank.resources[Resource.Lumber]++;
+                stateAfterMove.bank.resources[Resource.Wool]++;
+                stateAfterMove.bank.resources[Resource.Grain]++;
+                break;
+            case Construction.City:
+                stateAfterMove.moveType = MoveType.BUILD_CITY;
+                if (move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertexOwner[buildingMove.vertexOrEdge] !== playerIdx ||
+                    move.currState.board[buildingMove.hexRow][buildingMove.hexCol].vertices[buildingMove.vertexOrEdge] !== Construction.Settlement) {
+                    throw new Error('Invalid building instruction!');
+                }
+                player = stateAfterMove.players[playerIdx];
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.City)) {
+                    throw new Error('Insufficient resources to upgrade a settlement to a city!');
+                }
+                stateAfterMove.board = getNextStateToBuild(stateAfterMove.board, buildingMove);
+                stateAfterMove.players[playerIdx].resources[Resource.Ore] -= 3;
+                stateAfterMove.players[playerIdx].resources[Resource.Grain] -= 2;
+                stateAfterMove.bank.resources[Resource.Ore] += 3;
+                stateAfterMove.bank.resources[Resource.Grain] += 2;
+                break;
+            case Construction.DevCard:
+                if (move.currState.bank.devCardsOrder.length <= 0) {
+                    throw new Error('No development cards in bank right now!');
+                }
+                player = stateAfterMove.players[playerIdx];
+                if (!canAffordConstruction(stateAfterMove.players[playerIdx], Construction.DevCard)) {
+                    throw new Error('Insufficient resources to build a development card!');
+                }
+                //State transition to devCards
+                stateAfterMove.moveType = MoveType.BUILD_DEVCARD;
+                stateAfterMove.players[playerIdx].devCards[move.currState.bank.devCardsOrder[0]]++;
+                stateAfterMove.bank.devCards[move.currState.bank.devCardsOrder[0]]--;
+                stateAfterMove.bank.devCardsOrder.splice(0, 1);
+                //State transition to resources
+                stateAfterMove.players[playerIdx].resources[Resource.Ore]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Wool]--;
+                stateAfterMove.players[playerIdx].resources[Resource.Grain]--;
+                stateAfterMove.bank.resources[Resource.Ore]++;
+                stateAfterMove.bank.resources[Resource.Wool]++;
+                stateAfterMove.bank.resources[Resource.Grain]++;
+                break;
+            default:
+                throw new Error('Invalid command!');
+        }
+        stateAfterMove.players[playerIdx].points = countScores(stateAfterMove)[playerIdx];
+        stateAfterMove.players[playerIdx].points -= stateAfterMove.players[playerIdx].devCards[DevCard.VictoryPoint];
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onBuilding = onBuilding;
+    function onKnight(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (move.currState.devCardsPlayed) {
+            throw new Error('Already played development card!');
+        }
+        if (move.currState.players[move.playerIdx].devCards[DevCard.Knight] <= 0) {
+            throw new Error('Doesn\'t have knight card on hand!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.devCardsPlayed = true;
+        stateAfterMove.moveType = MoveType.KNIGHT;
+        //State transition to knight cards
+        stateAfterMove.players[move.playerIdx].knightsPlayed++;
+        stateAfterMove.players[move.playerIdx].devCards[DevCard.Knight]--;
+        if (stateAfterMove.players[move.playerIdx].knightsPlayed > stateBeforeMove.awards.largestArmy.num) {
+            stateAfterMove.awards.largestArmy = {
+                player: move.playerIdx,
+                num: stateAfterMove.players[move.playerIdx].knightsPlayed
+            };
+        }
+        stateAfterMove.players[move.playerIdx].points = countScores(stateAfterMove)[move.playerIdx];
+        stateAfterMove.players[move.playerIdx].points -= stateAfterMove.players[move.playerIdx].devCards[DevCard.VictoryPoint];
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onKnight = onKnight;
+    function onMonopoly(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (move.currState.devCardsPlayed) {
+            throw new Error('Already played development card in this turn!');
+        }
+        if (move.currState.players[turnIdx].devCards[DevCard.Monopoly] <= 0) {
+            throw new Error('No Monopoly card on hand!');
+        }
+        var monopolyMove = move;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.MONOPOLY;
+        stateAfterMove.devCardsPlayed = true;
+        //State transition to dev cards
+        stateAfterMove.players[turnIdx].devCards[DevCard.Monopoly]--;
+        //State transition to resource cards
+        var numCards = 0;
+        for (var p = 0; p < gameLogic.NUM_PLAYERS; p++) {
+            if (p !== turnIdx) {
+                var resources = stateAfterMove.players[p].resources[monopolyMove.target];
+                numCards += resources > 0 ? resources : 0;
+                stateAfterMove.players[p].resources[monopolyMove.target] = 0;
+            }
+        }
+        stateAfterMove.players[turnIdx].resources[monopolyMove.target] += numCards;
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onMonopoly = onMonopoly;
+    function onRoadBuilding(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (move.currState.devCardsPlayed) {
+            throw new Error('Already played development cards in this turn!');
+        }
+        if (move.currState.players[turnIdx].devCards[DevCard.RoadBuilding] <= 0) {
+            throw new Error('No Road Building cards on hand!');
+        }
+        var roadBuildMove = move;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROAD_BUILDING;
+        stateAfterMove.devCardsPlayed = true;
+        //State transition to dev cards
+        stateAfterMove.players[turnIdx].devCards[DevCard.RoadBuilding]--;
+        //State transition to roads and check if road can be legally built
+        if (!canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road1.hexRow, roadBuildMove.road1.hexCol, roadBuildMove.road1.vertexOrEdge, true) &&
+            !canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road2.hexRow, roadBuildMove.road2.hexCol, roadBuildMove.road2.vertexOrEdge, true)) {
+            throw new Error('Cannot legally build roads!');
+        }
+        var road1Legal = canBuildRoadLegally(stateAfterMove.players[turnIdx], stateAfterMove.board, roadBuildMove.road1.hexRow, roadBuildMove.road1.hexCol, roadBuildMove.road1.vertexOrEdge, true);
+        var tempBoard = road1Legal ? getNextStateToBuild(stateAfterMove.board, roadBuildMove.road1) :
+            getNextStateToBuild(stateAfterMove.board, roadBuildMove.road2);
+        if (road1Legal) {
+            if (!canBuildRoadLegally(stateAfterMove.players[turnIdx], tempBoard, roadBuildMove.road2.hexRow, roadBuildMove.road2.hexCol, roadBuildMove.road2.vertexOrEdge, true)) {
+                throw new Error('Cannot build road legally!');
+            }
+            stateAfterMove.board = getNextStateToBuild(tempBoard, roadBuildMove.road2);
+        }
+        else {
+            if (!canBuildRoadLegally(stateAfterMove.players[turnIdx], tempBoard, roadBuildMove.road1.hexRow, roadBuildMove.road1.hexCol, roadBuildMove.road1.vertexOrEdge, true)) {
+                throw new Error('Cannot build road legally!');
+            }
+            stateAfterMove.board = getNextStateToBuild(tempBoard, roadBuildMove.road1);
+        }
+        //State transition to players and possibly awards
+        stateAfterMove.players[turnIdx].construction[Construction.Road] += 2;
+        if (stateAfterMove.players[turnIdx].construction[Construction.Road] > stateBeforeMove.awards.longestRoad.length) {
+            stateAfterMove.awards.longestRoad = {
+                player: turnIdx,
+                length: stateAfterMove.players[turnIdx].construction[Construction.Road]
+            };
+        }
+        stateAfterMove.players[turnIdx].points = countScores(stateAfterMove)[turnIdx];
+        stateAfterMove.players[turnIdx].points -= stateAfterMove.players[turnIdx].devCards[DevCard.VictoryPoint];
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onRoadBuilding = onRoadBuilding;
+    function onYearOfPlenty(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (move.currState.devCardsPlayed) {
+            throw new Error('Already played development card in this turn!');
+        }
+        if (move.currState.players[turnIdx].devCards[DevCard.YearOfPlenty] <= 0) {
+            throw new Error('No Year of Plenty card on hand!');
+        }
+        var yearOfPlentyMove = move;
+        if (yearOfPlentyMove.target.reduce(function (a, b) { return a + b; }) !== 2) {
+            throw new Error('Must choose two resources (can be of same type)');
+        }
+        angular.forEach(yearOfPlentyMove.target, function (r) {
+            if (r < 0) {
+                throw new Error('Cannot dump resources!');
+            }
+        });
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.YEAR_OF_PLENTY;
+        //State transition to dev cards
+        stateAfterMove.players[turnIdx].devCards[DevCard.YearOfPlenty]--;
+        //State transition to resources
+        for (var i = 0; i < Resource.SIZE; i++) {
+            stateAfterMove.players[turnIdx].resources[i] += yearOfPlentyMove.target[i];
+            stateAfterMove.bank.resources[i] -= yearOfPlentyMove.target[i];
+            if (stateAfterMove.bank.resources[i] < 0) {
+                throw new Error('Insufficient resources in bank: ' + Resource[i]);
+            }
+        }
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onYearOfPlenty = onYearOfPlenty;
+    function onRobberEvent(move, turnIdx) {
+        var robberEventMove = move;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROBBER_EVENT;
+        var playerIdx = stateBeforeMove.eventIdx;
+        var prevSum = 0;
+        for (var i = 0; i < Resource.SIZE; i++) {
+            prevSum += stateBeforeMove.players[playerIdx].resources[i];
+        }
+        if (prevSum > 7) {
+            //State transition to toss resource cards
+            for (var i = 0; i < Resource.SIZE; i++) {
+                if (robberEventMove.tossed[i] < 0) {
+                    throw new Error('Cannot dump negative resources');
+                }
+                stateAfterMove.players[playerIdx].resources[i] -= robberEventMove.tossed[i];
+                if (stateAfterMove.players[playerIdx].resources[i] < 0) {
+                    throw new Error('Insufficient resource: ' + Resource[i]);
+                }
+            }
+        }
+        stateAfterMove.eventIdx = (stateBeforeMove.eventIdx + 1) % gameLogic.NUM_PLAYERS;
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onRobberEvent = onRobberEvent;
+    function onRobberMove(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        var robberMove = move;
+        if (isSea(robberMove.row, robberMove.col)) {
+            throw new Error('Cannot move robber to sea!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROBBER_MOVE;
+        var robber = stateBeforeMove.robber;
+        if (robber.row === robberMove.row && robber.col === robberMove.col) {
+            throw new Error('Cannot move robber to same place!');
+        }
+        //State transition to robber
+        stateAfterMove.board[robber.row][robber.col].hasRobber = false;
+        stateAfterMove.board[robberMove.row][robberMove.col].hasRobber = true;
+        stateAfterMove.robber.row = robberMove.row;
+        stateAfterMove.robber.col = robberMove.col;
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onRobberMove = onRobberMove;
+    function onRobPlayer(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        var robPlayerMove = move;
+        if (robPlayerMove.stealingIdx !== turnIdx || robPlayerMove.stealingIdx === robPlayerMove.stolenIdx) {
+            throw new Error('Invalid robbing action!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.ROB_PLAYER;
+        var resourcesOnHand = [];
+        for (var i = 0; i < Resource.SIZE; i++) {
+            if (stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i] > 0) {
+                for (var _ = 0; _ < stateBeforeMove.players[robPlayerMove.stolenIdx].resources[i]; _++) {
+                    resourcesOnHand.push(i);
+                }
+            }
+        }
+        //State transition to robbing
+        resourcesOnHand = shuffleArray(resourcesOnHand);
+        var idx = getRandomInt(0, resourcesOnHand.length);
+        stateAfterMove.players[robPlayerMove.stealingIdx].resources[resourcesOnHand[idx]]++;
+        stateAfterMove.players[robPlayerMove.stolenIdx].resources[resourcesOnHand[idx]]--;
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onRobPlayer = onRobPlayer;
+    function onTradingWithBank(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        var tradeWithBankMove = move;
+        var stateBeforeMove = getStateBeforeMove(move);
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.moveType = MoveType.TRANSACTION_WITH_BANK;
+        if (!stateBeforeMove.diceRolled) {
+            throw new Error('Need to roll dices first!');
+        }
+        //State transition to transaction
+        stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] -= tradeWithBankMove.sellingNum;
+        stateAfterMove.players[turnIdx].resources[tradeWithBankMove.buyingItem] += tradeWithBankMove.buyingNum;
+        stateAfterMove.bank.resources[tradeWithBankMove.sellingItem] += tradeWithBankMove.sellingNum;
+        stateAfterMove.bank.resources[tradeWithBankMove.buyingItem] -= tradeWithBankMove.buyingNum;
+        if (stateAfterMove.players[turnIdx].resources[tradeWithBankMove.sellingItem] < 0) {
+            throw new Error('Player has insufficient resources to trade!');
+        }
+        if (stateAfterMove.bank.resources[tradeWithBankMove.buyingItem] < 0) {
+            throw new Error('Bank has insufficient resources to trade!');
+        }
+        return {
+            endMatchScores: null,
+            turnIndexAfterMove: turnIdx,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onTradingWithBank = onTradingWithBank;
+    function onEndTurn(move, turnIdx) {
+        if (move.playerIdx !== turnIdx) {
+            throw new Error('Not your turn to play!');
+        }
+        if (!move.currState.diceRolled) {
+            throw new Error('Must roll the dices!');
+        }
+        var stateBeforeMove = getStateBeforeMove(move);
+        // lowering road length if current player affected other players' longest road
+        // can happen by building road to get longest, or by building settlement to break other person's road
+        for (var i = turnIdx; i < turnIdx + gameLogic.NUM_PLAYERS; i++) {
+            var j = i % gameLogic.NUM_PLAYERS;
+            if (stateBeforeMove.awards.longestRoad.player === j &&
+                getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) < stateBeforeMove.awards.longestRoad.length) {
+                if (getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) >= 5) {
+                    stateBeforeMove.awards.longestRoad = {
+                        player: j,
+                        length: getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board)
+                    };
+                }
+                else {
+                    stateBeforeMove.awards.longestRoad = {
+                        player: -1,
+                        length: 4
+                    };
+                }
+            }
+        }
+        // determine new award winner for longest road
+        for (var i = turnIdx; i < turnIdx + gameLogic.NUM_PLAYERS; i++) {
+            var j = i % gameLogic.NUM_PLAYERS;
+            if (getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board) > stateBeforeMove.awards.longestRoad.length) {
+                stateBeforeMove.awards.longestRoad = {
+                    player: j,
+                    length: getLongestRoad(stateBeforeMove.players[j], stateBeforeMove.board)
+                };
+            }
+        }
+        var scores = countScores(stateBeforeMove);
+        var hasWinner = false;
+        for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+            if (scores[i] >= 10) {
+                hasWinner = true;
+                break;
+            }
+        }
+        var stateAfterMove = getStateAfterMove(move, stateBeforeMove);
+        stateAfterMove.diceRolled = false;
+        stateAfterMove.devCardsPlayed = false;
+        stateAfterMove.moveType = hasWinner ? MoveType.WIN : MoveType.INIT;
+        return {
+            endMatchScores: hasWinner ? scores : null,
+            turnIndexAfterMove: (turnIdx + 1) % gameLogic.NUM_PLAYERS,
+            stateAfterMove: stateAfterMove
+        };
+    }
+    gameLogic.onEndTurn = onEndTurn;
+    function getLongestRoad(player, board) {
+        var max = 0;
+        // loop over all unique vertices
+        for (var i = 0; i < gameLogic.ROWS; i++) {
+            for (var j = 0; j < gameLogic.COLS; j++) {
+                // loop over every other vertex
+                // only need to do calculate from every other vertex to reduce computations
+                for (var k = 0; k < 6; k += 2) {
+                    var roadLength = findRoadSubLength(player, board, i, j, k, []);
+                    if (roadLength > max)
+                        max = roadLength;
+                }
+            }
+        }
+        return max;
+    }
+    gameLogic.getLongestRoad = getLongestRoad;
 })(gameLogic || (gameLogic = {}));
 //# sourceMappingURL=gameLogic.js.map
 ;
 ;
+var MouseTarget;
+(function (MouseTarget) {
+    MouseTarget[MouseTarget["NONE"] = 0] = "NONE";
+    MouseTarget[MouseTarget["HEX"] = 1] = "HEX";
+    MouseTarget[MouseTarget["VERTEX"] = 2] = "VERTEX";
+    MouseTarget[MouseTarget["EDGE"] = 3] = "EDGE";
+})(MouseTarget || (MouseTarget = {}));
 var game;
 (function (game) {
     // I export all variables to make it easy to debug in the browser by
@@ -152,14 +1284,68 @@ var game;
     game.move = null;
     game.state = null;
     game.isHelpModalShown = false;
+    game.isHexModalShown = false;
+    game.hexRow = 3;
+    game.hexCol = 3;
+    game.height = 0;
+    game.width = 0;
+    game.coordinates = [];
+    game.playerColor = ['#ED3B3B', '#3889F2', '#2AC761', '#CC9D04'];
+    game.myIndex = -2;
+    game.alertStyle = 'success';
+    game.alertMsg = 'Welcome to Pioneers Game!';
+    game.showInfoModal = false;
+    game.infoModalHeader = '';
+    game.infoModalMsg = '';
+    game.onOkClicked = null;
+    game.onCloseModal = cleanupInfoModal;
+    game.canInfoModalTurnOff = true;
+    game.showResourcePicker = false;
+    var targetOneResource = -1;
+    game.devRoads = [];
+    game.playingDevRoadBuild = false;
+    game.showResourcePickerMultiple = false;
+    game.resourcesPicked = [];
+    game.onClickHex = onMouseOverHex;
+    var settlementPadding = [[0, 25], [25, 0], [25, 25], [-25, 25], [-25, 0]];
+    var mouseTarget = MouseTarget.NONE;
+    var mouseRow = 0;
+    var mouseCol = 0;
+    var targetNum = 0;
+    var buildTarget = 0;
+    var buildRow = 0;
+    var buildCol = 0;
+    var buildNum = 0;
+    var makeMove = null;
+    var robberMovedRow = -1;
+    var robberMovedCol = -1;
+    game.showRobberPanel = false;
+    var robberVictomIdx = -1;
+    game.showTradingPanel = false;
+    var tradingResource = -1;
+    game.tradingNum = 0;
+    var wantedResource = -1;
+    game.wantedNum = 0;
+    var tradeWithBank = false;
+    // needed for initial building phase
+    game.initialBuilding = true;
+    var initBuildingReverse = false;
+    function init_callback(gameAreaWidth, gameAreaHeight) {
+        game.height = gameAreaHeight;
+        game.width = gameAreaWidth;
+    }
+    game.init_callback = init_callback;
     function init() {
+        resizeGameAreaService.setWidthToHeight(1.33333);
+        //resizeGameAreaService.setWidthToHeight(1.33333, init_callback);
         translate.setTranslations(getTranslations());
         translate.setLanguage('en');
-        log.log("Translation of 'RULES_OF_TICTACTOE' is " + translate('RULES_OF_TICTACTOE'));
-        resizeGameAreaService.setWidthToHeight(1);
+        log.log("Translation of 'Pioneers' is " + translate('RULES_OF_PIONEERS'));
+        //    resizeGameAreaService.setWidthToHeight(1);
+        resizeGameAreaService.setWidthToHeight(1.33333);
         moveService.setGame({
-            minNumberOfPlayers: 2,
-            maxNumberOfPlayers: 2,
+            minNumberOfPlayers: 4,
+            maxNumberOfPlayers: 4,
             checkMoveOk: gameLogic.checkMoveOk,
             updateUI: updateUI
         });
@@ -175,25 +1361,47 @@ var game;
                 });
             }, 3000);
         }
+        for (var row = 0; row < gameLogic.ROWS; row++) {
+            game.coordinates[row] = [];
+            for (var col = 0; col < gameLogic.COLS; col++) {
+                var coords = getBoardHex(row, col);
+                //To conform data model
+                game.coordinates[row][col] = coords.slice(2, 6).concat(coords.slice(0, 2));
+            }
+        }
+        game.resourcesPicked = getZerosArray(Resource.SIZE);
     }
     game.init = init;
     function getTranslations() {
         return {
-            RULES_OF_TICTACTOE: {
+            RULES_OF_PIONEERS: {
                 en: "Rules of Pioneers",
-                iw: "חוקי המשחק",
             },
             RULES_SLIDE1: {
-                en: "You and your opponent take turns to mark the grid in an empty spot. The first mark is X, then O, then X, then O, etc.",
-                iw: "אתה והיריב מסמנים איקס או עיגול כל תור",
+                en: "You and your opponent take turns to building settlements and cities on the island.  The first to reach 10 points wins!",
             },
             RULES_SLIDE2: {
-                en: "The first to mark a whole row, column or diagonal wins.",
-                iw: "הראשון שמסמן שורה, עמודה או אלכסון מנצח",
+                en: "Initial building phase starts with a placing a settlement on a vertex and an adjacent road on an edge, once the last player finishes, " +
+                    "it repeats in the opposite direction, gaining resources adjacent to the second settlement.  " +
+                    "After the first player's finishes their second settlement and road, the game starts.  ",
+            },
+            RULES_SLIDE3: {
+                en: "Settlements cannot be on adjacent vertices, they must be at least one vertex apart.  " +
+                    "You can only build settlements if you have a road leading to the vertex (aside from the first two settlements).  " +
+                    "When the dice are rolled, the number on the hex will yield that resource to players having a settlement or city adjacent to it.  " +
+                    "Having settlements on hexes with numbers closer to 7 are more likely to be rolled.  " +
+                    "However, if a 7 is rolled, no resources will be handed out, but instead players must drop cards if they have too many.  " +
+                    "In addition, the player who rolled the dice gets to move the robber to a new hex, allowing that person to steal a resource card from another player.  " +
+                    "Settlements can be upgraded to cities to yield double resources when a number is rolled.  ",
+            },
+            RULES_SLIDE4: {
+                en: "The cost of a road is: 1 wood and 1 brick.  " +
+                    "The cost of a settlement is: 1 wood, 1 brick, 1 sheep, and 1 wheat.  " +
+                    "The cost of upgrading to a city is: 3 wheat and 2 ore.\r" +
+                    "The cost of a development card is: 1 sheep, 1 wheat, and 1 ore.",
             },
             CLOSE: {
                 en: "Close",
-                iw: "סגור",
             },
         };
     }
@@ -211,6 +1419,92 @@ var game;
         game.isComputerTurn = false; // to make sure the computer can only move once.
         moveService.makeMove(aiService.findComputerMove(game.move));
     }
+    function checkCanMakeMove() {
+        /*
+        if (state.eventIdx === -1) {
+          return myIndex === move.turnIndexAfterMove;
+        } else {
+          return myIndex === state.eventIdx;
+        }
+        */
+        return true;
+    }
+    function updateAlert() {
+        switch (game.state.moveType) {
+            case MoveType.INIT:
+                game.alertStyle = 'success';
+                game.alertMsg = "It is now player 1's turn";
+                break;
+            case MoveType.INIT_BUILD:
+                game.alertStyle = 'success';
+                if (game.state.eventIdx === game.myIndex) {
+                    if (game.state.players[game.myIndex].construction[Construction.Settlement] === 2 && game.state.players[game.myIndex].construction[Construction.Road] === 2) {
+                        game.alertMsg = 'Initial buildings done, time to start the game!';
+                    }
+                    else {
+                        game.alertMsg = 'Please place your initial buildings and roads...';
+                    }
+                }
+                else {
+                    if (game.state.players[game.state.eventIdx].construction[Construction.Settlement] >
+                        game.state.players[game.state.eventIdx].construction[Construction.Road]) {
+                        game.alertMsg = 'Player ' + (game.state.eventIdx + 1) + ' placed a settlement, but now needs a road...';
+                    }
+                    else {
+                        game.alertMsg = 'Player ' + (game.state.eventIdx + 1) + ' placing initial buildings and roads...';
+                    }
+                }
+                break;
+            case MoveType.ROLL_DICE:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1 rolled a " + game.state.dices.reduce(function (a, b) { return a + b; });
+                break;
+            case MoveType.BUILD_ROAD:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " built a road!";
+                break;
+            case MoveType.BUILD_SETTLEMENT:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " built a settlement!";
+                break;
+            case MoveType.BUILD_CITY:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " upgraded a settlement to a city!";
+                break;
+            case MoveType.BUILD_DEVCARD:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " bought a development card!";
+                break;
+            case MoveType.KNIGHT:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " played a knight!";
+                break;
+            case MoveType.MONOPOLY:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " played a monopoly development card!";
+                break;
+            case MoveType.YEAR_OF_PLENTY:
+                game.alertStyle = 'success';
+                game.alertMsg = "Player 1" + " played a year of plenty card!";
+                break;
+            case MoveType.TRADE:
+                break;
+            case MoveType.ROBBER_EVENT:
+                break;
+            case MoveType.ROBBER_MOVE:
+                break;
+            case MoveType.ROB_PLAYER:
+                break;
+            case MoveType.TRANSACTION_WITH_BANK:
+                game.alertMsg = "Player 1" + " traded with the bank!";
+                break;
+            case MoveType.WIN:
+                break;
+            default:
+                game.alertStyle = 'danger';
+                game.alertMsg = 'Unknown Move!';
+        }
+    }
     function updateUI(params) {
         log.info("Game got updateUI:", params);
         game.animationEnded = false;
@@ -219,11 +1513,85 @@ var game;
         if (!game.state) {
             game.state = gameLogic.getInitialState();
         }
-        game.canMakeMove = game.move.turnIndexAfterMove >= 0 &&
-            params.yourPlayerIndex === game.move.turnIndexAfterMove; // it's my turn
+        game.myIndex = params.yourPlayerIndex;
+        game.canMakeMove = checkCanMakeMove();
+        updateAlert();
+        cleanupInfoModal();
+        switch (game.state.moveType) {
+            case MoveType.INIT_BUILD:
+                if (game.state.eventIdx === 0 && initBuildingReverse === true) {
+                    var allDoneInitBuild = true;
+                    for (var i = 0; i < gameLogic.NUM_PLAYERS; i++) {
+                        if (game.state.players[i].construction[Construction.Road] !== 2 || game.state.players[i].construction[Construction.Settlement] !== 2) {
+                            allDoneInitBuild = false;
+                            break;
+                        }
+                    }
+                    if (allDoneInitBuild) {
+                        game.showInfoModal = true;
+                        game.infoModalHeader = 'Start Game';
+                        game.infoModalMsg = "Everyone is ready, it's time to start the game!";
+                        game.canInfoModalTurnOff = false;
+                        game.initialBuilding = false;
+                        var turnMove = {
+                            moveType: MoveType.INIT,
+                            playerIdx: game.myIndex,
+                            currState: game.state
+                        };
+                        game.onOkClicked = function () {
+                            try {
+                                var nextMove = gameLogic.onGameStart(turnMove, 0);
+                                moveService.makeMove(nextMove);
+                                cleanupInfoModal();
+                            }
+                            catch (e) {
+                                game.alertStyle = 'danger';
+                                game.alertMsg = e.message;
+                            }
+                        };
+                    }
+                }
+                if (game.state.eventIdx === gameLogic.NUM_PLAYERS - 1) {
+                    initBuildingReverse = true;
+                }
+                break;
+            case MoveType.ROLL_DICE:
+                if (game.state.dices[0] + game.state.dices[1] === 7 && game.move.turnIndexAfterMove === game.myIndex) {
+                    whenRobberEvent();
+                }
+                break;
+            case MoveType.ROBBER_EVENT:
+                if (game.state.eventIdx === game.move.turnIndexAfterMove) {
+                    if (game.myIndex === game.move.turnIndexAfterMove) {
+                        game.alertStyle = 'warning';
+                        game.alertMsg = 'Moving robber...';
+                        whenMoveRobberStart();
+                    }
+                }
+                else {
+                    if (game.state.eventIdx === game.myIndex) {
+                        whenRobberEvent();
+                    }
+                }
+                break;
+            case MoveType.ROBBER_MOVE:
+                if (game.myIndex === game.move.turnIndexAfterMove) {
+                    whenRobPlayerStart();
+                }
+                break;
+            case MoveType.KNIGHT:
+                if (game.myIndex === game.move.turnIndexAfterMove) {
+                    game.alertStyle = 'warning';
+                    game.alertMsg = 'Knight!  Moving robber...';
+                    whenMoveRobberStart();
+                }
+                break;
+        }
+        /*
         // Is it the computer's turn?
-        game.isComputerTurn = game.canMakeMove &&
+        isComputerTurn = canMakeMove &&
             params.playersInfo[params.yourPlayerIndex].playerId === '';
+        */
         if (game.isComputerTurn) {
             // To make sure the player won't click something and send a move instead of the computer sending a move.
             game.canMakeMove = false;
@@ -238,44 +1606,6 @@ var game;
             }
         }
     }
-    function cellClicked(row, col) {
-        log.info("Clicked on cell:", row, col);
-        if (window.location.search === '?throwException') {
-            throw new Error("Throwing the error because URL has '?throwException'");
-        }
-        if (!game.canMakeMove) {
-            return;
-        }
-        try {
-            var nextMove = gameLogic.createMove(game.state, row, col, game.move.turnIndexAfterMove);
-            game.canMakeMove = false; // to prevent making another move
-            moveService.makeMove(nextMove);
-        }
-        catch (e) {
-            log.info(["Cell is already full in position:", row, col]);
-            return;
-        }
-    }
-    game.cellClicked = cellClicked;
-    function shouldShowImage(row, col) {
-        var cell = game.state.board[row][col];
-        return cell !== "";
-    }
-    game.shouldShowImage = shouldShowImage;
-    function isPieceX(row, col) {
-        return game.state.board[row][col] === 'X';
-    }
-    game.isPieceX = isPieceX;
-    function isPieceO(row, col) {
-        return game.state.board[row][col] === 'O';
-    }
-    game.isPieceO = isPieceO;
-    function shouldSlowlyAppear(row, col) {
-        return !game.animationEnded &&
-            game.state.delta &&
-            game.state.delta.row === row && game.state.delta.col === col;
-    }
-    game.shouldSlowlyAppear = shouldSlowlyAppear;
     function clickedOnModal(evt) {
         if (evt.target === evt.currentTarget) {
             evt.preventDefault();
@@ -285,13 +1615,1328 @@ var game;
         return true;
     }
     game.clickedOnModal = clickedOnModal;
+    function clickedOnInfoModal(evt) {
+        if (!game.canInfoModalTurnOff) {
+            return;
+        }
+        if (evt.target === evt.currentTarget) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            game.onCloseModal();
+        }
+    }
+    game.clickedOnInfoModal = clickedOnInfoModal;
+    function getOffset(row, radius) {
+        return (Math.sqrt(3) * radius) / 2;
+    }
+    function getHexPoints(x, y, radius) {
+        var ret = [];
+        for (var theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
+            var pointX = x + radius * Math.sin(theta);
+            var pointY = y + radius * Math.cos(theta);
+            ret.push(pointX + ',' + pointY);
+        }
+        return ret;
+    }
+    function getBoardHex(row, col) {
+        var offset = getOffset(row, 45);
+        var x = 105 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
+        var y = 100 + offset * row * Math.sqrt(3);
+        return getHexPoints(x, y, 45);
+    }
+    function getCenter(row, col) {
+        var offset = getOffset(row, 45);
+        var x = 105 + offset * col * 2 - (row % 2 === 1 ? offset : 0);
+        var y = 100 + offset * row * Math.sqrt(3);
+        return [x.toString(), y.toString()];
+    }
+    game.getCenter = getCenter;
+    function showHex(row, col) {
+        if ((row === 0 || row === 6) && (col === 0 || col > 4))
+            return false;
+        if ((row === 1 || row === 5) && (col === 0 || col === 6))
+            return false;
+        if ((row === 2 || row === 4) && col === 6)
+            return false;
+        return true;
+    }
+    game.showHex = showHex;
+    function onClickedHexModal(evt) {
+        if (evt.target === evt.currentTarget) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            this.isHexModalShown = false;
+        }
+    }
+    game.onClickedHexModal = onClickedHexModal;
+    function getHexVertices(row, col) {
+        return game.coordinates[row][col].join(' ');
+    }
+    game.getHexVertices = getHexVertices;
+    function getVertexCenter(row, col, vertex) {
+        return game.coordinates[row][col][vertex].split(',');
+    }
+    game.getVertexCenter = getVertexCenter;
+    function getEdgeCoordinates(row, col, edge) {
+        var src = edge === 0 ? 5 : edge - 1;
+        return [game.coordinates[row][col][src].split(','), game.coordinates[row][col][edge].split(',')];
+    }
+    game.getEdgeCoordinates = getEdgeCoordinates;
+    function showVertex(row, col, vertex) {
+        if (game.state.board[row][col].vertices[vertex] !== -1 || game.playingDevRoadBuild) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
+            return false;
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return false;
+        }
+        if (robberMovedRow !== -1 && robberMovedCol !== -1) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.VERTEX) {
+            return targetNum === vertex;
+        }
+        if (game.initialBuilding && game.state.players[game.myIndex].construction[Construction.Settlement] >
+            game.state.players[game.myIndex].construction[Construction.Road]) {
+            return false;
+        }
+        // only show buildable locations
+        if (gameLogic.canBuildSettlementLegally(game.state.players[game.myIndex], game.state.board, row, col, vertex, game.initialBuilding)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    game.showVertex = showVertex;
+    function getVertexClass(row, col, vertex) {
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.EDGE) {
+            return '';
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return '';
+        }
+        if (mouseTarget === MouseTarget.VERTEX) {
+            return targetNum === vertex ? 'emphasize-vertex' : '';
+        }
+        else {
+            return 'mouse-to-display-vertex';
+        }
+    }
+    game.getVertexClass = getVertexClass;
+    function showEdge(row, col, edge) {
+        if (game.state.board[row][col].edges[edge] !== -1) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.VERTEX) {
+            return false;
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return false;
+        }
+        if (robberMovedRow !== -1 && robberMovedCol !== -1) {
+            return false;
+        }
+        if (mouseTarget === MouseTarget.EDGE) {
+            return targetNum === edge;
+        }
+        if (game.initialBuilding && game.state.players[game.myIndex].construction[Construction.Settlement] ===
+            game.state.players[game.myIndex].construction[Construction.Road]) {
+            return false;
+        }
+        // only show buildable locations
+        if (gameLogic.canBuildRoadLegally(game.state.players[game.myIndex], game.state.board, row, col, edge, true)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    game.showEdge = showEdge;
+    function getEdgeClass(row, col, edge) {
+        if (mouseTarget === MouseTarget.NONE || mouseTarget === MouseTarget.VERTEX) {
+            return '';
+        }
+        if (mouseRow !== row || mouseCol !== col) {
+            return '';
+        }
+        if (mouseTarget === MouseTarget.EDGE) {
+            return targetNum === edge ? 'emphasize-edge' : '';
+        }
+        else {
+            return 'mouse-to-display-edge';
+        }
+    }
+    game.getEdgeClass = getEdgeClass;
+    function showRoad(row, col, edge) {
+        if (game.state.board[row][col].edges[edge] >= 0) {
+            return true;
+        }
+        for (var i = 0; i < game.devRoads.length; i++) {
+            if (game.devRoads[i].hexRow === row && game.devRoads[i].hexCol === col && game.devRoads[i].vertexOrEdge === edge) {
+                return true;
+            }
+        }
+        return false;
+    }
+    game.showRoad = showRoad;
+    function showSettlement(row, col, vertex) {
+        return game.state.board[row][col].vertices[vertex] === Construction.Settlement;
+    }
+    game.showSettlement = showSettlement;
+    function showCity(row, col, vertex) {
+        return game.state.board[row][col].vertices[vertex] === Construction.City;
+    }
+    game.showCity = showCity;
+    function getColor(idx) {
+        return idx >= 0 ? game.playerColor[idx] : 'black';
+    }
+    game.getColor = getColor;
+    function getRoadColor(row, col, edge) {
+        if (game.state.board[row][col].edges[edge] >= 0) {
+            return getColor(game.state.board[row][col].edges[edge]);
+        }
+        if (game.devRoads.length > 0 && showRoad(row, col, edge)) {
+            return getColor(game.myIndex);
+        }
+        return getColor(-1);
+    }
+    game.getRoadColor = getRoadColor;
+    function getSettlement(row, col, vertex) {
+        var v = game.coordinates[row][col][vertex].split(',');
+        var x = parseFloat(v[0]);
+        var y = parseFloat(v[1]);
+        var start = 'M' + x + ',' + (y - 10);
+        return start + ' l-10,10' + ' v10' + ' h20' + ' v-10' + ' l-10,-10';
+    }
+    game.getSettlement = getSettlement;
+    function getCity(row, col, vertex) {
+        var v = game.coordinates[row][col][vertex].split(',');
+        var x = parseFloat(v[0]);
+        var y = parseFloat(v[1]);
+        var start = 'M' + x + ',' + (y - 10);
+        return start + ' l-10,10' + ' v10' + ' h30' + ' v-10' + ' h-10' + ' l-10,-10';
+    }
+    game.getCity = getCity;
+    function getHarbor(row, col) {
+        var cx = Number(getCenter(row, col)[0]);
+        var cy = Number(getCenter(row, col)[1]);
+        var start = 'M' + cx + ',' + cy;
+        var v = game.coordinates[row][col][game.state.board[row][col].harbor.vertices[0]].split(',');
+        var x1 = parseFloat(v[0]);
+        var y1 = parseFloat(v[1]);
+        v = game.coordinates[row][col][game.state.board[row][col].harbor.vertices[1]].split(',');
+        var x2 = parseFloat(v[0]);
+        var y2 = parseFloat(v[1]);
+        var dx1 = x1 - cx;
+        var dy1 = y1 - cy;
+        var dx2 = x2 - x1;
+        var dy2 = y2 - y1;
+        var dx3 = cx - x2;
+        var dy3 = cy - y2;
+        return start + ' l' + dx1 + ',' + dy1 + ' l' + dx2 + ',' + dy2 + ' l' + dx3 + ',' + dy3;
+    }
+    game.getHarbor = getHarbor;
+    function getHarborFill(row, col) {
+        if (game.state.board[row][col].harbor.trading === Resource.ANY)
+            return 'white';
+        return 'url(#r' + game.state.board[row][col].harbor.trading + ')';
+    }
+    game.getHarborFill = getHarborFill;
+    function harborIsAny(row, col) {
+        if (game.state.board[row][col].harbor === null)
+            return false;
+        return game.state.board[row][col].harbor.trading === Resource.ANY;
+    }
+    game.harborIsAny = harborIsAny;
+    function showHarbor(row, col) {
+        return game.state.board[row][col].harbor !== null;
+    }
+    game.showHarbor = showHarbor;
+    function showRollNum(row, col) {
+        return game.state.board[row][col].rollNum > 0 || (game.state.robber.row === row && game.state.robber.col === col);
+    }
+    game.showRollNum = showRollNum;
+    function getRollColor(row, col) {
+        return game.state.board[row][col].hasRobber || (game.state.board[row][col].rollNum >= 6 && game.state.board[row][col].rollNum <= 8) ? 'red' : 'black';
+    }
+    game.getRollColor = getRollColor;
+    function getNumSettlementCanBuild() {
+        return game.myIndex >= 0 ? 5 - game.state.players[game.myIndex].construction[Construction.Settlement] : 0;
+    }
+    game.getNumSettlementCanBuild = getNumSettlementCanBuild;
+    function getNumCityCanBuild() {
+        return game.myIndex >= 0 ? 4 - game.state.players[game.myIndex].construction[Construction.City] : 0;
+    }
+    game.getNumCityCanBuild = getNumCityCanBuild;
+    function getNumRoadCanBuild() {
+        return game.myIndex >= 0 ? 15 - game.state.players[game.myIndex].construction[Construction.Road] : 0;
+    }
+    game.getNumRoadCanBuild = getNumRoadCanBuild;
+    function getHexFill(row, col) {
+        if (row === robberMovedRow && col === robberMovedCol) {
+            return getColor(game.myIndex);
+        }
+        return 'url(#r' + game.state.board[row][col].label + ')';
+    }
+    game.getHexFill = getHexFill;
+    function onMouseOverHex(row, col) {
+        mouseTarget = MouseTarget.HEX;
+        mouseRow = row;
+        mouseCol = col;
+    }
+    game.onMouseOverHex = onMouseOverHex;
+    function onMouseOverEdge(row, col, edgeNum) {
+        mouseTarget = MouseTarget.EDGE;
+        mouseRow = row;
+        mouseCol = col;
+        targetNum = edgeNum;
+    }
+    game.onMouseOverEdge = onMouseOverEdge;
+    function onClickEdge(row, col, edgeNum) {
+        if (game.playingDevRoadBuild) {
+            var devRoad = {
+                moveType: MoveType.BUILD_ROAD,
+                playerIdx: game.myIndex,
+                currState: game.state,
+                consType: Construction.Road,
+                hexRow: row,
+                hexCol: col,
+                vertexOrEdge: edgeNum
+            };
+            game.devRoads.push(devRoad);
+            if (game.devRoads.length === 2) {
+                game.showInfoModal = true;
+                game.infoModalHeader = 'Playing Development Cards';
+                game.infoModalMsg = 'Are you sure you want to build both roads?';
+                game.onOkClicked = onRoadBuildingDone;
+            }
+            return;
+        }
+        buildTarget = Construction.Road;
+        buildRow = row;
+        buildCol = col;
+        buildNum = edgeNum;
+        game.showInfoModal = true;
+        game.onOkClicked = onBuild;
+        game.infoModalHeader = 'Building';
+        game.infoModalMsg = 'Are you sure you want to build a road?';
+    }
+    game.onClickEdge = onClickEdge;
+    function onMouseOverVertex(row, col, vertexNum) {
+        mouseTarget = MouseTarget.VERTEX;
+        mouseRow = row;
+        mouseCol = col;
+        targetNum = vertexNum;
+    }
+    game.onMouseOverVertex = onMouseOverVertex;
+    function onClickVertex(row, col, vertexNum) {
+        if (game.state.board[row][col].vertices[vertexNum] === -1) {
+            buildTarget = Construction.Settlement;
+            buildRow = row;
+            buildCol = col;
+            buildNum = vertexNum;
+            game.showInfoModal = true;
+            game.onOkClicked = onBuild;
+            game.infoModalHeader = 'Building';
+            game.infoModalMsg = 'Are you sure you want to build a settlement?';
+        }
+        else if (game.state.board[row][col].vertices[vertexNum] === Construction.Settlement && game.state.board[row][col].vertexOwner[vertexNum] === game.myIndex) {
+            buildTarget = Construction.City;
+            buildRow = row;
+            buildCol = col;
+            buildNum = vertexNum;
+            game.showInfoModal = true;
+            game.onOkClicked = onBuild;
+            game.infoModalHeader = 'Building';
+            game.infoModalMsg = 'Are you sure you want to upgrade this settlement to a city?';
+        }
+    }
+    game.onClickVertex = onClickVertex;
+    function onBuild() {
+        game.showInfoModal = false;
+        game.onOkClicked = null;
+        if (!game.canMakeMove) {
+            return;
+        }
+        var buildMove = {
+            moveType: game.state.moveType,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state),
+            consType: buildTarget,
+            hexRow: buildRow,
+            hexCol: buildCol,
+            vertexOrEdge: buildNum
+        };
+        try {
+            var nextMove = game.state.moveType === MoveType.INIT_BUILD ? gameLogic.onInitBuilding(buildMove, game.move.turnIndexAfterMove) :
+                gameLogic.onBuilding(buildMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+    }
+    game.onBuild = onBuild;
+    function onMouseLeaveBoard() {
+        mouseTarget = MouseTarget.NONE;
+    }
+    game.onMouseLeaveBoard = onMouseLeaveBoard;
+    function cleanupInfoModal() {
+        game.showInfoModal = false;
+        game.infoModalHeader = '';
+        game.infoModalMsg = '';
+        game.onOkClicked = null;
+        game.onCloseModal = cleanupInfoModal;
+        game.canInfoModalTurnOff = true;
+        makeMove = null;
+        game.showResourcePicker = false;
+        targetOneResource = -1;
+        game.resourcesPicked = getZerosArray(Resource.SIZE);
+        game.showResourcePickerMultiple = false;
+        game.onClickHex = onMouseOverHex;
+        robberMovedRow = -1;
+        robberMovedCol = -1;
+        game.showRobberPanel = false;
+        robberVictomIdx = -1;
+        game.showTradingPanel = false;
+        tradingResource = -1;
+        game.tradingNum = 0;
+        wantedResource = -1;
+        game.wantedNum = 0;
+        tradeWithBank = false;
+    }
+    game.cleanupInfoModal = cleanupInfoModal;
+    function getPlayerPoints(idx) {
+        return game.state.players[idx].points;
+    }
+    game.getPlayerPoints = getPlayerPoints;
+    function getPlayerKnights(idx) {
+        return game.state.players[idx].knightsPlayed;
+    }
+    game.getPlayerKnights = getPlayerKnights;
+    function getPlayerRoadLength(idx) {
+        return gameLogic.getLongestRoad(game.state.players[idx], game.state.board);
+    }
+    game.getPlayerRoadLength = getPlayerRoadLength;
+    function getPlayerBorder(idx) {
+        return idx === game.myIndex ? 'my-info-border' : 'player-info-border';
+    }
+    game.getPlayerBorder = getPlayerBorder;
+    function getRollNumText(row, col) {
+        if (game.state.board[row][col].hasRobber) {
+            if (game.state.board[row][col].rollNum === -1)
+                return "R";
+            return "R" + game.state.board[row][col].rollNum;
+        }
+        return "" + game.state.board[row][col].rollNum;
+    }
+    game.getRollNumText = getRollNumText;
+    function getNumResources(playerIdx, resource) {
+        if (!game.state || playerIdx < 0) {
+            return 0;
+        }
+        if (resource === undefined || resource === null) {
+            return game.state.players[playerIdx].resources.reduce(function (a, b) {
+                return a + b;
+            });
+        }
+        return game.state.players[playerIdx].resources[resource];
+    }
+    game.getNumResources = getNumResources;
+    function getNumDevCards(playerIdx, dev) {
+        if (!game.state || playerIdx < 0) {
+            return 0;
+        }
+        if (dev === undefined || dev === null) {
+            return game.state.players[playerIdx].devCards.reduce(function (a, b) {
+                return a + b;
+            });
+        }
+        return game.state.players[playerIdx].devCards[dev];
+    }
+    game.getNumDevCards = getNumDevCards;
+    function getBankResources(resource) {
+        if (!game.state || resource < 0) {
+            return 0;
+        }
+        return game.state.bank.resources[resource];
+    }
+    game.getBankResources = getBankResources;
+    function getBankDevCards() {
+        return game.state.bank.devCardsOrder.length;
+    }
+    game.getBankDevCards = getBankDevCards;
+    function showDice() {
+        return game.state.moveType !== MoveType.INIT_BUILD && !game.state.diceRolled;
+    }
+    game.showDice = showDice;
+    function showEndTurn() {
+        return game.state.moveType !== MoveType.INIT_BUILD && game.state.diceRolled;
+    }
+    game.showEndTurn = showEndTurn;
+    function endTurn() {
+        var turnMove = {
+            moveType: MoveType.INIT,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state)
+        };
+        var nextMove = gameLogic.onEndTurn(turnMove, game.move.turnIndexAfterMove);
+        moveService.makeMove(nextMove);
+    }
+    game.endTurn = endTurn;
+    function getDicesNum() {
+        return game.state.dices.reduce(function (a, b) { return a + b; });
+    }
+    game.getDicesNum = getDicesNum;
+    function onRollDice() {
+        var turnMove = {
+            playerIdx: game.myIndex,
+            moveType: MoveType.ROLL_DICE,
+            currState: game.state
+        };
+        try {
+            var nextMove = gameLogic.onRollDice(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+    }
+    game.onRollDice = onRollDice;
+    var devCardEventHandlers = [
+        whenPlayKnight,
+        whenPlayMonopoly,
+        whenPlayRoadBuilding,
+        whenPlayYearOfPlenty
+    ];
+    function onDevCardClicked(cardIdx) {
+        makeMove = {
+            moveType: null,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state)
+        };
+        switch (cardIdx) {
+            case DevCard.Knight:
+                makeMove.moveType = MoveType.KNIGHT;
+                break;
+            case DevCard.Monopoly:
+                makeMove.moveType = MoveType.MONOPOLY;
+                break;
+            case DevCard.RoadBuilding:
+                makeMove.moveType = MoveType.ROAD_BUILDING;
+                break;
+            case DevCard.YearOfPlenty:
+                makeMove.moveType = MoveType.YEAR_OF_PLENTY;
+                break;
+            default:
+                makeMove = null;
+                return;
+        }
+        game.showInfoModal = true;
+        game.onOkClicked = devCardEventHandlers[cardIdx];
+        game.infoModalHeader = 'Playing Development Cards';
+        game.infoModalMsg = 'Are you sure you want to play ' + DevCard[cardIdx] + '?';
+    }
+    game.onDevCardClicked = onDevCardClicked;
+    /**
+     * Playing DevCards handlers
+     */
+    function whenPlayKnight() {
+        console.log(makeMove);
+        try {
+            var nextMove = gameLogic.onKnight(makeMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            cleanupInfoModal();
+        }
+    }
+    function whenPlayMonopoly() {
+        game.showResourcePicker = true;
+        game.infoModalHeader = 'Please pick a resource';
+        game.infoModalMsg = '';
+        game.onOkClicked = onPlayMonopoly;
+    }
+    function onOneTargetResourcePicked(resource) {
+        targetOneResource = resource;
+    }
+    game.onOneTargetResourcePicked = onOneTargetResourcePicked;
+    function oneTargetResourceClass(resource) {
+        return 'resource-pic' + (targetOneResource === resource ? ' on-highlighted' : '');
+    }
+    game.oneTargetResourceClass = oneTargetResourceClass;
+    function onPlayMonopoly() {
+        var turnMove = {
+            moveType: makeMove.moveType,
+            playerIdx: makeMove.moveType,
+            currState: game.state,
+            target: targetOneResource
+        };
+        try {
+            var nextMove = gameLogic.onMonopoly(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            cleanupInfoModal();
+        }
+    }
+    function whenPlayRoadBuilding() {
+        game.alertStyle = 'warning';
+        game.alertMsg = 'Please select two roads';
+        cleanupDevRoadBuild();
+        game.playingDevRoadBuild = true;
+        cleanupInfoModal();
+    }
+    function onRoadBuildingDone() {
+        var turnMove = {
+            moveType: MoveType.ROAD_BUILDING,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state),
+            road1: game.devRoads[0],
+            road2: game.devRoads[1]
+        };
+        try {
+            var nextMove = gameLogic.onRoadBuilding(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            cleanupDevRoadBuild();
+            cleanupInfoModal();
+        }
+    }
+    game.onRoadBuildingDone = onRoadBuildingDone;
+    function onRoadBuildingCanceled() {
+        game.alertStyle = 'success';
+        game.alertMsg = 'Road Building Canceled';
+        cleanupDevRoadBuild();
+    }
+    game.onRoadBuildingCanceled = onRoadBuildingCanceled;
+    function cleanupDevRoadBuild() {
+        game.devRoads = [];
+        game.playingDevRoadBuild = false;
+    }
+    function whenPlayYearOfPlenty() {
+        game.showResourcePickerMultiple = true;
+        game.infoModalHeader = 'Please pick two resources';
+        game.infoModalMsg = '';
+        game.onOkClicked = onPlayYearOfPlenty;
+    }
+    function onMultipleResourcesPicked(resource, add) {
+        game.resourcesPicked[resource] += add ? 1 : -1;
+    }
+    game.onMultipleResourcesPicked = onMultipleResourcesPicked;
+    function onPlayYearOfPlenty() {
+        var turnMove = {
+            moveType: makeMove.moveType,
+            playerIdx: makeMove.playerIdx,
+            currState: game.state,
+            target: game.resourcesPicked
+        };
+        try {
+            var nextMove = gameLogic.onYearOfPlenty(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+        finally {
+            cleanupInfoModal();
+        }
+    }
+    function whenRobberEvent() {
+        if (game.state.players[game.myIndex].resources.reduce(function (a, b) { return a + b; }) > 7) {
+            game.showResourcePickerMultiple = true;
+            game.infoModalHeader = 'Please dump half of resources on hand';
+            game.infoModalMsg = '';
+        }
+        else {
+            game.infoModalHeader = 'Robber Event!';
+            game.infoModalMsg = 'Luckily you do not have to dump resources!';
+        }
+        game.onOkClicked = onRobberEventDone;
+        game.showInfoModal = true;
+        game.canInfoModalTurnOff = false;
+    }
+    function onRobberEventDone() {
+        var turnMove = {
+            moveType: MoveType.ROBBER_EVENT,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state),
+            tossed: angular.copy(game.resourcesPicked)
+        };
+        try {
+            var nextMove = gameLogic.onRobberEvent(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal(); //Can only turn off info modal after a valid move
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+            whenRobberEvent(); //Do it again if it's an invalid move
+        }
+    }
+    function whenMoveRobberStart() {
+        if (game.myIndex !== game.move.turnIndexAfterMove) {
+            return;
+        }
+        game.onClickHex = whenMoveRobber;
+        game.onOkClicked = onMoveRobberDone;
+        game.onCloseModal = function () {
+            game.showInfoModal = false;
+        };
+        robberMovedRow = game.state.robber.row;
+        robberMovedCol = game.state.robber.col;
+    }
+    function whenMoveRobber(row, col) {
+        robberMovedRow = row;
+        robberMovedCol = col;
+        game.showInfoModal = true;
+        game.infoModalHeader = 'Move Robber';
+        game.infoModalMsg = 'Are you sure you want to move the robber here?';
+    }
+    function onMoveRobberDone() {
+        var turnMove = {
+            moveType: MoveType.ROBBER_MOVE,
+            playerIdx: game.myIndex,
+            currState: game.state,
+            row: robberMovedRow,
+            col: robberMovedCol
+        };
+        try {
+            var nextMove = gameLogic.onRobberMove(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+            game.onCloseModal();
+            whenMoveRobberStart();
+        }
+    }
+    function whenRobPlayerStart() {
+        //Check if there has player(s) to rob.  If none, move on
+        var noOneCanSteal = true, r = game.state.robber.row, c = game.state.robber.col;
+        for (var v = 0; v < game.state.board[r][c].vertexOwner.length; v++) {
+            if (game.state.board[r][c].vertexOwner[v] === -1) {
+                continue;
+            }
+            var p = game.state.board[r][c].vertexOwner[v];
+            if (game.state.players[p].resources.reduce(function (a, b) { return a + b; }) > 0) {
+                noOneCanSteal = false;
+                break;
+            }
+        }
+        if (noOneCanSteal) {
+            game.alertStyle = 'warning';
+            game.alertMsg = 'No one can rob...';
+            cleanupInfoModal();
+            return;
+        }
+        game.showInfoModal = true;
+        game.canInfoModalTurnOff = false;
+        game.infoModalHeader = 'Select a player to rob';
+        game.infoModalMsg = '';
+        game.onOkClicked = onRobPlayerDone;
+        game.showRobberPanel = true;
+    }
+    function onVictomSelected(idx) {
+        robberVictomIdx = idx;
+    }
+    game.onVictomSelected = onVictomSelected;
+    function onRobPlayerDone() {
+        var turnMove = {
+            moveType: MoveType.ROB_PLAYER,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state),
+            stealingIdx: game.myIndex,
+            stolenIdx: robberVictomIdx
+        };
+        try {
+            var nextMove = gameLogic.onRobPlayer(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+            whenRobPlayerStart();
+        }
+    }
+    function possibleRobberVictom(idx) {
+        var r = game.state.robber.row, c = game.state.robber.col;
+        for (var i = 0; i < game.state.board[r][c].vertexOwner.length; i++) {
+            if (game.state.board[r][c].vertexOwner[i] === idx) {
+                return idx !== game.myIndex && game.state.players[idx].resources.reduce(function (a, b) { return a + b; }) > 0;
+            }
+        }
+        return false;
+    }
+    game.possibleRobberVictom = possibleRobberVictom;
+    function showTradeButton() {
+        return game.state.diceRolled && game.myIndex === game.move.turnIndexAfterMove;
+    }
+    game.showTradeButton = showTradeButton;
+    function onTradeWithBankStart() {
+        tradeWithBank = true;
+        whenTradingStarted();
+    }
+    game.onTradeWithBankStart = onTradeWithBankStart;
+    function whenTradingStarted() {
+        game.showInfoModal = true;
+        game.infoModalHeader = 'Trade';
+        game.infoModalMsg = '';
+        game.onOkClicked = tradeWithBank ? onTradingWithBankDone : null; //TODO: Trade with players
+        game.showTradingPanel = true;
+    }
+    function onTradingWithBankDone() {
+        if (tradingResource < 0 || tradingResource >= Resource.SIZE ||
+            wantedResource < 0 || wantedResource >= Resource.SIZE) {
+            game.alertStyle = 'danger';
+            game.alertMsg = 'Must select items to trade!';
+            return;
+        }
+        if (game.tradingNum <= 0 || game.wantedNum <= 0) {
+            game.alertStyle = 'danger';
+            game.alertMsg = 'Must identify number of items to trade!';
+            return;
+        }
+        var turnMove = {
+            moveType: MoveType.TRANSACTION_WITH_BANK,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state),
+            sellingItem: tradingResource,
+            sellingNum: game.tradingNum,
+            buyingItem: wantedResource,
+            buyingNum: game.wantedNum
+        };
+        try {
+            var nextMove = gameLogic.onTradingWithBank(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+    }
+    function onTradingSelected(resource) {
+        tradingResource = resource;
+    }
+    game.onTradingSelected = onTradingSelected;
+    function onWantedSelected(resource) {
+        wantedResource = resource;
+    }
+    game.onWantedSelected = onWantedSelected;
+    function tradingResourceClass(resource, trading) {
+        var comp = wantedResource;
+        if (trading) {
+            comp = tradingResource;
+        }
+        return 'resource-pic' + (comp >= 0 && comp === resource ? ' on-highlighted' : '');
+    }
+    game.tradingResourceClass = tradingResourceClass;
+    function changeTradingNum(add) {
+        if (add) {
+            game.tradingNum++;
+        }
+        else {
+            game.tradingNum -= game.tradingNum <= 0 ? 0 : 1;
+        }
+    }
+    game.changeTradingNum = changeTradingNum;
+    function changeWantedNum(add) {
+        if (add) {
+            game.wantedNum++;
+        }
+        else {
+            game.wantedNum -= game.wantedNum <= 0 ? 0 : 1;
+        }
+    }
+    game.changeWantedNum = changeWantedNum;
+    function showBuyDevCardButton() {
+        return game.state.diceRolled && game.myIndex === game.move.turnIndexAfterMove;
+    }
+    game.showBuyDevCardButton = showBuyDevCardButton;
+    function whenBuyDevCard() {
+        game.infoModalHeader = 'Trade';
+        game.infoModalMsg = 'Are you sure you want to buy a development card?';
+        game.showInfoModal = true;
+        game.onOkClicked = confirmBuyDevCard;
+    }
+    game.whenBuyDevCard = whenBuyDevCard;
+    function confirmBuyDevCard() {
+        var turnMove = {
+            moveType: MoveType.BUILD_DEVCARD,
+            playerIdx: game.myIndex,
+            currState: angular.copy(game.state),
+            consType: Construction.DevCard,
+            hexRow: -1,
+            hexCol: -1,
+            vertexOrEdge: -1
+        };
+        try {
+            var nextMove = gameLogic.onBuilding(turnMove, game.move.turnIndexAfterMove);
+            moveService.makeMove(nextMove);
+            cleanupInfoModal();
+        }
+        catch (e) {
+            game.alertStyle = 'danger';
+            game.alertMsg = e.message;
+        }
+    }
 })(game || (game = {}));
+function getArray(length) {
+    var ret = [];
+    for (var i = 0; i < length; i++) {
+        ret[i] = i;
+    }
+    return ret;
+}
+function getZerosArray(length) {
+    var ret = [];
+    for (var i = 0; i < length; i++) {
+        ret[i] = 0;
+    }
+    return ret;
+}
 angular.module('myApp', ['ngTouch', 'ui.bootstrap', 'gameServices'])
     .run(function () {
     $rootScope['game'] = game;
+    $rootScope['rows'] = getArray(gameLogic.ROWS);
+    $rootScope['cols'] = getArray(gameLogic.COLS);
+    $rootScope['vertices'] = getArray(6);
+    $rootScope['edges'] = getArray(6);
+    $rootScope['players'] = getArray(gameLogic.NUM_PLAYERS);
+    $rootScope['resourceSize'] = getArray(Resource.SIZE);
+    $rootScope['devCardsSize'] = getArray(DevCard.SIZE);
     game.init();
 });
 //# sourceMappingURL=game.js.map
+;
+var Resource;
+(function (Resource) {
+    Resource[Resource["Brick"] = 0] = "Brick";
+    Resource[Resource["Lumber"] = 1] = "Lumber";
+    Resource[Resource["Wool"] = 2] = "Wool";
+    Resource[Resource["Grain"] = 3] = "Grain";
+    Resource[Resource["Ore"] = 4] = "Ore";
+    Resource[Resource["SIZE"] = 5] = "SIZE";
+    Resource[Resource["Dust"] = 6] = "Dust";
+    Resource[Resource["Water"] = 7] = "Water";
+    Resource[Resource["ANY"] = 8] = "ANY"; //Used for harbor 3:1
+})(Resource || (Resource = {}));
+var DevCard;
+(function (DevCard) {
+    DevCard[DevCard["Knight"] = 0] = "Knight";
+    DevCard[DevCard["Monopoly"] = 1] = "Monopoly";
+    DevCard[DevCard["RoadBuilding"] = 2] = "RoadBuilding";
+    DevCard[DevCard["YearOfPlenty"] = 3] = "YearOfPlenty";
+    DevCard[DevCard["VictoryPoint"] = 4] = "VictoryPoint";
+    DevCard[DevCard["SIZE"] = 5] = "SIZE";
+})(DevCard || (DevCard = {}));
+var Construction;
+(function (Construction) {
+    Construction[Construction["Road"] = 0] = "Road";
+    Construction[Construction["Settlement"] = 1] = "Settlement";
+    Construction[Construction["City"] = 2] = "City";
+    Construction[Construction["DevCard"] = 3] = "DevCard";
+    Construction[Construction["SIZE"] = 4] = "SIZE";
+})(Construction || (Construction = {}));
+var MoveType;
+(function (MoveType) {
+    MoveType[MoveType["INIT"] = 0] = "INIT";
+    MoveType[MoveType["INIT_BUILD"] = 1] = "INIT_BUILD";
+    MoveType[MoveType["ROLL_DICE"] = 2] = "ROLL_DICE";
+    MoveType[MoveType["BUILD_ROAD"] = 3] = "BUILD_ROAD";
+    MoveType[MoveType["BUILD_SETTLEMENT"] = 4] = "BUILD_SETTLEMENT";
+    MoveType[MoveType["BUILD_CITY"] = 5] = "BUILD_CITY";
+    MoveType[MoveType["BUILD_DEVCARD"] = 6] = "BUILD_DEVCARD";
+    MoveType[MoveType["KNIGHT"] = 7] = "KNIGHT";
+    MoveType[MoveType["MONOPOLY"] = 8] = "MONOPOLY";
+    MoveType[MoveType["ROAD_BUILDING"] = 9] = "ROAD_BUILDING";
+    MoveType[MoveType["YEAR_OF_PLENTY"] = 10] = "YEAR_OF_PLENTY";
+    MoveType[MoveType["TRADE"] = 11] = "TRADE";
+    MoveType[MoveType["ROBBER_EVENT"] = 12] = "ROBBER_EVENT";
+    MoveType[MoveType["ROBBER_MOVE"] = 13] = "ROBBER_MOVE";
+    MoveType[MoveType["ROB_PLAYER"] = 14] = "ROB_PLAYER";
+    MoveType[MoveType["TRANSACTION_WITH_BANK"] = 15] = "TRANSACTION_WITH_BANK";
+    MoveType[MoveType["WIN"] = 16] = "WIN";
+    MoveType[MoveType["SIZE"] = 17] = "SIZE";
+})(MoveType || (MoveType = {}));
+function numberResourceCards(player) {
+    var total = 0;
+    for (var i = 0; i < Resource.SIZE; i++) {
+        total += player.resources[i];
+    }
+    return total;
+}
+function stealFromPlayer(playerStealing, playerStolen) {
+    // no cards to steal
+    if (numberResourceCards(playerStolen) === 0)
+        return;
+    // pick random card from other player's hand - from 1 to number of cards
+    var cardIndex = Math.floor(Math.random() * numberResourceCards(playerStolen)) + 1;
+    // take from other player, add to stealer
+    var currentNumber = 0;
+    for (var i = 0; i < Resource.SIZE; i++) {
+        currentNumber = playerStolen.resources[i];
+        if (cardIndex <= currentNumber) {
+            playerStolen.resources[i]--;
+            playerStealing.resources[i]++;
+            return;
+        }
+        cardIndex -= currentNumber;
+    }
+}
+function canAffordConstruction(player, construct) {
+    switch (construct) {
+        case Construction.Road:
+            if (player.resources[Resource.Brick] >= 1 && player.resources[Resource.Lumber] >= 1)
+                return true;
+            break;
+        case Construction.Settlement:
+            if (player.resources[Resource.Brick] >= 1 && player.resources[Resource.Lumber] >= 1 &&
+                player.resources[Resource.Wool] >= 1 && player.resources[Resource.Grain] >= 1)
+                return true;
+            break;
+        case Construction.City:
+            if (player.resources[Resource.Grain] >= 2 && player.resources[Resource.Ore] >= 3)
+                return true;
+            break;
+        case Construction.DevCard:
+            if (player.resources[Resource.Wool] >= 1 && player.resources[Resource.Grain] >= 1 && player.resources[Resource.Ore] >= 1)
+                return true;
+            break;
+        default:
+            return false;
+    }
+    return false;
+}
+function hasSufficientConstructsToBuild(player, construct, bank) {
+    switch (construct) {
+        case Construction.Road:
+            if (player.construction[Construction.Road] < 15)
+                return true;
+            break;
+        case Construction.Settlement:
+            if (player.construction[Construction.Settlement] < 5)
+                return true;
+            break;
+        case Construction.City:
+            if (player.construction[Construction.City] < 4 && player.construction[Construction.Settlement] > 0)
+                return true;
+            break;
+        case Construction.DevCard:
+            for (var i = 0; i < bank.devCards.length; i++) {
+                if (bank.devCards[i] > 0) {
+                    return true;
+                }
+            }
+            break;
+        default:
+            return false;
+    }
+    return false;
+}
+// *****************
+// Helper functions for player-based functions
+// *****************
+function hasAdjacentRoad(player, board, row, col, vertex) {
+    if (board[row][col].edges[vertex] === player.id)
+        return true;
+    if (board[row][col].edges[(vertex + 1) % 6] === player.id)
+        return true;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    //  console.log(hexes);
+    for (var i = 0; i < hexes.length; i++) {
+        if (hexes[i].length === 0)
+            continue;
+        if (board[hexes[i][0]][hexes[i][1]].edges[hexes[i][2]] === player.id)
+            return true;
+        if (board[hexes[i][0]][hexes[i][1]].edges[(hexes[i][2] + 1) % 6] === player.id)
+            return true;
+    }
+    return false;
+}
+function hasNearbyConstruct(board, row, col, vertex) {
+    if (board[row][col].vertices[vertex] === Construction.Settlement ||
+        board[row][col].vertices[vertex] === Construction.City)
+        return true;
+    if (board[row][col].vertices[(vertex + 1) % 6] === Construction.Settlement ||
+        board[row][col].vertices[(vertex + 1) % 6] === Construction.City ||
+        board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] === Construction.Settlement ||
+        board[row][col].vertices[((vertex - 1) % 6 + 6) % 6] === Construction.City)
+        return true;
+    var hexes = getHexesAdjacentToVertex(row, col, vertex);
+    for (var i = 0; i < hexes.length; i++) {
+        if (hexes[i] === null)
+            continue;
+        if (board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] === Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[(hexes[i][3] + 1) % 6] === Construction.City ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] === Construction.Settlement ||
+            board[hexes[i][0]][hexes[i][1]].vertices[((hexes[i][3] - 1) % 6 + 6) % 6] === Construction.City)
+            return true;
+    }
+    return false;
+}
+// return [row, col] pair that shares edge with original edge
+function getHexAdjcentToEdgeUnfiltered(row, col, edge) {
+    // TODO: add check for new row/col out of bounds
+    if (edge === 0)
+        return [row, col + 1];
+    if (edge === 1 && row % 2 === 0)
+        return [row - 1, col + 1];
+    if (edge === 1 && row % 2 === 1)
+        return [row - 1, col];
+    if (edge === 2 && row % 2 === 0)
+        return [row - 1, col];
+    if (edge === 2 && row % 2 === 1)
+        return [row - 1, col - 1];
+    if (edge === 3)
+        return [row, col - 1];
+    if (edge === 4 && row % 2 === 0)
+        return [row + 1, col];
+    if (edge === 4 && row % 2 === 1)
+        return [row + 1, col - 1];
+    if (edge === 5 && row % 2 === 0)
+        return [row + 1, col + 1];
+    if (edge === 5 && row % 2 === 1)
+        return [row + 1, col];
+    // default - shouldn't happen though
+    return [];
+}
+function getHexAdjcentToEdge(row, col, edge) {
+    var hex = getHexAdjcentToEdgeUnfiltered(row, col, edge);
+    if (hex[0] < 0 || hex[1] < 0 || hex[0] >= gameLogic.ROWS || hex[1] >= gameLogic.COLS)
+        return [];
+    return hex;
+}
+// will return 2 hexes in [row, col, vertex] that share the original vertex
+function getHexesAdjacentToVertexUnfiltered(row, col, vertex) {
+    if (vertex === 0 && row % 2 === 0)
+        return [[row, col + 1, 2], [row - 1, col + 1, 4]];
+    if (vertex === 0 && row % 2 === 1)
+        return [[row, col + 1, 2], [row - 1, col, 4]];
+    if (vertex === 1 && row % 2 === 0)
+        return [[row - 1, col, 5], [row - 1, col + 1, 3]];
+    if (vertex === 1 && row % 2 === 1)
+        return [[row - 1, col - 1, 5], [row - 1, col, 3]];
+    if (vertex === 2 && row % 2 === 0)
+        return [[row, col - 1, 0], [row - 1, col, 4]];
+    if (vertex === 2 && row % 2 === 1)
+        return [[row, col - 1, 0], [row - 1, col - 1, 4]];
+    if (vertex === 3 && row % 2 === 0)
+        return [[row, col - 1, 5], [row + 1, col, 1]];
+    if (vertex === 3 && row % 2 === 1)
+        return [[row, col - 1, 5], [row + 1, col - 1, 1]];
+    if (vertex === 4 && row % 2 === 0)
+        return [[row + 1, col, 0], [row + 1, col + 1, 2]];
+    if (vertex === 4 && row % 2 === 1)
+        return [[row + 1, col - 1, 0], [row + 1, col, 2]];
+    if (vertex === 5 && row % 2 === 0)
+        return [[row + 1, col + 1, 1], [row, col + 1, 3]];
+    if (vertex === 5 && row % 2 === 1)
+        return [[row + 1, col, 1], [row, col + 1, 3]];
+    // default - shouldn't happen though
+    return [];
+}
+function getHexesAdjacentToVertex(row, col, vertex) {
+    var _a = getHexesAdjacentToVertexUnfiltered(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
+    // hex 1 oob
+    if (hex1[0] < 0 || hex1[1] < 0 || hex1[0] >= gameLogic.ROWS || hex1[1] >= gameLogic.COLS) {
+        // both hexes oob
+        if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+            return [];
+        }
+        return [hex2];
+    }
+    // hex2 oob
+    if (hex2[0] < 0 || hex2[1] < 0 || hex2[0] >= gameLogic.ROWS || hex2[1] >= gameLogic.COLS) {
+        return [hex1];
+    }
+    return [hex1, hex2];
+}
+// traverse each node (vertex) and recurse if a road exists between a neighboring node
+//
+// TODO: stop adding to length if other player settlement/city is inbetween roads
+//
+function findRoadSubLength(player, board, row, col, vertex, traversed) {
+    if (!hasAdjacentRoad(player, board, row, col, vertex))
+        return 0;
+    traversed.push("\"" + row + ", " + col + ", " + vertex + "\"");
+    var _a = getHexesAdjacentToVertex(row, col, vertex), hex1 = _a[0], hex2 = _a[1];
+    var length1 = 0;
+    var length2 = 0;
+    var length3 = 0;
+    // TODO: fix hexes to allow for 0 or 1 hex instead of 2
+    var _b = getHexesAdjacentToVertex(row, col, (vertex + 1) % 6), h1 = _b[0], h2 = _b[1];
+    if (traversed.indexOf("\"" + row + ", " + col + ", " + ((vertex + 1) % 6) + "\"") === -1 &&
+        traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") === -1 &&
+        traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") === -1) {
+        if (board[row][col].edges[(vertex + 1) % 6] === player.id)
+            length1 = 1 + findRoadSubLength(player, board, row, col, (vertex + 1) % 6, angular.copy(traversed));
+    }
+    _c = getHexesAdjacentToVertex(hex1[0], hex1[1], (hex1[2] + 1) % 6), h1 = _c[0], h2 = _c[1];
+    if (traversed.indexOf("\"" + hex1[0] + ", " + hex1[1] + ", " + ((hex1[2] + 1) % 6) + "\"") === -1 &&
+        traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") === -1 &&
+        traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") === -1) {
+        if (board[hex1[0]][hex1[1]].edges[(hex1[2] + 1) % 6] === player.id)
+            length2 = 1 + findRoadSubLength(player, board, hex1[0], hex1[1], (hex1[2] + 1) % 6, angular.copy(traversed));
+    }
+    _d = getHexesAdjacentToVertex(hex2[0], hex2[1], (hex2[2] + 1) % 6), h1 = _d[0], h2 = _d[1];
+    if (traversed.indexOf("\"" + hex2[0] + ", " + hex2[1] + ", " + ((hex2[2] + 1) % 6) + "\"") === -1 &&
+        traversed.indexOf("\"" + h1[0] + ", " + h1[1] + ", " + h1[2] + "\"") === -1 &&
+        traversed.indexOf("\"" + h2[0] + ", " + h2[1] + ", " + h2[2] + "\"") === -1) {
+        if (board[hex2[0]][hex2[1]].edges[(hex2[2] + 1) % 6] === player.id)
+            length3 = 1 + findRoadSubLength(player, board, hex2[0], hex2[1], (hex2[2] + 1) % 6, angular.copy(traversed));
+    }
+    // first call to finding road length
+    if (traversed.length === 1) {
+        if (length1 < length2 && length1 < length3) {
+            return length2 + length3;
+        }
+        else if (length2 < length1 && length2 < length3) {
+            return length1 + length3;
+        }
+        else {
+            return length1 + length2;
+        }
+    }
+    else {
+        if (length2 < length3) {
+            return length3;
+        }
+        else {
+            return length2;
+        }
+    }
+    var _c, _d;
+}
+/**
+ * Helper functions for making next state
+ */
+function getNextStateToBuildRoad(board, row, col, e, idx) {
+    var _a = getHexAdjcentToEdge(row, col, e), adjRow = _a[0], adjCol = _a[1];
+    var adjEdge = (e + 3) % 6;
+    board[row][col].edges[e] = idx;
+    board[adjRow][adjCol].edges[adjEdge] = idx;
+    return board;
+}
+function getNextStateToBuild(board, buildingMove) {
+    var row = buildingMove.hexRow;
+    var col = buildingMove.hexCol;
+    var num = buildingMove.vertexOrEdge;
+    var idx = buildingMove.playerIdx;
+    if (buildingMove.consType === Construction.Road) {
+        return getNextStateToBuildRoad(board, row, col, num, idx);
+    }
+    var hexes = getHexesAdjacentToVertex(row, col, num);
+    for (var i = 0; i < hexes.length; i++) {
+        var _a = hexes[i], r = _a[0], c = _a[1], v = _a[2];
+        board[r][c].vertexOwner[v] = idx;
+        board[r][c].vertices[v] = buildingMove.consType;
+    }
+    board[row][col].vertexOwner[num] = idx;
+    board[row][col].vertices[num] = buildingMove.consType;
+    return board;
+}
+/**
+ * Constants definitions
+ */
+var tokens = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11];
+var terrains = [
+    Resource.Brick,
+    Resource.Brick,
+    Resource.Brick,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Lumber,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Wool,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Grain,
+    Resource.Ore,
+    Resource.Ore,
+    Resource.Ore,
+    Resource.Dust
+];
+/**
+ * Constants for harbors
+ */
+var harborPos = [
+    [0, 1],
+    [0, 3],
+    [1, 5],
+    [2, 0],
+    [3, 6],
+    [4, 0],
+    [5, 5],
+    [6, 1],
+    [6, 3]
+];
+var harbors = [
+    {
+        trading: Resource.ANY,
+        vertices: [4, 5]
+    },
+    {
+        trading: Resource.Grain,
+        vertices: [3, 4]
+    },
+    {
+        trading: Resource.Ore,
+        vertices: [3, 4]
+    },
+    {
+        trading: Resource.Lumber,
+        vertices: [0, 5]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [2, 3]
+    },
+    {
+        trading: Resource.Brick,
+        vertices: [0, 5]
+    },
+    {
+        trading: Resource.Wool,
+        vertices: [1, 2]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [0, 1]
+    },
+    {
+        trading: Resource.ANY,
+        vertices: [1, 2]
+    }
+];
+//# sourceMappingURL=common.js.map
 ;
 var aiService;
 (function (aiService) {
@@ -311,7 +2956,6 @@ var aiService;
         for (var i = 0; i < gameLogic.ROWS; i++) {
             for (var j = 0; j < gameLogic.COLS; j++) {
                 try {
-                    possibleMoves.push(gameLogic.createMove(state, i, j, turnIndexBeforeMove));
                 }
                 catch (e) {
                 }
