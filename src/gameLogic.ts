@@ -527,6 +527,7 @@ module gameLogic {
     }
 
     //Check when playing year of plenty
+    //TODO
     try {
       checkResources(nextState.bank.resources);
     } catch(e) {

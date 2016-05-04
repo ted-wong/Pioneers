@@ -105,18 +105,22 @@ var game;
         game.resourcesPicked = getZerosArray(Resource.SIZE);
     }
     game.init = init;
+    //TODO
     function getTranslations() {
         return {
             RULES_OF_PIONEERS: {
                 en: "Rules of Pioneers",
+                zh: "Pioneers規則"
             },
             RULES_SLIDE1: {
                 en: "You and your opponent take turns to building settlements and cities on the island.  The first to reach 10 points wins!",
+                zh: 'TODO'
             },
             RULES_SLIDE2: {
                 en: "Initial building phase starts with a placing a settlement on a vertex and an adjacent road on an edge, once the last player finishes, " +
                     "it repeats in the opposite direction, gaining resources adjacent to the second settlement.  " +
                     "After the first player's finishes their second settlement and road, the game starts.  ",
+                zh: 'TODO'
             },
             RULES_SLIDE3: {
                 en: "Settlements cannot be on adjacent vertices, they must be at least one vertex apart.  " +
@@ -126,16 +130,243 @@ var game;
                     "However, if a 7 is rolled, no resources will be handed out, but instead players must drop cards if they have too many.  " +
                     "In addition, the player who rolled the dice gets to move the robber to a new hex, allowing that person to steal a resource card from another player.  " +
                     "Settlements can be upgraded to cities to yield double resources when a number is rolled.  ",
+                zh: 'TODO'
             },
             RULES_SLIDE4: {
                 en: "The cost of a road is: 1 wood and 1 brick.  " +
                     "The cost of a settlement is: 1 wood, 1 brick, 1 sheep, and 1 wheat.  " +
                     "The cost of upgrading to a city is: 3 wheat and 2 ore.\r" +
                     "The cost of a development card is: 1 sheep, 1 wheat, and 1 ore.",
+                zh: 'TODO'
             },
             CLOSE: {
                 en: "Close",
+                zh: "關閉"
             },
+            WELCOME_MSG: {
+                en: 'Welcome to Pioneers Game!',
+                zh: '歡迎來到Pioneers遊戲!'
+            },
+            INIT_MSG: {
+                en: "Current Player: Player",
+                zh: "目前玩家: 玩家"
+            },
+            INIT_BUILD_DONE: {
+                en: 'Initial buildings done, time to start the game!',
+                zh: '初始建築完成，開始遊戲!'
+            },
+            INIT_BUILD_MYTURN: {
+                en: 'Please place your initial buildings and roads...',
+                zh: '請建造您的初始建築...'
+            },
+            INIT_BUILD_OTHER_MOVE_MADE: {
+                en: 'Other player is made an initial building move...',
+                zh: '其他玩家建造了初始建築...'
+            },
+            INIT_BUILD_OTHER_MOVE_MAKING: {
+                en: 'Other player is making an initial bulding move...',
+                zh: '其他玩家正在建造初始建築...'
+            },
+            ROLL_DICE: {
+                en: 'Dice rolled with number: ',
+                zh: '骰子骰出了: '
+            },
+            BUILD_ROAD: {
+                en: 'Player built a road!',
+                zh: '玩家建造了一條路!'
+            },
+            BUILD_SETTLEMENT: {
+                en: 'Player built a settlement!',
+                zh: '玩家建造了一棟房子!'
+            },
+            BUILD_CITY: {
+                en: 'Player built a city!',
+                zh: '玩家建造了一座城市!'
+            },
+            BUILD_ROAD_CANCELED: {
+                en: 'Road Building canceled',
+                zh: '道路建造取消'
+            },
+            BUILD_DEVCARD: {
+                en: 'Player built a development card!',
+                zh: '玩家購買了一張發展卡!'
+            },
+            PLAY_KNIGHT: {
+                en: 'Player played a knight!',
+                zh: '玩家使用了兵卡!'
+            },
+            PLAY_MONOPOLY: {
+                en: 'Player played a monopoly development card!',
+                zh: '玩家使用了獨佔卡!'
+            },
+            PLAY_YEAR_OF_PLENTY: {
+                en: 'Player played a year of plenty card!',
+                zh: '玩家使用了豐收卡!'
+            },
+            PLAY_ROAD_BUILDING: {
+                en: 'Please select two roads',
+                zh: '請建造兩條路'
+            },
+            TRADE_WITH_BANK: {
+                en: 'Player traded with bank!',
+                zh: '玩家與銀行進行了交易!'
+            },
+            ROBBER_MOVE_ON_DICE: {
+                en: 'Moving robber...',
+                zh: '移動強盜中...'
+            },
+            ROBBER_MOVE_ON_KNIGHT: {
+                en: 'Knight! Moving robber...',
+                zh: '騎士來了! 強盜移動中...'
+            },
+            NO_ONE_CAN_ROB: {
+                en: 'No one can rob...',
+                zh: '無人可搶劫...'
+            },
+            MUST_SELECT_TRADE_ITEM: {
+                en: 'Must select items to trade!',
+                zh: '必須選擇交易物品!'
+            },
+            MUST_SELECT_NUMBER_TO_TRADE: {
+                en: 'Must identify number of items to trade!',
+                zh: '必須指定交易數量!'
+            },
+            UNKNOWN_MOVE: {
+                en: 'Unknown Move!',
+                zh: '無效操作!'
+            },
+            ERR_NOT_YOUR_TURN: {
+                en: 'Not your turn to play!',
+                zh: '不是您的回合!'
+            },
+            ERR_INIT_BUILD: {
+                en: 'Invalid build during initialization!',
+                zh: '無效的初始建築!'
+            },
+            ERR_INIT_BUILD_NOT_FINISHED: {
+                en: 'Initial construction not finished!',
+                zh: '初始建築尚未結束!'
+            },
+            ERR_DICE_ROLLED: {
+                en: 'Dices already rolled!',
+                zh: '骰子已經骰過了!'
+            },
+            ERR_DICE_NOT_ROLLED: {
+                en: 'Need to roll dices first!',
+                zh: '請先使用骰子!'
+            },
+            ERR_DEV_CARD_PLAYED: {
+                en: 'Already played development card!',
+                zh: '已經使用過發展卡!'
+            },
+            ERR_NO_KNIGHT_ON_HAND: {
+                en: "Doens't have knight card on hand!",
+                zh: '手中無兵卡!'
+            },
+            ERR_NO_MONOPOLY_ON_HAND: {
+                en: 'No Monopoly card on hand!',
+                zh: '手中無獨佔卡!'
+            },
+            ERR_NO_ROAD_BUILDING_ON_HAND: {
+                en: 'No Road Building cards on hand!',
+                zh: '手中無建路卡!'
+            },
+            ERR_NO_YEAR_OF_PLENTY_ON_HAND: {
+                en: 'No Year of Plenty cards on hand!',
+                zh: '手中無豐年卡!'
+            },
+            ERR_DUMP_RESOURCES: {
+                en: 'Cannot dump resources!',
+                zh: '不可丟棄資源!'
+            },
+            ERR_INSUFFICIENT_RESOURCE: {
+                en: 'Insufficient resources!',
+                zh: '資源不足!'
+            },
+            ERR_INSUFFICIENT_BUILDING: {
+                en: 'Insufficient building to build!',
+                zh: '建築數量不足!'
+            },
+            ERR_ILLEGAL_BUILD: {
+                en: 'Cannot build legally!',
+                zh: '無法在此建築!'
+            },
+            ERR_TOSS_CARDS_NOT_ENOUGH: {
+                en: 'Need to toss half of resource cards!',
+                zh: '需要丟棄一半的資源卡!'
+            },
+            ERR_NEED_TO_MOVE_ROBBER: {
+                en: 'Need to move robber',
+                zh: '必須移動強盜!'
+            },
+            ERR_STEAL_MORE_THAN_ONE_PLAYERS: {
+                en: 'Cannot steal multiple players!',
+                zh: '不可從多位玩家身上進行偷盜!'
+            },
+            ERR_STEAL_MORE_THAN_ONCE: {
+                en: 'Cannot have multiple stealings!',
+                zh: '不可偷盜多次!'
+            },
+            ERR_NOT_YOU_TO_STEAL: {
+                en: 'Only current player can steal from others!',
+                zh: '只有目前玩家可以進行偷盜!'
+            },
+            ERR_STEAL_SELF: {
+                en: 'Cannot steal from self!',
+                zh: '不可對自己進行偷盜!'
+            },
+            ERR_STEAL_ITEM_NO_MATCH: {
+                en: 'Stealing item is not matching stolen item!',
+                zh: '偷盜物品與被偷盜物品不符!'
+            },
+            ERR_STEAL_NOTHING: {
+                en: 'Must choose what to steal!',
+                zh: '必須選擇偷盜物品!'
+            },
+            ERR_STEAL_NUMBER_NO_MATCH: {
+                en: 'Stealing number is not matching stolen number!',
+                zh: '偷盜數量不符!'
+            },
+            ERR_STEAL_MORE_THAN_ONE_RESOURCE: {
+                en: 'Must steal one resource at a time!',
+                zh: '一次只能盜取一個資源!'
+            },
+            ERR_DIFF_RESOURCE_ON_TRADING: {
+                en: 'Need to use same resources for trading',
+                zh: '必須使用同樣資源進行交易'
+            },
+            ERR_TRADE_MORE_THAN_ONE_RESOURCE: {
+                en: 'One resource per trade',
+                zh: '一次交易一樣資源'
+            },
+            ERR_MISSING_TRADING_ITEM: {
+                en: 'Missing trading item!',
+                zh: '缺少交易資源!'
+            },
+            ERR_TRADING_SAME_RESOURCE: {
+                en: 'Cannot trade the same resources',
+                zh: '不可交易相同資源'
+            },
+            ERR_WRONG_TRADING_RATIO: {
+                en: 'Wrong trading ratio',
+                zh: '錯誤交易比例'
+            },
+            ERR_INSUFFICIENT_RESOURCE_IN_BANK: {
+                en: 'Insufficient resources in bank for now!',
+                zh: '銀行資源不足!'
+            },
+            ERR_INSUFFICIENT_DEVCARD_IN_BANK: {
+                en: 'Insufficient development cards in bank!',
+                zh: '銀行發展卡不足!'
+            },
+            ERR_INVALID_PLACE_FOR_ROBBER: {
+                en: 'Invalid position for robber',
+                zh: '無效強盜位置'
+            },
+            ERR_INVALID_ROBBING_MOVE: {
+                en: 'Invalid robbing action!',
+                zh: '無效偷盜行為!'
+            }
         };
     }
     function animationEndedCallback() {
