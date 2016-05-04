@@ -259,7 +259,140 @@ module game {
       },
       UNKNOWN_MOVE: {
         en: 'Unknown Move!',
-        zh: '無效!'
+        zh: '無效操作!'
+      },
+
+      ERR_NOT_YOUR_TURN: {
+        en: 'Not your turn to play!',
+        zh: '不是您的回合!'
+      },
+      ERR_INIT_BUILD: {
+        en: 'Invalid build during initialization!',
+        zh: '無效的初始建築!'
+      },
+      ERR_INIT_BUILD_NOT_FINISHED: {
+        en: 'Initial construction not finished!',
+        zh: '初始建築尚未結束!'
+      },
+      ERR_DICE_ROLLED: {
+        en: 'Dices already rolled!',
+        zh: '骰子已經骰過了!'
+      },
+      ERR_DICE_NOT_ROLLED: {
+        en: 'Need to roll dices first!',
+        zh: '請先使用骰子!'
+      },
+      ERR_DEV_CARD_PLAYED: {
+        en: 'Already played development card!',
+        zh: '已經使用過發展卡!'
+      },
+      ERR_NO_KNIGHT_ON_HAND: {
+        en: "Doens't have knight card on hand!",
+        zh: '手中無兵卡!'
+      },
+      ERR_NO_MONOPOLY_ON_HAND: {
+        en: 'No Monopoly card on hand!',
+        zh: '手中無獨佔卡!'
+      },
+      ERR_NO_ROAD_BUILDING_ON_HAND: {
+        en: 'No Road Building cards on hand!',
+        zh: '手中無建路卡!'
+      },
+      ERR_NO_YEAR_OF_PLENTY_ON_HAND: {
+        en: 'No Year of Plenty cards on hand!',
+        zh: '手中無豐年卡!'
+      },
+      ERR_DUMP_RESOURCES: {
+        en: 'Cannot dump resources!',
+        zh: '不可丟棄資源!'
+      },
+      ERR_INSUFFICIENT_RESOURCE: {
+        en: 'Insufficient resources!',
+        zh: '資源不足!'
+      },
+      ERR_INSUFFICIENT_BUILDING: {
+        en: 'Insufficient building to build!',
+        zh: '建築數量不足!'
+      },
+      ERR_ILLEGAL_BUILD: {
+        en: 'Cannot build legally!',
+        zh: '無法在此建築!'
+      },
+      ERR_TOSS_CARDS_NOT_ENOUGH: {
+        en: 'Need to toss half of resource cards!',
+        zh: '需要丟棄一半的資源卡!'
+      },
+      ERR_NEED_TO_MOVE_ROBBER: {
+        en: 'Need to move robber',
+        zh: '必須移動強盜!'
+      },
+      ERR_STEAL_MORE_THAN_ONE_PLAYERS: {
+        en: 'Cannot steal multiple players!',
+        zh: '不可從多位玩家身上進行偷盜!'
+      },
+      ERR_STEAL_MORE_THAN_ONCE: {
+        en: 'Cannot have multiple stealings!',
+        zh: '不可偷盜多次!'
+      },
+      ERR_NOT_YOU_TO_STEAL: {
+        en: 'Only current player can steal from others!',
+        zh: '只有目前玩家可以進行偷盜!'
+      },
+      ERR_STEAL_SELF: {
+        en: 'Cannot steal from self!',
+        zh: '不可對自己進行偷盜!'
+      },
+      ERR_STEAL_ITEM_NO_MATCH: {
+        en: 'Stealing item is not matching stolen item!',
+        zh: '偷盜物品與被偷盜物品不符!'
+      },
+      ERR_STEAL_NOTHING: {
+        en: 'Must choose what to steal!',
+        zh: '必須選擇偷盜物品!'
+      },
+      ERR_STEAL_NUMBER_NO_MATCH: {
+        en: 'Stealing number is not matching stolen number!',
+        zh: '偷盜數量不符!'
+      },
+      ERR_STEAL_MORE_THAN_ONE_RESOURCE: {
+        en: 'Must steal one resource at a time!',
+        zh: '一次只能盜取一個資源!'
+      },
+      ERR_DIFF_RESOURCE_ON_TRADING: {
+        en: 'Need to use same resources for trading',
+        zh: '必須使用同樣資源進行交易'
+      },
+      ERR_TRADE_MORE_THAN_ONE_RESOURCE: {
+        en: 'One resource per trade',
+        zh: '一次交易一樣資源'
+      },
+      ERR_MISSING_TRADING_ITEM: {
+        en: 'Missing trading item!',
+        zh: '缺少交易資源!'
+      },
+      ERR_TRADING_SAME_RESOURCE: {
+        en: 'Cannot trade the same resources',
+        zh: '不可交易相同資源'
+      },
+      ERR_WRONG_TRADING_RATIO: {
+        en: 'Wrong trading ratio',
+        zh: '錯誤交易比例'
+      },
+      ERR_INSUFFICIENT_RESOURCE_IN_BANK: {
+        en: 'Insufficient resources in bank for now!',
+        zh: '銀行資源不足!'
+      },
+      ERR_INSUFFICIENT_DEVCARD_IN_BANK: {
+        en: 'Insufficient development cards in bank!',
+        zh: '銀行發展卡不足!'
+      },
+      ERR_INVALID_PLACE_FOR_ROBBER: {
+        en: 'Invalid position for robber',
+        zh: '無效強盜位置'
+      },
+      ERR_INVALID_ROBBING_MOVE: {
+        en: 'Invalid robbing action!',
+        zh: '無效偷盜行為!'
       }
     };
   }

@@ -459,6 +459,7 @@ var gameLogic;
             throw new Error('Already played development cards');
         }
         //Check when playing year of plenty
+        //TODO
         try {
             checkResources(nextState.bank.resources);
         }
