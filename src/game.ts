@@ -128,7 +128,6 @@ module game {
     resourcesPicked = getZerosArray(Resource.SIZE);
   }
 
-  //TODO
   function getTranslations(): Translations {
     return {
       RULES_OF_PIONEERS: {
@@ -137,31 +136,61 @@ module game {
       },
       RULES_SLIDE1: { 
         en: "You and your opponent take turns to building settlements and cities on the island.  The first to reach 10 points wins!",
-        zh: 'TODO'
-    },
-      RULES_SLIDE2: {
-    en: "Initial building phase starts with a placing a settlement on a vertex and an adjacent road on an edge, once the last player finishes, " + 
-      "it repeats in the opposite direction, gaining resources adjacent to the second settlement.  "  +
-      "After the first player's finishes their second settlement and road, the game starts.  ",
-      zh: 'TODO'
-    },
-    RULES_SLIDE3: {
-      en: "Settlements cannot be on adjacent vertices, they must be at least one vertex apart.  " + 
-      "You can only build settlements if you have a road leading to the vertex (aside from the first two settlements).  " + 
-      "When the dice are rolled, the number on the hex will yield that resource to players having a settlement or city adjacent to it.  " +
-      "Having settlements on hexes with numbers closer to 7 are more likely to be rolled.  " + 
-      "However, if a 7 is rolled, no resources will be handed out, but instead players must drop cards if they have too many.  " + 
-      "In addition, the player who rolled the dice gets to move the robber to a new hex, allowing that person to steal a resource card from another player.  " + 
-      "Settlements can be upgraded to cities to yield double resources when a number is rolled.  ",
-        zh: 'TODO'
+        zh: '遊戲目標: 您與其他玩家輪流建造路、房子與城市，第一個得到10分的玩家勝利!'
       },
-      RULES_SLIDE4: {
-        en: "The cost of a road is: 1 wood and 1 brick.  " +
-        "The cost of a settlement is: 1 wood, 1 brick, 1 sheep, and 1 wheat.  " + 
-      "The cost of upgrading to a city is: 3 wheat and 2 ore.\r" + 
-      "The cost of a development card is: 1 sheep, 1 wheat, and 1 ore.",
-        zh: 'TODO'
+      RULES_SLIDE2_TITLE: {
+        en: 'How to earn victory points:',
+        zh: '得分方式:'
       },
+      RULES_SLIDE2_SETTLEMENT: {
+        en: 'Each settlement earns 1 point',
+        zh: '每棟房子可獲得1分'
+      },
+      RULES_SLIDE2_CITY: {
+        en: 'Each city earns 2 points',
+        zh: '每座城市可獲得2分'
+      },
+      RULES_SLIDE2_LARGEST_ARMY: {
+        en: 'Player with largest army earns 2 points',
+        zh: '獲得兵王的玩家可獲得2分'
+      },
+      RULES_SLIDE2_LONGEST_ROAD: {
+        en: 'Player with longest road earns 2 points',
+        zh: '獲得路王的玩家可獲得2分'
+      },
+      RULES_SLIDE2_DEV_CARD: {
+        en: 'Each Victory Point development card worths 1 point',
+        zh: '每張分卡(發展卡)為1分'
+      },
+      RULES_SLIDE2_HOWTO_LARGEST_ARMY: {
+        en: 'Player with equal or more than 3 knights played and number of knights is the biggest earns Largest Army Award',
+        zh: '使用過三個或以上的兵卡，並且為場上最多的玩家可獲得兵王獎勵'
+      },
+      RULES_SLIDE2_HOWTO_LONGEST_ROAD: {
+        en: 'Player with equal or more than 5 roads constructed in a row earns Longest Road Award',
+        zh: '連續的已建造的路，長度為5或以上的擁有最長的路的玩家，可獲得路王獎勵'
+      },
+      RULES_SLIDE3_TITLE: {
+        en: 'Building Costs:',
+        zh: '建造成本:'
+      },
+      RULES_SLIDE3_BUILD_ROAD: {
+        en: 'Road: Brick x 1 + Lumber x 1',
+        zh: '路: 磚頭 x 1 + 木頭 x 1'
+      },
+      RULES_SLIDE3_BUILD_SETTLEMENT: {
+        en: 'Settlement: Brick x 1 + Lumber x 1 + Grain x 1 + Wool x 1',
+        zh: '房子: 磚頭 x 1 + 木頭 x 1 + 小麥 x 1 + 羊毛 x 1'
+      },
+      RULES_SLIDE3_BUILD_CITY: {
+        en: 'City: Grain x 2 + Ore x 3',
+        zh: '城市: 小麥 x 2 + 鐵礦 x 3'
+      },
+      RULES_SLIDE3_BUILD_DEV_CARD: {
+        en: 'Development Card: Wool x 1 + Grain x 1 + Ore x 1',
+        zh: '發展卡: 羊毛 x 1 + 小麥 x 1 + 鐵礦 x 1'
+      },
+
       CLOSE:  {
         en: "Close",
         zh: "關閉"

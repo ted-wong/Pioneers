@@ -34,6 +34,14 @@ td {
   background-image: url(../imgs/water1.jpg);
 }
 
+.help-tip-text {
+  text-align: left;
+}
+
+.help-tip-img {
+  display: inline-block;
+  height: 40px;
+}
 
 .default-hex {
   stroke: #E8D0A9;
