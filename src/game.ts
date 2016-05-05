@@ -175,15 +175,15 @@ module game {
         en: 'Pieces left to build:',
         zh: '剩餘可建築數量:'
       },
-      PLAYER: {
+      GAME_PLAYER: {
         en: 'Player',
         zh: '玩家'
       },
-      BANK: {
+      GAME_BANK: {
         en: 'Bank',
         zh: '銀行'
       },
-      MY_CARDS: {
+      GAME_MY_CARDS: {
         en: 'My Cards',
         zh: '我的卡片'
       },

@@ -154,7 +154,7 @@
           <div class="panel-body">
             <ul class="list-group player-table-group player-info">
               <li ng-repeat="p in players" ng-attr-class="player-table-item {{'player-' + p + '-color'}} {{game.getPlayerBorder(p)}}">
-                <p><strong>{{PLAYER | translate}} {{p+1}}</strong></p>
+                <p><strong>{{'GAME_PLAYER' | translate}} {{p+1}}</strong></p>
                 <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(p)}}
                 <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(p)}}
                 <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(p)}}
@@ -162,7 +162,7 @@
                 <img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(p)}}
               </li>
               <li class="player-table-item bank-info">
-                <p><strong>{{BANK | translate}}</strong></p>
+                <p><strong>{{'GAME_BANK' | translate}}</strong></p>
                 <span ng-repeat="idx in resourceSize">
                   <img ng-attr-src="imgs/resource{{idx}}.png" alt="imgs/develop.svg" class="resource-pic2">
                     x {{game.getBankResources(idx)}}
@@ -394,7 +394,7 @@
       <div id="MyResourcesInfo">
         <div class="panel-default my-detail">
           <div class="mycards-header">
-        <strong>{{MY_CARDS | translate}}</strong>
+        <strong>{{'GAME_MY_CARDS' | translate}}</strong>
             <button class="btn btn-success btn-xs"
                     ng-click="game.onTradeWithBankStart()"
                     ng-if="game.showTradeButton()">
