@@ -31,7 +31,7 @@ module game {
   export let myIndex: number = -2;
 
   export let alertStyle = 'success';
-  export let alertMsg = 'Welcome to Pioneers Game!';
+  export let alertMsg = 'WELCOME_MSG';
 
   export let showInfoModal = false;
   export let infoModalHeader = '';
@@ -173,8 +173,8 @@ module game {
       },
 
       INIT_MSG: {
-        en: "Current Player: Player",
-        zh: "目前玩家: 玩家"
+        en: "Player's turn...",
+        zh: "下一個玩家..."
       },
       INIT_BUILD_DONE: {
         en: 'Initial buildings done, time to start the game!',
@@ -428,22 +428,22 @@ module game {
     switch (state.moveType) {
       case MoveType.INIT:
         alertStyle = 'success';
-        alertMsg = "It is now player 1's turn";
+        alertMsg = "INIT_MSG";
         break;
       case MoveType.INIT_BUILD:
         alertStyle = 'success';
         if (state.eventIdx === myIndex) {
           if (state.players[myIndex].construction[Construction.Settlement] === 2 && state.players[myIndex].construction[Construction.Road] === 2) {
-            alertMsg = 'Initial buildings done, time to start the game!';
+            alertMsg = 'INIT_BUILD_DONE';
           } else {
-            alertMsg = 'Please place your initial buildings and roads...';
+            alertMsg = 'INIT_BUILD_MYTURN';
           }
         } else {
           if (state.players[state.eventIdx].construction[Construction.Settlement] > 
             state.players[state.eventIdx].construction[Construction.Road]) {
-            alertMsg = 'Player ' + (state.eventIdx + 1) + ' placed a settlement, but now needs a road...';
+            alertMsg = 'INIT_BUILD_OTHER_MOVE_MADE';
           } else {
-            alertMsg = 'Player ' + (state.eventIdx + 1) + ' placing initial buildings and roads...';
+            alertMsg = 'INIT_BUILD_OTHER_MOVE_MAKING';
           }
         }
         break;

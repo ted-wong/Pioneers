@@ -26,7 +26,7 @@ var game;
     game.playerColor = ['#ED3B3B', '#3889F2', '#2AC761', '#CC9D04'];
     game.myIndex = -2;
     game.alertStyle = 'success';
-    game.alertMsg = 'Welcome to Pioneers Game!';
+    game.alertMsg = 'WELCOME_MSG';
     game.showInfoModal = false;
     game.infoModalHeader = '';
     game.infoModalMsg = '';
@@ -148,8 +148,8 @@ var game;
                 zh: '歡迎來到Pioneers遊戲!'
             },
             INIT_MSG: {
-                en: "Current Player: Player",
-                zh: "目前玩家: 玩家"
+                en: "Player's turn...",
+                zh: "下一個玩家..."
             },
             INIT_BUILD_DONE: {
                 en: 'Initial buildings done, time to start the game!',
@@ -397,25 +397,25 @@ var game;
         switch (game.state.moveType) {
             case MoveType.INIT:
                 game.alertStyle = 'success';
-                game.alertMsg = "It is now player 1's turn";
+                game.alertMsg = "INIT_MSG";
                 break;
             case MoveType.INIT_BUILD:
                 game.alertStyle = 'success';
                 if (game.state.eventIdx === game.myIndex) {
                     if (game.state.players[game.myIndex].construction[Construction.Settlement] === 2 && game.state.players[game.myIndex].construction[Construction.Road] === 2) {
-                        game.alertMsg = 'Initial buildings done, time to start the game!';
+                        game.alertMsg = 'INIT_BUILD_DONE';
                     }
                     else {
-                        game.alertMsg = 'Please place your initial buildings and roads...';
+                        game.alertMsg = 'INIT_BUILD_MYTURN';
                     }
                 }
                 else {
                     if (game.state.players[game.state.eventIdx].construction[Construction.Settlement] >
                         game.state.players[game.state.eventIdx].construction[Construction.Road]) {
-                        game.alertMsg = 'Player ' + (game.state.eventIdx + 1) + ' placed a settlement, but now needs a road...';
+                        game.alertMsg = 'INIT_BUILD_OTHER_MOVE_MADE';
                     }
                     else {
-                        game.alertMsg = 'Player ' + (game.state.eventIdx + 1) + ' placing initial buildings and roads...';
+                        game.alertMsg = 'INIT_BUILD_OTHER_MOVE_MAKING';
                     }
                 }
                 break;
