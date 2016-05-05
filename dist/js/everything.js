@@ -1414,6 +1414,22 @@ var game;
                 en: 'Welcome to Pioneers Game!',
                 zh: '歡迎來到Pioneers遊戲!'
             },
+            PIECE_LEFT_TO_BUILD: {
+                en: 'Pieces left to build:',
+                zh: '剩餘可建築數量:'
+            },
+            PLAYER: {
+                en: 'Player',
+                zh: '玩家'
+            },
+            BANK: {
+                en: 'Bank',
+                zh: '銀行'
+            },
+            MY_CARDS: {
+                en: 'My Cards',
+                zh: '我的卡片'
+            },
             INIT_MSG: {
                 en: "Player's turn...",
                 zh: "下一個玩家..."
