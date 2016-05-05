@@ -193,8 +193,8 @@ module game {
         zh: '其他玩家正在建造初始建築...'
       },
       ROLL_DICE: {
-        en: 'Dice rolled with number: ',
-        zh: '骰子骰出了: '
+        en: 'Dice rolled with number!',
+        zh: '骰子骰出了!'
       },
       BUILD_ROAD: {
         en: 'Player built a road!',
@@ -302,9 +302,17 @@ module game {
         en: 'No Year of Plenty cards on hand!',
         zh: '手中無豐年卡!'
       },
+      ERR_MUST_CHOOSE_TWO_RESOURCE: {
+        en: 'Must choose two resources (can be of same type)',
+        zh: '必須選擇兩項資源(可以是同一種資源)'
+      },
       ERR_DUMP_RESOURCES: {
         en: 'Cannot dump resources!',
         zh: '不可丟棄資源!'
+      },
+      ERR_DUMP_NEGATIVE_RESOURCE: {
+        en: 'Cannot dump negative resources',
+        zh: '丟棄資源數量不可為負數'
       },
       ERR_INSUFFICIENT_RESOURCE: {
         en: 'Insufficient resources!',
@@ -449,19 +457,19 @@ module game {
         break;
       case MoveType.ROLL_DICE:
         alertStyle = 'success';
-        alertMsg = "Player 1 rolled a " + state.dices.reduce(function(a, b) {return a+b;});
+        alertMsg = 'ROLL_DICE';
         break;
       case MoveType.BUILD_ROAD:
         alertStyle = 'success';
-        alertMsg = "Player 1" + " built a road!";
+        alertMsg = 'BUILD_ROAD';
         break;
       case MoveType.BUILD_SETTLEMENT:
         alertStyle = 'success';
-        alertMsg = "Player 1" + " built a settlement!";
+        alertMsg = 'BUILD_SETTLEMENT';
         break;
       case MoveType.BUILD_CITY:
         alertStyle = 'success';
-        alertMsg = "Player 1" + " upgraded a settlement to a city!";
+        alertMsg = 'BUILD_CITY';
         break;
       case MoveType.BUILD_DEVCARD:
         alertStyle = 'success';
@@ -469,15 +477,15 @@ module game {
         break;
       case MoveType.KNIGHT:
         alertStyle = 'success';
-        alertMsg = "Player 1" + " played a knight!";
+        alertMsg = 'PLAY_KNIGHT';
         break;
       case MoveType.MONOPOLY:
         alertStyle = 'success';
-        alertMsg = "Player 1" + " played a monopoly development card!";
+        alertMsg = 'PLAY_MONOPOLY';
         break;
       case MoveType.YEAR_OF_PLENTY:
         alertStyle = 'success';
-        alertMsg = "Player 1" + " played a year of plenty card!";
+        alertMsg = 'PLAY_YEAR_OF_PLENTY';
         break;
       case MoveType.TRADE:
         break;
@@ -488,13 +496,13 @@ module game {
       case MoveType.ROB_PLAYER:
         break;
       case MoveType.TRANSACTION_WITH_BANK:
-        alertMsg = "Player 1" + " traded with the bank!";
+        alertMsg = 'TRADE_WITH_BANK';
         break;
       case MoveType.WIN:
         break;
       default:
         alertStyle = 'danger';
-        alertMsg = 'Unknown Move!';
+        alertMsg = 'UNKNOWN_MOVE';
     }
   }
 
@@ -560,7 +568,7 @@ module game {
         if (state.eventIdx === move.turnIndexAfterMove) {
           if (myIndex === move.turnIndexAfterMove) {
             alertStyle = 'warning';
-            alertMsg = 'Moving robber...';
+            alertMsg = 'ROBBER_MOVE_ON_DICE';
             whenMoveRobberStart();
           }
         } else {
@@ -577,7 +585,7 @@ module game {
       case MoveType.KNIGHT:
         if (myIndex === move.turnIndexAfterMove) {
           alertStyle = 'warning';
-          alertMsg = 'Knight!  Moving robber...';
+          alertMsg = 'ROBBER_MOVE_ON_KNIGHT';
           whenMoveRobberStart();
         }
         break;
@@ -1234,7 +1242,7 @@ module game {
 
   function whenPlayRoadBuilding() {
     alertStyle = 'warning';
-    alertMsg = 'Please select two roads';
+    alertMsg = 'PLAY_ROAD_BUILDING';
 
     cleanupDevRoadBuild();
     playingDevRoadBuild = true;
@@ -1264,7 +1272,7 @@ module game {
 
   export function onRoadBuildingCanceled() {
     alertStyle = 'success';
-    alertMsg = 'Road Building Canceled';
+    alertMsg = 'BUILD_ROAD_CANCELED';
     cleanupDevRoadBuild();
   }
 
@@ -1397,7 +1405,7 @@ module game {
     }
     if (noOneCanSteal) {
       alertStyle = 'warning';
-      alertMsg = 'No one can rob...';
+      alertMsg = 'NO_ONE_CAN_ROB';
       cleanupInfoModal();
       return;
     }
@@ -1468,12 +1476,12 @@ module game {
     if (tradingResource < 0 || tradingResource >= Resource.SIZE ||
         wantedResource < 0 || wantedResource >= Resource.SIZE) {
       alertStyle = 'danger';
-      alertMsg = 'Must select items to trade!';
+      alertMsg = 'MUST_SELECT_TRADE_ITEM';
       return;
     }
     if (tradingNum <= 0 || wantedNum <= 0) {
       alertStyle = 'danger';
-      alertMsg = 'Must identify number of items to trade!';
+      alertMsg = 'MUST_SELECT_NUMBER_TO_TRADE';
       return;
     }
 

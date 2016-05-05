@@ -168,8 +168,8 @@ var game;
                 zh: '其他玩家正在建造初始建築...'
             },
             ROLL_DICE: {
-                en: 'Dice rolled with number: ',
-                zh: '骰子骰出了: '
+                en: 'Dice rolled with number!',
+                zh: '骰子骰出了!'
             },
             BUILD_ROAD: {
                 en: 'Player built a road!',
@@ -275,9 +275,17 @@ var game;
                 en: 'No Year of Plenty cards on hand!',
                 zh: '手中無豐年卡!'
             },
+            ERR_MUST_CHOOSE_TWO_RESOURCE: {
+                en: 'Must choose two resources (can be of same type)',
+                zh: '必須選擇兩項資源(可以是同一種資源)'
+            },
             ERR_DUMP_RESOURCES: {
                 en: 'Cannot dump resources!',
                 zh: '不可丟棄資源!'
+            },
+            ERR_DUMP_NEGATIVE_RESOURCE: {
+                en: 'Cannot dump negative resources',
+                zh: '丟棄資源數量不可為負數'
             },
             ERR_INSUFFICIENT_RESOURCE: {
                 en: 'Insufficient resources!',
@@ -421,19 +429,19 @@ var game;
                 break;
             case MoveType.ROLL_DICE:
                 game.alertStyle = 'success';
-                game.alertMsg = "Player 1 rolled a " + game.state.dices.reduce(function (a, b) { return a + b; });
+                game.alertMsg = 'ROLL_DICE';
                 break;
             case MoveType.BUILD_ROAD:
                 game.alertStyle = 'success';
-                game.alertMsg = "Player 1" + " built a road!";
+                game.alertMsg = 'BUILD_ROAD';
                 break;
             case MoveType.BUILD_SETTLEMENT:
                 game.alertStyle = 'success';
-                game.alertMsg = "Player 1" + " built a settlement!";
+                game.alertMsg = 'BUILD_SETTLEMENT';
                 break;
             case MoveType.BUILD_CITY:
                 game.alertStyle = 'success';
-                game.alertMsg = "Player 1" + " upgraded a settlement to a city!";
+                game.alertMsg = 'BUILD_CITY';
                 break;
             case MoveType.BUILD_DEVCARD:
                 game.alertStyle = 'success';
@@ -441,15 +449,15 @@ var game;
                 break;
             case MoveType.KNIGHT:
                 game.alertStyle = 'success';
-                game.alertMsg = "Player 1" + " played a knight!";
+                game.alertMsg = 'PLAY_KNIGHT';
                 break;
             case MoveType.MONOPOLY:
                 game.alertStyle = 'success';
-                game.alertMsg = "Player 1" + " played a monopoly development card!";
+                game.alertMsg = 'PLAY_MONOPOLY';
                 break;
             case MoveType.YEAR_OF_PLENTY:
                 game.alertStyle = 'success';
-                game.alertMsg = "Player 1" + " played a year of plenty card!";
+                game.alertMsg = 'PLAY_YEAR_OF_PLENTY';
                 break;
             case MoveType.TRADE:
                 break;
@@ -460,13 +468,13 @@ var game;
             case MoveType.ROB_PLAYER:
                 break;
             case MoveType.TRANSACTION_WITH_BANK:
-                game.alertMsg = "Player 1" + " traded with the bank!";
+                game.alertMsg = 'TRADE_WITH_BANK';
                 break;
             case MoveType.WIN:
                 break;
             default:
                 game.alertStyle = 'danger';
-                game.alertMsg = 'Unknown Move!';
+                game.alertMsg = 'UNKNOWN_MOVE';
         }
     }
     function updateUI(params) {
@@ -528,7 +536,7 @@ var game;
                 if (game.state.eventIdx === game.move.turnIndexAfterMove) {
                     if (game.myIndex === game.move.turnIndexAfterMove) {
                         game.alertStyle = 'warning';
-                        game.alertMsg = 'Moving robber...';
+                        game.alertMsg = 'ROBBER_MOVE_ON_DICE';
                         whenMoveRobberStart();
                     }
                 }
@@ -546,7 +554,7 @@ var game;
             case MoveType.KNIGHT:
                 if (game.myIndex === game.move.turnIndexAfterMove) {
                     game.alertStyle = 'warning';
-                    game.alertMsg = 'Knight!  Moving robber...';
+                    game.alertMsg = 'ROBBER_MOVE_ON_KNIGHT';
                     whenMoveRobberStart();
                 }
                 break;
@@ -1159,7 +1167,7 @@ var game;
     }
     function whenPlayRoadBuilding() {
         game.alertStyle = 'warning';
-        game.alertMsg = 'Please select two roads';
+        game.alertMsg = 'PLAY_ROAD_BUILDING';
         cleanupDevRoadBuild();
         game.playingDevRoadBuild = true;
         cleanupInfoModal();
@@ -1188,7 +1196,7 @@ var game;
     game.onRoadBuildingDone = onRoadBuildingDone;
     function onRoadBuildingCanceled() {
         game.alertStyle = 'success';
-        game.alertMsg = 'Road Building Canceled';
+        game.alertMsg = 'BUILD_ROAD_CANCELED';
         cleanupDevRoadBuild();
     }
     game.onRoadBuildingCanceled = onRoadBuildingCanceled;
@@ -1311,7 +1319,7 @@ var game;
         }
         if (noOneCanSteal) {
             game.alertStyle = 'warning';
-            game.alertMsg = 'No one can rob...';
+            game.alertMsg = 'NO_ONE_CAN_ROB';
             cleanupInfoModal();
             return;
         }
@@ -1375,12 +1383,12 @@ var game;
         if (tradingResource < 0 || tradingResource >= Resource.SIZE ||
             wantedResource < 0 || wantedResource >= Resource.SIZE) {
             game.alertStyle = 'danger';
-            game.alertMsg = 'Must select items to trade!';
+            game.alertMsg = 'MUST_SELECT_TRADE_ITEM';
             return;
         }
         if (game.tradingNum <= 0 || game.wantedNum <= 0) {
             game.alertStyle = 'danger';
-            game.alertMsg = 'Must identify number of items to trade!';
+            game.alertMsg = 'MUST_SELECT_NUMBER_TO_TRADE';
             return;
         }
         var turnMove = {
