@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="myApp" ng-strict-di manifest="index.min.appcache">
+<!-- build:[manifest] index.min.appcache -->
+<html lang="en" ng-app="myApp" ng-strict-di>
+<!-- /build -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -8,21 +10,43 @@
   <link rel="shortcut icon"type="image/x-icon" href="data:image/x-icon;,"><!-- Suppress browser request for favicon.ico -->
 
   <!-- To ensure CSS files are downloaded in parallel, always include external CSS before external JavaScript. -->
-  <link rel="stylesheet" type="text/css" href="css/everything.min.css">
+  <!-- build:[href] css/everything.min.css -->
+  <link rel="stylesheet" type="text/css" href="css/game.css">
+  <!-- /build -->
   <link crossorigin="anonymous" rel="stylesheet" type="text/css" href="http://yoav-zibin.github.io/emulator/main.css">
 
-  <link crossorigin="anonymous" rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+  <!-- build:[href] http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css -->
+  <link crossorigin="anonymous" rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.css">
+  <!-- /build -->
 
   <!-- The crossorigin attribute controls, for scripts that are obtained from other origins, whether error information will be exposed. -->
-  <script crossorigin="anonymous" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+  <!-- build:[src] http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js -->
+  <script crossorigin="anonymous" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.js"></script>
+  <!-- /build -->
 
   <!-- For the game rules/instructions, I use carousel from Angular UI + Bootstrap -->
-  <script crossorigin="anonymous" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-touch.min.js"></script>
-  <script crossorigin="anonymous" src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.1/ui-bootstrap-tpls.min.js"></script>
+  <!-- build:[src] http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-touch.min.js -->
+  <script crossorigin="anonymous" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular-touch.js"></script>
+  <!-- /build -->
+  <!-- build:[src] http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.1/ui-bootstrap-tpls.min.js -->
+  <script crossorigin="anonymous" src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.1/ui-bootstrap-tpls.js"></script>
+  <!-- /build -->
 
-  <script crossorigin="anonymous" src="http://yoav-zibin.github.io/emulator/dist/turnBasedServices.3.min.js"></script>
+  <!-- build:[src] http://yoav-zibin.github.io/emulator/dist/turnBasedServices.3.min.js -->
+  <script crossorigin="anonymous" src="http://yoav-zibin.github.io/emulator/dist/turnBasedServices.3.js"></script>
+  <!-- /build -->
 
-  <script src="js/everything.min.js"></script>
+  <!-- build:js js/everything.min.js -->
+  <script src="ts_output_readonly_do_NOT_change_manually/src/gameLogic.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/game.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/common.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/aiService.js"></script>
+  <!-- /build -->
+
+  <!-- build:remove -->
+  <!-- https://github.com/philipwalton/html-inspector#getting-started -->
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/html-inspector/0.8.2/html-inspector.js"></script>
+  <!-- /build -->
 </head>
 <body ng-cloak>
   <div id="e2e_test_open_rules_modal" class="help-tip" ng-click="game.isHelpModalShown = true" aria-hidden="true"></div>
@@ -55,16 +79,7 @@
               <table>
                 <tr>
                   <td id="e2e_test_rules_slide2_text">
-                    <h4>{{ 'RULES_SLIDE2_TITLE' | translate }}</h4>
-                    <ul class="help-tip-text">
-                      <li>{{ 'RULES_SLIDE2_SETTLEMENT' | translate }}</li>
-                      <li>{{ 'RULES_SLIDE2_CITY' | translate }}</li>
-                      <li>{{ 'RULES_SLIDE2_LARGEST_ARMY' | translate }}</li>
-                      <li>{{ 'RULES_SLIDE2_LONGEST_ROAD' | translate }}</li>
-                      <li>{{ 'RULES_SLIDE2_DEV_CARD' | translate }}</li>
-                    </ul>
-                    **{{ 'RULES_SLIDE2_HOWTO_LARGEST_ARMY' | translate }}</br>
-                    **{{ 'RULES_SLIDE2_HOWTO_LONGEST_ROAD' | translate }}</br>
+                  {{ 'RULES_SLIDE2' | translate }}
                   </td>
                   <td>
                     <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
@@ -75,21 +90,23 @@
             <slide>
               <table>
                 <tr>
-                  <td id="e2e_test_rules_slide3_text" style="width:80%;">
-                    <h4>{{ 'RULES_SLIDE3_TITLE' | translate }}</h4>
-                    <ul class="help-tip-text">
-                      <li>{{ 'RULES_SLIDE3_BUILD_ROAD' | translate }}</li>
-                      <li>{{ 'RULES_SLIDE3_BUILD_SETTLEMENT' | translate }}</li>
-                      <li>{{ 'RULES_SLIDE3_BUILD_CITY' | translate }}</li>
-                      <li>{{ 'RULES_SLIDE3_BUILD_DEV_CARD' | translate }}</li>
-                    </ul>
+                  <td id="e2e_test_rules_slide3_text">
+                  {{ 'RULES_SLIDE3' | translate }}
                   </td>
-                  <td style="width:20%;">
-                    <img src="imgs/resource0.png" alt="Brick" class="help-tip-img" />
-                    <img src="imgs/resource1.png" alt="Lumber" class="help-tip-img" />
-                    <img src="imgs/resource2.png" alt="Wool" class="help-tip-img" />
-                    <img src="imgs/resource3.png" alt="Grain" class="help-tip-img" />
-                    <img src="imgs/resource4.png" alt="Ore" class="help-tip-img" />
+                  <td>
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 3" style="height:150px;">
+                  </td>
+                </tr>
+              </table>
+            </slide>
+            <slide>
+              <table>
+                <tr>
+                  <td id="e2e_test_rules_slide4_text">
+                  {{ 'RULES_SLIDE4' | translate }}
+                  </td>
+                  <td>
+                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
                   </td>
                 </tr>
               </table>
@@ -113,12 +130,12 @@
         <div class="panel-default" id="AlertInfo">
           <div class="panel-body">
             <div ng-attr-class="alert alert-{{game.alertStyle}}" role="alert">
-              {{game.alertMsg | translate }}
+              {{game.alertMsg}}
             </div>
           </div>
         </div>
         <div class="panel-default" id="BuildingInfo">
-          <p><strong>{{ 'PIECE_LEFT_TO_BUILD' | translate }}</strong></p>
+          <p><strong>Pieces left to build:</strong></p>
           <div class="buildings-body">
             <span id="num-settlement" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="30" height="30" viewBox="0 0 30 30">
@@ -161,7 +178,7 @@
           <div class="panel-body">
             <ul class="list-group player-table-group player-info">
               <li ng-repeat="p in players" ng-attr-class="player-table-item {{'player-' + p + '-color'}} {{game.getPlayerBorder(p)}}">
-                <p><strong>{{'GAME_PLAYER' | translate}} {{p+1}}</strong></p>
+                <p><strong>Player {{p+1}}</strong></p>
                 <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(p)}}
                 <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(p)}}
                 <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(p)}}
@@ -169,7 +186,7 @@
                 <img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(p)}}
               </li>
               <li class="player-table-item bank-info">
-                <p><strong>{{'GAME_BANK' | translate}}</strong></p>
+                <p><strong>Bank</strong></p>
                 <span ng-repeat="idx in resourceSize">
                   <img ng-attr-src="imgs/resource{{idx}}.png" alt="imgs/develop.svg" class="resource-pic2">
                     x {{game.getBankResources(idx)}}
@@ -401,7 +418,7 @@
       <div id="MyResourcesInfo">
         <div class="panel-default my-detail">
           <div class="mycards-header">
-        <strong>{{'GAME_MY_CARDS' | translate}}</strong>
+        <strong>My Cards</strong>
             <button class="btn btn-success btn-xs"
                     ng-click="game.onTradeWithBankStart()"
                     ng-if="game.showTradeButton()">

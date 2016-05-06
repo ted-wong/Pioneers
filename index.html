@@ -79,7 +79,16 @@
               <table>
                 <tr>
                   <td id="e2e_test_rules_slide2_text">
-                  {{ 'RULES_SLIDE2' | translate }}
+                    <h4>{{ 'RULES_SLIDE2_TITLE' | translate }}</h4>
+                    <ul class="help-tip-text">
+                      <li>{{ 'RULES_SLIDE2_SETTLEMENT' | translate }}</li>
+                      <li>{{ 'RULES_SLIDE2_CITY' | translate }}</li>
+                      <li>{{ 'RULES_SLIDE2_LARGEST_ARMY' | translate }}</li>
+                      <li>{{ 'RULES_SLIDE2_LONGEST_ROAD' | translate }}</li>
+                      <li>{{ 'RULES_SLIDE2_DEV_CARD' | translate }}</li>
+                    </ul>
+                    **{{ 'RULES_SLIDE2_HOWTO_LARGEST_ARMY' | translate }}</br>
+                    **{{ 'RULES_SLIDE2_HOWTO_LONGEST_ROAD' | translate }}</br>
                   </td>
                   <td>
                     <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
@@ -90,23 +99,21 @@
             <slide>
               <table>
                 <tr>
-                  <td id="e2e_test_rules_slide3_text">
-                  {{ 'RULES_SLIDE3' | translate }}
+                  <td id="e2e_test_rules_slide3_text" style="width:80%;">
+                    <h4>{{ 'RULES_SLIDE3_TITLE' | translate }}</h4>
+                    <ul class="help-tip-text">
+                      <li>{{ 'RULES_SLIDE3_BUILD_ROAD' | translate }}</li>
+                      <li>{{ 'RULES_SLIDE3_BUILD_SETTLEMENT' | translate }}</li>
+                      <li>{{ 'RULES_SLIDE3_BUILD_CITY' | translate }}</li>
+                      <li>{{ 'RULES_SLIDE3_BUILD_DEV_CARD' | translate }}</li>
+                    </ul>
                   </td>
-                  <td>
-                    <img src="imgs/HelpSlide2.png" alt="Help slide 3" style="height:150px;">
-                  </td>
-                </tr>
-              </table>
-            </slide>
-            <slide>
-              <table>
-                <tr>
-                  <td id="e2e_test_rules_slide4_text">
-                  {{ 'RULES_SLIDE4' | translate }}
-                  </td>
-                  <td>
-                    <img src="imgs/HelpSlide2.png" alt="Help slide 2" style="height:150px;">
+                  <td style="width:20%;">
+                    <img src="imgs/resource0.png" alt="Brick" class="help-tip-img" />
+                    <img src="imgs/resource1.png" alt="Lumber" class="help-tip-img" />
+                    <img src="imgs/resource2.png" alt="Wool" class="help-tip-img" />
+                    <img src="imgs/resource3.png" alt="Grain" class="help-tip-img" />
+                    <img src="imgs/resource4.png" alt="Ore" class="help-tip-img" />
                   </td>
                 </tr>
               </table>
@@ -130,12 +137,12 @@
         <div class="panel-default" id="AlertInfo">
           <div class="panel-body">
             <div ng-attr-class="alert alert-{{game.alertStyle}}" role="alert">
-              {{game.alertMsg}}
+              {{game.alertMsg | translate }}
             </div>
           </div>
         </div>
         <div class="panel-default" id="BuildingInfo">
-          <p><strong>Pieces left to build:</strong></p>
+          <p><strong>{{ 'PIECE_LEFT_TO_BUILD' | translate }}</strong></p>
           <div class="buildings-body">
             <span id="num-settlement" draggable="true" class="building-info">
               <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="30" height="30" viewBox="0 0 30 30">
@@ -178,7 +185,7 @@
           <div class="panel-body">
             <ul class="list-group player-table-group player-info">
               <li ng-repeat="p in players" ng-attr-class="player-table-item {{'player-' + p + '-color'}} {{game.getPlayerBorder(p)}}">
-                <p><strong>Player {{p+1}}</strong></p>
+                <p><strong>{{'GAME_PLAYER' | translate}} {{p+1}}</strong></p>
                 <img src="imgs/resource-card.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumResources(p)}}
                 <img src="imgs/develop.svg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getNumDevCards(p)}}
                 <img src="imgs/devcards4.jpg" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerPoints(p)}}
@@ -186,7 +193,7 @@
                 <img src="imgs/road.png" alt="imgs/develop.svg" class="resource-pic"> x {{game.getPlayerRoadLength(p)}}
               </li>
               <li class="player-table-item bank-info">
-                <p><strong>Bank</strong></p>
+                <p><strong>{{'GAME_BANK' | translate}}</strong></p>
                 <span ng-repeat="idx in resourceSize">
                   <img ng-attr-src="imgs/resource{{idx}}.png" alt="imgs/develop.svg" class="resource-pic2">
                     x {{game.getBankResources(idx)}}
@@ -418,7 +425,7 @@
       <div id="MyResourcesInfo">
         <div class="panel-default my-detail">
           <div class="mycards-header">
-        <strong>My Cards</strong>
+        <strong>{{'GAME_MY_CARDS' | translate}}</strong>
             <button class="btn btn-success btn-xs"
                     ng-click="game.onTradeWithBankStart()"
                     ng-if="game.showTradeButton()">
