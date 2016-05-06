@@ -904,7 +904,7 @@ module gameLogic {
 
     return {
       endMatchScores: null,
-      turnIndexAfterMove: turnIdx,
+      turnIndexAfterMove: stateAfterMove.eventIdx,
       stateAfterMove: stateAfterMove
     };
   }

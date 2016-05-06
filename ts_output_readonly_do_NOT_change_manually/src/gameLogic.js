@@ -798,7 +798,7 @@ var gameLogic;
         stateAfterMove.players[playerIdx].points -= stateAfterMove.players[playerIdx].devCards[DevCard.VictoryPoint];
         return {
             endMatchScores: null,
-            turnIndexAfterMove: turnIdx,
+            turnIndexAfterMove: stateAfterMove.eventIdx,
             stateAfterMove: stateAfterMove
         };
     }
